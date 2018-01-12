@@ -19,3 +19,8 @@ class log:
         logger.addHandler(console_handler)
         logger.setLevel(verbose)
         return logger
+
+
+if __name__ == '__main__':
+    m = log.get_logger("123")
+    m.info("abc")
