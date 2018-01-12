@@ -1,0 +1,22 @@
+{
+  "Oracle": {
+    "user": "chenyan",
+    "password": "chenyan",
+    "host": "192.168.99.100",
+    "port": 9999,
+    "sid": "xe",
+    "pool_min": 5,
+    "pool_max": 40
+  },
+  "MySQL": {
+    "user": "root",
+    "password": "chenyan",
+    "host": "192.168.99.100",
+    "port": 32768,
+    "database": "sync",
+    "pool_size": 20
+  },
+  "Log": {
+    "verbose": "DEBUG"
+  }
+}
