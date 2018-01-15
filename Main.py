@@ -3,7 +3,6 @@
 import argparse
 import json
 
-from utils import oracle
 from utils import mysql
 from datatrans import trans_start
 

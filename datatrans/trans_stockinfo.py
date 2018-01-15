@@ -6,8 +6,10 @@ import datetime
 from utils.logger.log import log
 from dbfread import DBF
 
-log = log.get_logger('trans_stockinfo', console_level='DEBUG')
+stock_filename = "PAR_STOCK"
+qy_info_filename = "PAR_QY_INFO"
 
+log = log.get_logger('trans_stock')
 
 def transform(param, mysql):
     dbfs = __checkFile()
@@ -55,7 +57,7 @@ def transform(param, mysql):
                                param['ProductID'],
                                param['ProductGroupID'],
                                param['ProductID'],
-                               "4", "2", 0, "0",
+                               "4", "2", None, "0",
                                param['VolumeMultiple'],
                                1, stock['ZQDM'], stock['ZQJC'],
                                2099, 12, "012"
@@ -118,8 +120,8 @@ def __checkFile():
     catalog = env_dist['HOME']
     now = datetime.datetime.now().strftime("%Y%m%d")
     catalog = '%s%s%s%s%s' % (catalog, os.path.sep, 'sim_data', os.path.sep, now)
-    par_stock = '%s%s%s%s%s' % (catalog, os.path.sep, 'PAR_STOCK', now, '.dbf')
-    par_qy_info = '%s%s%s%s%s' % (catalog, os.path.sep, 'PAR_QY_INFO', now, '.dbf')
+    par_stock = '%s%s%s%s%s' % (catalog, os.path.sep, stock_filename, now, '.dbf')
+    par_qy_info = '%s%s%s%s%s' % (catalog, os.path.sep, qy_info_filename, now, '.dbf')
 
     # 判断PAR_STOCKYYYYMMDD.dbf文件是否存在
     if not os.path.exists(par_stock):
