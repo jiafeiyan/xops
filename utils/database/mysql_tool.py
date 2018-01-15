@@ -6,7 +6,7 @@ from mysql.connector import pooling
 
 class mysql:
     def __init__(self, configs=None):
-        self.logger = log.get_logger("mysqlDB", configs["Log"]["verbose"])
+        self.logger = log.get_logger(category="mysql", console_level=configs["Log"]["console_level"])
         dbConfig = {
             "user": configs["MySQL"]["user"],
             "password": configs["MySQL"]["password"],
@@ -23,6 +23,14 @@ class mysql:
 
     def __getCnx(self):
         return self.pool.get_connection()
+
+    # 判断是否存在记录
+    def isExist(self, sql, params):
+        res = self.select(sql=sql, params=params)
+        if len(res) > 0:
+            return True
+        else:
+            return False
 
     # 查询
     def select(self, sql, params=None):

@@ -8,4 +8,4 @@ table = DBF("E:/GithubResponsity/my_python_util/test/PAR_STOCK20171228.dbf", enc
 
 table.load()
 
-pprint(type(table.records[0]))
+pprint(table.records[0])

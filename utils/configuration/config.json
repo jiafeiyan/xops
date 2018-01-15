@@ -13,10 +13,12 @@
     "password": "chenyan",
     "host": "192.168.99.100",
     "port": 32768,
-    "database": "sync",
+    "database": "siminfo",
     "pool_size": 20
   },
   "Log": {
-    "verbose": "DEBUG"
+    "filePath": "",
+    "console_level": "INFO",
+    "file_level": "INFO"
   }
 }
