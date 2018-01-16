@@ -11,6 +11,7 @@ qy_info_filename = "PAR_QY_INFO"
 
 log = log.get_logger('trans_stock')
 
+
 def transform(param, mysql):
     dbfs = __checkFile()
     if dbfs is None:
@@ -18,7 +19,7 @@ def transform(param, mysql):
 
     # ================================处理stock_dbf======================================
     stock_dbf = dbfs[0]
-    # 判断合约是否已存在，存在不执行
+    # 判断合约是否已存在
     dbf_stock = []
     exist_stock = []
     sql_Instrument = " SELECT InstrumentID " + \
@@ -40,8 +41,8 @@ def transform(param, mysql):
     log.info("%s%d%s" % ("t_Instrument存在：", len(exist_stock), "条"))
     log.info("%s%d%s" % ("t_Instrument不存在：", len(inexist_stock), "条"))
 
-    # 写入t_Instrument
-    sql_Instrument = """INSERT INTO siminfo.t_Instrument (
+    # 不存在插入记录
+    sql_insert_Instrument = """INSERT INTO siminfo.t_Instrument (
                             SettlementGroupID,ProductID,
                             ProductGroupID,UnderlyingInstrID,
                             ProductClass,PositionType,
@@ -50,23 +51,33 @@ def transform(param, mysql):
                             InstrumentID,InstrumentName,
                             DeliveryYear,DeliveryMonth,AdvanceMonth
                         )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
-    sql_params = []
+    # 存在更新记录
+    sql_update_Instrument = """UPDATE t_Instrument
+                                SET InstrumentName = %s
+                                WHERE InstrumentID = %s
+                                AND SettlementGroupID = %s"""
+    sql_insert_params = []
+    sql_update_params = []
     for stock in stock_dbf:
         if stock['ZQDM'] in inexist_stock:
-            sql_params.append((param['SettlementGroupID'],
-                               param['ProductID'],
-                               param['ProductGroupID'],
-                               param['ProductID'],
-                               "4", "2", None, "0",
-                               param['VolumeMultiple'],
-                               1, stock['ZQDM'], stock['ZQJC'],
-                               2099, 12, "012"
-                               ))
-    mysql.executemany(sql_Instrument, sql_params)
+            sql_insert_params.append((param['SettlementGroupID'],
+                                      param['ProductID'],
+                                      param['ProductGroupID'],
+                                      param['ProductID'],
+                                      "4", "2", None, "0",
+                                      param['VolumeMultiple'],
+                                      1, stock['ZQDM'], stock['ZQJC'],
+                                      2099, 12, "012"
+                                      ))
+        if stock['ZQDM'] in exist_stock:
+            sql_update_params.append((stock['ZQJC'], stock['ZQDM'], param['SettlementGroupID']))
+
+    mysql.executemany(sql_insert_Instrument, sql_insert_params)
+    mysql.executemany(sql_update_Instrument, sql_update_params)
 
     # ================================处理info_dbf======================================
     info_dbf = dbfs[1]
-    # 判断权益信息是否已存在，存在不执行
+    # 判断权益信息是否已存在
     dbf_qy_info = []
     exist_qy_info = []
     sql_qy_info = " SELECT SecurityID, SecurityType, SecurityMarketID,  ProfitType" + \
@@ -90,8 +101,8 @@ def transform(param, mysql):
     log.info("%s%d%s" % ("t_SecurityProfit存在：", len(exist_qy_info), "条"))
     log.info("%s%d%s" % ("t_SecurityProfit不存在：", len(inexist_qy_info), "条"))
 
-    # 写入t_SecurityProfit
-    sql_qy_info = """INSERT INTO siminfo.t_SecurityProfit (
+    # 不存在插入记录
+    sql_insert_qy_info = """INSERT INTO siminfo.t_SecurityProfit (
                             SettlementGroupID,SecurityID,
                             SecurityType,SecurityMarketID,
                             ProfitType,DJDate,
@@ -99,15 +110,32 @@ def transform(param, mysql):
                             DZDate,BeforeRate,
                             AfterRate,Price
                         )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
-    sql_params = []
+    # 存在更新记录
+    sql_update_qy_info = """UPDATE t_SecurityProfit
+                            SET DJDate=%s,CQDate=%s,EndDate=%s,
+                            DZDate=%s,BeforeRate=%s,
+                            AfterRate=%s,Price=%s
+                            WHERE SecurityID=%s AND SettlementGroupID=%s
+                            AND SecurityType=%s AND SecurityMarketID=%s
+                            AND ProfitType=%s"""
+    sql_insert_params = []
+    sql_update_params = []
     for info in info_dbf:
         if (info['ZQDM'], info['ZQLX'], info['SCDM'], info['QYKIND']) in inexist_qy_info:
-            sql_params.append((param['SettlementGroupID'], info['ZQDM'],
-                               info['ZQLX'], info['SCDM'], info['QYKIND'],
-                               info['DJDATE'], info['CQDATE'], info['ENDDATE'],
-                               info['DZDATE'], info['BEFORERATE'],
-                               info['AFTERRATE'], info['PRICE']))
-    mysql.executemany(sql_qy_info, sql_params)
+            sql_insert_params.append((param['SettlementGroupID'], info['ZQDM'],
+                                      info['ZQLX'], info['SCDM'], info['QYKIND'],
+                                      info['DJDATE'], info['CQDATE'], info['ENDDATE'],
+                                      info['DZDATE'], info['BEFORERATE'],
+                                      info['AFTERRATE'], info['PRICE']))
+        if (info['ZQDM'], info['ZQLX'], info['SCDM'], info['QYKIND']) in exist_qy_info:
+            sql_update_params.append((info['DJDATE'], info['CQDATE'], info['ENDDATE'],
+                                      info['DZDATE'], info['BEFORERATE'],
+                                      info['AFTERRATE'], info['PRICE'],
+                                      info['ZQDM'], param['SettlementGroupID'],
+                                      info['ZQLX'], info['SCDM'], info['QYKIND']))
+
+    mysql.executemany(sql_insert_qy_info, sql_insert_params)
+    mysql.executemany(sql_update_qy_info, sql_update_params)
 
 
 def __checkFile():

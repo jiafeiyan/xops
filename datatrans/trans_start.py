@@ -10,5 +10,5 @@ def init(mysql):
         'ProductGroupID': 'ShareX05',
         'VolumeMultiple': 1
     }
-    # trans_stockinfo.transform(param=parameters, mysql=mysql)
+    trans_stockinfo.transform(param=parameters, mysql=mysql)
     trans_futureinfo.transform(param=parameters, mysql=mysql)

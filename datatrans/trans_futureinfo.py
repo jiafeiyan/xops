@@ -19,7 +19,7 @@ def transform(param, mysql):
 
     # ================================处理futures_dbf======================================
     futures_dbf = dbfs[0]
-    # 判断合约是否已存在，存在不执行
+    # 判断合约是否已存在
     dbf_futures = []
     exist_futures = []
     sql_futures = " SELECT InstrumentID " + \
@@ -41,8 +41,8 @@ def transform(param, mysql):
     log.info("%s%d%s" % ("t_Instrument存在：", len(exist_futures), "条"))
     log.info("%s%d%s" % ("t_Instrument不存在：", len(inexist_futures), "条"))
 
-    # 写入t_Instrument
-    sql_futures = """INSERT INTO siminfo.t_Instrument (
+    # 不存在插入记录
+    sql_insert_futures = """INSERT INTO siminfo.t_Instrument (
                             SettlementGroupID,ProductID,
                             ProductGroupID,UnderlyingInstrID,
                             ProductClass,PositionType,
@@ -51,22 +51,33 @@ def transform(param, mysql):
                             InstrumentID,InstrumentName,
                             DeliveryYear,DeliveryMonth,AdvanceMonth
                         )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
-    sql_params = []
+    # 存在更新记录
+    sql_update_futures = """UPDATE t_Instrument
+                                 SET InstrumentName = %s
+                                 WHERE InstrumentID = %s
+                                 AND SettlementGroupID = %s"""
+    sql_insert_params = []
+    sql_update_params = []
     for future in futures_dbf:
         if future['ZQDM'] in inexist_futures:
-            sql_params.append((param['SettlementGroupID'],
-                               param['ProductID'],
-                               param['ProductGroupID'],
-                               param['ProductID'],
-                               "1", "2", None, "0",
-                               param['VolumeMultiple'],
-                               1, future['ZQDM'], future['ZQMC'],
-                               2099, 12, "012"
-                               ))
-    mysql.executemany(sql_futures, sql_params)
+            sql_insert_params.append((param['SettlementGroupID'],
+                                      param['ProductID'],
+                                      param['ProductGroupID'],
+                                      param['ProductID'],
+                                      "1", "2", None, "0",
+                                      param['VolumeMultiple'],
+                                      1, future['ZQDM'], future['ZQMC'],
+                                      2099, 12, "012"
+                                      ))
+        if future['ZQDM'] in exist_futures:
+            sql_update_params.append((future['ZQMC'], future['ZQDM'], param['SettlementGroupID']))
+
+    mysql.executemany(sql_insert_futures, sql_insert_params)
+    mysql.executemany(sql_update_futures, sql_update_params)
 
     # ================================处理gjshq_dbf======================================
     gjshq_dbf = dbfs[1]
+    # 判断贵金属行情是否已存在
     dbf_gjshq = []
     exist_gjshq = []
     sql_gjshq = " SELECT InstrumentID " + \
@@ -88,37 +99,37 @@ def transform(param, mysql):
     log.info("%s%d%s" % ("t_MarketData存在：", len(exist_gjshq), "条"))
     log.info("%s%d%s" % ("t_MarketData不存在：", len(inexist_gjshq), "条"))
 
-    # 写入t_MarketData
-    sql_gjshq = """INSERT INTO siminfo.t_MarketData (
-                                SettlementGroupID,
-                                LastPrice,
-                                PreSettlementPrice,
-                                PreClosePrice,
-                                PreOpenInterest,
-                                OpenPrice,
-                                HighestPrice,
-                                LowestPrice,
-                                Volume,
-                                Turnover,
-                                OpenInterest,
-                                ClosePrice,
-                                SettlementPrice,
-                                UpperLimitPrice,
-                                LowerLimitPrice,
-                                PreDelta,
-                                CurrDelta,
-                                UpdateTime,
-                                UpdateMillisec,
-                                InstrumentID
+    # 不存在插入记录
+    sql_insert_gjshq = """INSERT INTO siminfo.t_MarketData (
+                                SettlementGroupID,LastPrice,PreSettlementPrice,
+                                PreClosePrice,PreOpenInterest,OpenPrice,
+                                HighestPrice,LowestPrice,Volume,Turnover,
+                                OpenInterest,ClosePrice,SettlementPrice,
+                                UpperLimitPrice,LowerLimitPrice,PreDelta,
+                                CurrDelta,UpdateTime,UpdateMillisec,InstrumentID
                            )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
-    sql_params = []
+    # 存在更新记录
+    sql_update_gjshq = """UPDATE t_MarketData 
+                            SET OpenPrice = %s,
+                                HighestPrice = %s,
+                                LowestPrice = %s,
+                                Volume = %s,
+                                Turnover = %s,
+                                ClosePrice = %s
+                            WHERE SettlementGroupID = %s AND InstrumentID = %s"""
+    sql_insert_params = []
+    sql_update_params = []
     for hq in gjshq_dbf:
         if hq['HYDM'] in inexist_gjshq:
-            sql_params.append((param['SettlementGroupID'],
-                               None, None, None, 0, hq['KPJ'], hq['ZGJ'], hq['ZDJ'], hq['CJL'],
-                               hq['CJJE'], None, hq['SPJ'], None, None, None, None, None, None, None, hq['HYDM']
-                               ))
-    mysql.executemany(sql_gjshq, sql_params)
+            sql_insert_params.append((param['SettlementGroupID'],
+                                      None, None, None, 0, hq['KPJ'], hq['ZGJ'], hq['ZDJ'], hq['CJL'],
+                                      hq['CJJE'], None, hq['SPJ'], None, None, None, None, None, None, None,
+                                      hq['HYDM']))
+        if hq['HYDM'] in exist_gjshq:
+            sql_update_params.append((hq['KPJ'], hq['ZGJ'], hq['ZDJ'], hq['CJL'], hq['CJJE'], hq['SPJ'],
+                                      param['SettlementGroupID'], hq['HYDM']))
+    mysql.executemany(sql_insert_gjshq, sql_insert_params)
+    mysql.executemany(sql_update_gjshq, sql_update_params)
 
 
 def __checkFile():
