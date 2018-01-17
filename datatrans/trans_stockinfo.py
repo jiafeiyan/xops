@@ -11,6 +11,13 @@ qy_info_filename = "PAR_QY_INFO"
 
 log = log.get_logger('trans_stock')
 
+# 结算组ID和交易所对应关系
+__self_conf = {
+    "1": "SG01",
+    "2": "SG02",
+    "3": "SG99",
+    "4": "SG98"
+}
 
 def transform(param, mysql):
     # 读取dbf文件
@@ -35,11 +42,11 @@ def __t_Instrument(mysql, dbf, param):
     exist_stock = []
     sql_Instrument = " SELECT InstrumentID " + \
                      " FROM siminfo.t_Instrument " + \
-                     " WHERE SettlementGroupID = '" + param['SettlementGroupID'] + "'" + \
-                     " AND InstrumentID in ("
+                     " WHERE (InstrumentID, SettlementGroupID) in ("
     for stock in stock_dbf:
         dbf_stock.append(stock['ZQDM'])
-        sql_Instrument = sql_Instrument + "'" + stock['ZQDM'] + "',"
+        sql_values = "('" + stock['ZQDM'] + "', '" + __self_conf[str(stock['SCDM'])] + "') "
+        sql_Instrument = sql_Instrument + sql_values + ","
     sql_Instrument = sql_Instrument[0:-1] + ")"
 
     # 查询存在数据
@@ -81,7 +88,7 @@ def __t_Instrument(mysql, dbf, param):
                 ProductGroupID = 'ZQ'
             else:
                 continue
-            sql_insert_params.append((param['SettlementGroupID'],
+            sql_insert_params.append((__self_conf[str(stock['SCDM'])],
                                       ProductID,
                                       ProductGroupID,
                                       ProductID,
@@ -89,7 +96,7 @@ def __t_Instrument(mysql, dbf, param):
                                       1, 1, stock['ZQDM'], stock['ZQJC'],
                                       2099, 12, "012"))
         if stock['ZQDM'] in exist_stock:
-            sql_update_params.append((stock['ZQJC'], stock['ZQDM'], param['SettlementGroupID']))
+            sql_update_params.append((stock['ZQJC'], stock['ZQDM'], __self_conf[str(stock['SCDM'])]))
 
     mysql.executemany(sql_insert_Instrument, sql_insert_params)
     mysql.executemany(sql_update_Instrument, sql_update_params)
@@ -103,12 +110,11 @@ def __t_SecurityProfit(mysql, dbf, param):
     exist_qy_info = []
     sql_qy_info = " SELECT SecurityID, SecurityType, SecurityMarketID,  ProfitType" + \
                   " FROM siminfo.t_SecurityProfit " + \
-                  " WHERE SettlementGroupID = '" + param['SettlementGroupID'] + "'" + \
-                  " AND (SecurityID, SecurityType, SecurityMarketID, ProfitType) in ("
+                  " WHERE (SecurityID, SecurityType, SecurityMarketID, ProfitType, SettlementGroupID) in ("
     for info in info_dbf:
         dbf_qy_info.append((info['ZQDM'], info['ZQLX'], info['SCDM'], info['QYKIND']))
-        sql_values = "('" + info['ZQDM'] + "', '" + info['ZQLX'] + "', '" + info['SCDM'] + "', '" + info[
-            'QYKIND'] + "')"
+        sql_values = "('" + info['ZQDM'] + "', '" + info['ZQLX'] + "', '" + info['SCDM'] + "', '" + info['QYKIND'] + \
+                     "', '" + __self_conf[str(info['SCDM'])] + "') "
         sql_qy_info = sql_qy_info + sql_values + ","
     sql_qy_info = sql_qy_info[0:-1] + ")"
 
@@ -143,7 +149,7 @@ def __t_SecurityProfit(mysql, dbf, param):
     sql_update_params = []
     for info in info_dbf:
         if (info['ZQDM'], info['ZQLX'], info['SCDM'], info['QYKIND']) in inexist_qy_info:
-            sql_insert_params.append((param['SettlementGroupID'], info['ZQDM'],
+            sql_insert_params.append((__self_conf[str(info['SCDM'])], info['ZQDM'],
                                       info['ZQLX'], info['SCDM'], info['QYKIND'],
                                       info['DJDATE'], info['CQDATE'], info['ENDDATE'],
                                       info['DZDATE'], info['BEFORERATE'],
@@ -152,7 +158,7 @@ def __t_SecurityProfit(mysql, dbf, param):
             sql_update_params.append((info['DJDATE'], info['CQDATE'], info['ENDDATE'],
                                       info['DZDATE'], info['BEFORERATE'],
                                       info['AFTERRATE'], info['PRICE'],
-                                      info['ZQDM'], param['SettlementGroupID'],
+                                      info['ZQDM'], __self_conf[str(info['SCDM'])],
                                       info['ZQLX'], info['SCDM'], info['QYKIND']))
 
     mysql.executemany(sql_insert_qy_info, sql_insert_params)
@@ -165,11 +171,11 @@ def __t_InstrumentProperty(mysql, dbf, param):
     exist_stock = []
     sql_Property = " SELECT InstrumentID " + \
                    " FROM t_InstrumentProperty " + \
-                   " WHERE SettlementGroupID = '" + param['SettlementGroupID'] + "'" + \
-                   " AND InstrumentID in ("
+                   " WHERE (InstrumentID, SettlementGroupID) in ("
     for stock in dbf:
         dbf_stock.append(stock['ZQDM'])
-        sql_Property = sql_Property + "'" + stock['ZQDM'] + "',"
+        sql_values = "('" + stock['ZQDM'] + "', '" + __self_conf[str(stock['SCDM'])] + "') "
+        sql_Property = sql_Property + sql_values + ","
     sql_Property = sql_Property[0:-1] + ")"
 
     # 查询存在数据
@@ -192,7 +198,7 @@ def __t_InstrumentProperty(mysql, dbf, param):
     sql_params = []
     for stock in dbf:
         if stock['ZQDM'] in inexist_stock:
-            sql_params.append((param['SettlementGroupID'], stock['FXRQ'], stock['SSRQ'],
+            sql_params.append((__self_conf[str(stock['SCDM'])], stock['FXRQ'], stock['SSRQ'],
                                '99991219', '99991219', '99991219', 0, 1000000, 100,
                                1000000, 100, 0.01, 0, stock['ZQDM'], 1))
     mysql.executemany(sql_Property, sql_params)

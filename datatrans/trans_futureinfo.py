@@ -11,6 +11,14 @@ gjshq_filename = "GJSHQ"
 
 log = log.get_logger('trans_future')
 
+# 结算组ID和交易所对应关系
+__self_conf = {
+    "上海期货交易所": "SG03",
+    "大连商品交易所": "SG04",
+    "郑州商品交易所": "SG05",
+    "中国金融期货交易所": "SG06",
+    "上海黄金交易所": "SG97"
+}
 
 def transform(param, mysql):
     # 读取dbf文件
@@ -35,11 +43,11 @@ def __t_Instrument(mysql, dbf, param):
     exist_futures = []
     sql_futures = " SELECT InstrumentID " + \
                   " FROM siminfo.t_Instrument " + \
-                  " WHERE SettlementGroupID = '" + param['SettlementGroupID'] + "'" + \
-                  " AND InstrumentID in ("
+                  " WHERE (InstrumentID, SettlementGroupID) in ("
     for future in futures_dbf:
         dbf_futures.append(future['ZQDM'])
-        sql_futures = sql_futures + "'" + future['ZQDM'] + "',"
+        sql_values = "('" + future['ZQDM'] + "', '" + __self_conf[future['JYSC'].encode('UTF-8')] + "') "
+        sql_futures = sql_futures + sql_values + ","
     sql_futures = sql_futures[0:-1] + ")"
 
     # 查询存在数据
@@ -79,11 +87,11 @@ def __t_Instrument(mysql, dbf, param):
             ProductClass = '1'
             if str(future['HYLX']) == 'C' or str(future['HYLX']) == 'P':
                 ProductClass = '2'
-            sql_insert_params.append((param['SettlementGroupID'], "2", None, "0",
+            sql_insert_params.append((__self_conf[future['JYSC'].encode('UTF-8')], "2", None, "0",
                                       future['JYDW'], 1, future['ZQDM'], future['ZQMC'],
                                       2099, 12, "012", future['JYPZ'], ProductClass))
         if future['ZQDM'] in exist_futures:
-            sql_update_params.append((future['ZQMC'], future['JYDW'], future['ZQDM'], param['SettlementGroupID']))
+            sql_update_params.append((future['ZQMC'], future['JYDW'], future['ZQDM'], __self_conf[future['JYSC'].encode('UTF-8')]))
 
     mysql.executemany(sql_insert_futures, sql_insert_params)
     mysql.executemany(sql_update_futures, sql_update_params)
@@ -97,11 +105,11 @@ def __t_MarketData(mysql, dbf, param):
     exist_gjshq = []
     sql_gjshq = " SELECT InstrumentID " + \
                 " FROM siminfo.t_MarketData " + \
-                " WHERE SettlementGroupID = '" + param['SettlementGroupID'] + "'" + \
-                " AND InstrumentID in ("
+                " WHERE  (InstrumentID,SettlementGroupID) in ("
     for hq in gjshq_dbf:
         dbf_gjshq.append(hq['HYDM'])
-        sql_gjshq = sql_gjshq + "'" + hq['HYDM'] + "',"
+        sql_values = "('" + hq['HYDM'] + "', '" + __self_conf[hq['JYSC'].encode('UTF-8')] + "') "
+        sql_gjshq = sql_gjshq + sql_values + ","
     sql_gjshq = sql_gjshq[0:-1] + ")"
 
     # 查询存在数据
@@ -137,13 +145,13 @@ def __t_MarketData(mysql, dbf, param):
     sql_update_params = []
     for hq in gjshq_dbf:
         if hq['HYDM'] in inexist_gjshq:
-            sql_insert_params.append((param['SettlementGroupID'],
+            sql_insert_params.append((__self_conf[hq['JYSC'].encode('UTF-8')],
                                       None, None, None, 0, hq['KPJ'], hq['ZGJ'], hq['ZDJ'], hq['CJL'],
                                       hq['CJJE'], None, hq['SPJ'], hq['JQPJJ'], None, None, None, None, None, None,
                                       hq['HYDM']))
         if hq['HYDM'] in exist_gjshq:
             sql_update_params.append((hq['KPJ'], hq['ZGJ'], hq['ZDJ'], hq['CJL'], hq['CJJE'], hq['SPJ'], hq['JQPJJ'],
-                                      param['SettlementGroupID'], hq['HYDM']))
+                                      __self_conf[hq['JYSC'].encode('UTF-8')], hq['HYDM']))
     mysql.executemany(sql_insert_gjshq, sql_insert_params)
     mysql.executemany(sql_update_gjshq, sql_update_params)
 
@@ -154,11 +162,12 @@ def __t_InstrumentProperty(mysql, dbf, param):
     exist_futures = []
     sql_Property = " SELECT InstrumentID " + \
                    " FROM t_InstrumentProperty " + \
-                   " WHERE SettlementGroupID = '" + param['SettlementGroupID'] + "'" + \
-                   " AND InstrumentID in ("
-    for stock in dbf:
-        dbf_futures.append(stock['ZQDM'])
-        sql_Property = sql_Property + "'" + stock['ZQDM'] + "',"
+                   " WHERE (InstrumentID,SettlementGroupID) in ("
+    for future in dbf:
+        dbf_futures.append(future['ZQDM'])
+        sql_values = "('" + future['ZQDM'] + "', '" + __self_conf[future['JYSC'].encode('UTF-8')] + "') "
+        sql_Property = sql_Property + sql_values + ","
+
     sql_Property = sql_Property[0:-1] + ")"
 
     # 查询存在数据
@@ -178,11 +187,11 @@ def __t_InstrumentProperty(mysql, dbf, param):
                                      AllowDelivPersonOpen,InstrumentID,InstLifePhase
                                      )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
     sql_params = []
-    for stock in dbf:
-        if stock['ZQDM'] in inexist_futures:
-            sql_params.append((param['SettlementGroupID'], stock['SSRQ'], stock['SSRQ'],
+    for future in dbf:
+        if future['ZQDM'] in inexist_futures:
+            sql_params.append((__self_conf[future['JYSC'].encode('UTF-8')], future['SSRQ'], future['SSRQ'],
                                '99991219', '99991219', '99991219', 0, 1000000, 100,
-                               1000000, 100, 0.01, 0, stock['ZQDM'], 1))
+                               1000000, 100, 0.01, 0, future['ZQDM'], 1))
     mysql.executemany(sql_Property, sql_params)
 
 def __checkFile():
