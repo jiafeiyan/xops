@@ -20,5 +20,8 @@
     "filePath": "",
     "console_level": "INFO",
     "file_level": "INFO"
+  },
+  "Init": {
+    "path": "E:/GithubResponsity/my_python_util/initialization/data"
   }
 }

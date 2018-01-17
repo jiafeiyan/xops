@@ -5,6 +5,7 @@ import json
 
 from utils import mysql
 from datatrans import trans_start
+from initialization import initScript
 
 
 def parse_args():
@@ -29,4 +30,5 @@ if __name__ == '__main__':
     conf = getConfig(args.conf)
     mysql = mysql(configs=conf)
 
-    trans_start.init(mysql=mysql)
+    initScript.initScript(mysql=mysql, path=conf["Init"]["path"])
+    # trans_start.init(mysql=mysql)
