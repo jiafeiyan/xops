@@ -1,0 +1,8 @@
+{
+  "name" : "Log",
+  "module" : {
+    "file_path": "",
+    "console_level": "INFO",
+    "file_level": "INFO"
+  }
+}

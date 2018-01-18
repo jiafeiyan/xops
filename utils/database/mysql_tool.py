@@ -5,27 +5,33 @@ from mysql.connector import pooling
 
 
 class mysql:
-    def __init__(self, configs=None):
-        self.logger = log.get_logger(category="mysql", console_level=configs["Log"]["console_level"])
-        dbConfig = {
+    def __init__(self, configs):
+        if "Log" in configs:
+            self.logger = log.get_logger(category="mysql",
+                                         file_Path=configs["Log"]["file_path"],
+                                         console_level=configs["Log"]["console_level"],
+                                         file_level=configs["Log"]["file_level"])
+        else:
+            self.logger = log.get_logger(category="mysql")
+        db_config = {
             "user": configs["MySQL"]["user"],
             "password": configs["MySQL"]["password"],
             "host": configs["MySQL"]["host"],
             "port": configs["MySQL"]["port"],
             "database": configs["MySQL"]["database"]
         }
-        self.__connect(dbConfig=dbConfig, pool_size=configs["MySQL"]["pool_size"])
+        self.__connect(db_config=db_config, pool_size=configs["MySQL"]["pool_size"])
 
-    def __connect(self, dbConfig, pool_size):
-        self.pool = pooling.MySQLConnectionPool(pool_size=pool_size, **dbConfig)
+    def __connect(self, db_config, pool_size):
+        self.pool = pooling.MySQLConnectionPool(pool_size=pool_size, **db_config)
         self.logger.info("start connect mysql database [ user=%s, host=%s, port=%s ]",
-                         dbConfig["user"], dbConfig["host"], dbConfig["port"])
+                         db_config["user"], db_config["host"], db_config["port"])
 
-    def __getCnx(self):
+    def get_cnx(self):
         return self.pool.get_connection()
 
     # 判断是否存在记录
-    def isExist(self, sql, params):
+    def is_exist(self, sql, params):
         res = self.select(sql=sql, params=params)
         if len(res) > 0:
             return True
@@ -34,7 +40,7 @@ class mysql:
 
     # 查询
     def select(self, sql, params=None):
-        cnx = self.__getCnx()
+        cnx = self.get_cnx()
         try:
             self.logger.debug({"sql": sql, "params": params})
             cursor = cnx.cursor()
@@ -52,7 +58,7 @@ class mysql:
 
     # 执行
     def execute(self, sql, params=None):
-        cnx = self.__getCnx()
+        cnx = self.get_cnx()
         try:
             self.logger.debug({"sql": sql, "params": params})
             cursor = cnx.cursor()
@@ -69,7 +75,7 @@ class mysql:
 
     # 批量执行
     def executemany(self, sql, params):
-        cnx = self.__getCnx()
+        cnx = self.get_cnx()
         try:
             self.logger.debug({"sql": sql, "params": params})
             cursor = cnx.cursor()

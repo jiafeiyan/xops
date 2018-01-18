@@ -29,7 +29,7 @@ class log:
         logger.addHandler(console_handler)
 
         # 创建一个handler，用于写入日志文件
-        if file_Path is not "" and file_Path is not None:
+        if file_Path != "" and file_Path is not None:
             nowTime = datetime.datetime.now().strftime("%Y_%m_%d")
             file_Path = "%s%s%s%s" % (file_Path, "logger_", nowTime, ".txt")
             file_handler = logging.FileHandler(file_Path, mode='a')
