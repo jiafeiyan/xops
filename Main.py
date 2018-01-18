@@ -30,5 +30,5 @@ if __name__ == '__main__':
     conf = getConfig(args.conf)
     mysql = mysql(configs=conf)
 
-    initScript.initScript(mysql=mysql, path=conf["Init"]["path"])
-    # trans_start.init(mysql=mysql)
+    # initScript.initScript(mysql=mysql, path=conf["Init"]["path"])
+    trans_start.init(mysql=mysql, config=conf)

@@ -2,6 +2,7 @@
 
 import os
 import datetime
+import json
 
 from utils.logger.log import log
 from dbfread import DBF
@@ -19,23 +20,27 @@ __self_conf = {
     "4": "SG98"
 }
 
-def transform(param, mysql):
+
+def transform(mysql, param=None, config=None):
     # 读取dbf文件
     dbfs = __checkFile()
     if dbfs is None:
         return
     # ===========处理stock_dbf写入t_Instrument表==============
-    __t_Instrument(mysql=mysql, dbf=dbfs[0], param=param)
+    __t_Instrument(mysql=mysql, dbf=dbfs[0])
+
+    # ===========处理futures_dbf写入t_TradingSegmentAttr表==============
+    __t_TradingSegmentAttr(mysql=mysql, dbf=dbfs[0], config=config)
 
     # ===========处理info_dbf写入t_SecurityProfit表===========
-    __t_SecurityProfit(mysql=mysql, dbf=dbfs[1], param=param)
+    __t_SecurityProfit(mysql=mysql, dbf=dbfs[1])
 
     # ===========判断并写入t_InstrumentProperty表(如果存在不写入)==============
-    __t_InstrumentProperty(mysql=mysql, dbf=dbfs[0], param=param)
+    __t_InstrumentProperty(mysql=mysql, dbf=dbfs[0])
 
 
 # 读取处理PAR_STOCK文件
-def __t_Instrument(mysql, dbf, param):
+def __t_Instrument(mysql, dbf, param=None):
     stock_dbf = dbf
     # 判断合约是否已存在
     dbf_stock = []
@@ -95,15 +100,15 @@ def __t_Instrument(mysql, dbf, param):
                                       "4", "2", None, "0",
                                       1, 1, stock['ZQDM'], stock['ZQJC'],
                                       2099, 12, "012"))
+            continue
         if stock['ZQDM'] in exist_stock:
             sql_update_params.append((stock['ZQJC'], stock['ZQDM'], __self_conf[str(stock['SCDM'])]))
-
     mysql.executemany(sql_insert_Instrument, sql_insert_params)
     mysql.executemany(sql_update_Instrument, sql_update_params)
 
 
 # 读取处理PAR_QY_INFO文件
-def __t_SecurityProfit(mysql, dbf, param):
+def __t_SecurityProfit(mysql, dbf, param=None):
     info_dbf = dbf
     # 判断权益信息是否已存在
     dbf_qy_info = []
@@ -154,19 +159,19 @@ def __t_SecurityProfit(mysql, dbf, param):
                                       info['DJDATE'], info['CQDATE'], info['ENDDATE'],
                                       info['DZDATE'], info['BEFORERATE'],
                                       info['AFTERRATE'], info['PRICE']))
+            continue
         if (info['ZQDM'], info['ZQLX'], info['SCDM'], info['QYKIND']) in exist_qy_info:
             sql_update_params.append((info['DJDATE'], info['CQDATE'], info['ENDDATE'],
                                       info['DZDATE'], info['BEFORERATE'],
                                       info['AFTERRATE'], info['PRICE'],
                                       info['ZQDM'], __self_conf[str(info['SCDM'])],
                                       info['ZQLX'], info['SCDM'], info['QYKIND']))
-
     mysql.executemany(sql_insert_qy_info, sql_insert_params)
     mysql.executemany(sql_update_qy_info, sql_update_params)
 
 
 # 写入t_InstrumentProperty
-def __t_InstrumentProperty(mysql, dbf, param):
+def __t_InstrumentProperty(mysql, dbf, param=None):
     dbf_stock = []
     exist_stock = []
     sql_Property = " SELECT InstrumentID " + \
@@ -204,6 +209,62 @@ def __t_InstrumentProperty(mysql, dbf, param):
     mysql.executemany(sql_Property, sql_params)
 
 
+def __t_TradingSegmentAttr(mysql, dbf, config, param=None):
+    # 判断合约是否已存在
+    dbf_stock = []
+    exist_segment = []
+    sql_segment = " SELECT InstrumentID " + \
+                  " FROM siminfo.t_TradingSegmentAttr " + \
+                  " WHERE (InstrumentID, SettlementGroupID) in ("
+    for stock in dbf:
+        dbf_stock.append(stock['ZQDM'])
+        sql_values = "('" + stock['ZQDM'] + "', '" + __self_conf[str(stock['SCDM'])] + "') "
+        sql_segment = sql_segment + sql_values + ","
+    sql_segment = sql_segment[0:-1] + ") GROUP BY InstrumentID"
+
+    # 查询存在数据
+    for stock in mysql.select(sql_segment):
+        exist_segment.append(str(stock[0]))
+
+    # 获取差集
+    inexist_segment = list(set(dbf_stock) ^ set(exist_segment))
+    log.info("%s%d%s" % ("future导入t_TradingSegmentAttr存在：", len(exist_segment), "个合约"))
+    log.info("%s%d%s" % ("future导入t_TradingSegmentAttr不存在：", len(inexist_segment), "个合约"))
+
+    # 不存在插入记录
+    sql_insert_segment = """INSERT INTO t_TradingSegmentAttr (
+                                    SettlementGroupID,TradingSegmentSN,
+                                    TradingSegmentName,StartTime,
+                                    InstrumentStatus,InstrumentID
+                                ) VALUES (%s,%s,%s,%s,%s,%s)"""
+    # 存在更新记录
+    sql_update_segment = """UPDATE t_TradingSegmentAttr
+                                    SET TradingSegmentName=%s,
+                                     StartTime=%s,InstrumentStatus=%s
+                                    WHERE SettlementGroupID=%s AND InstrumentID=%s AND TradingSegmentSN=%s"""
+    sql_insert_params = []
+    sql_update_params = []
+    SegmentAttr = __loadJSON(tableName='t_TradingSegmentAttr', config=config)
+    if SegmentAttr is None:
+        return
+    for stock in dbf:
+        SGID = __self_conf[str(stock['SCDM'])]
+        # 插入记录
+        if stock['ZQDM'] in inexist_segment and SGID in SegmentAttr:
+            for attr in SegmentAttr[SGID]:
+                sql_insert_params.append((
+                    SGID, attr[1], attr[2], attr[3], attr[4], stock['ZQDM']
+                ))
+            continue
+        # 更新记录
+        if stock['ZQDM'] in exist_segment and SGID in SegmentAttr:
+            for attr in SegmentAttr[SGID]:
+                sql_update_params.append((
+                    attr[2], attr[3], attr[4], SGID, stock['ZQDM'], attr[1]
+                ))
+    mysql.executemany(sql_insert_segment, sql_insert_params)
+    mysql.executemany(sql_update_segment, sql_update_params)
+
 def __checkFile():
     env_dist = os.environ
     # 判断环境变量是否存在HOME配置
@@ -237,3 +298,13 @@ def __loadDBF(**par):
     info = DBF(filename=par['info'], encoding='GBK')
     info.load()
     return stock.records, info.records
+
+
+# 主要读取TradingSegmentAttr配置数据
+def __loadJSON(tableName, config):
+    path = "%s%s%s%s" % (config["Init"]["path"], os.path.sep, tableName, ".json")
+    if not os.path.exists(path):
+        log.error("文件" + tableName + ".json不存在")
+        return None
+    f = open(path)
+    return json.load(f)

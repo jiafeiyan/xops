@@ -3,11 +3,11 @@
 import trans_stockinfo
 import trans_futureinfo
 
-def init(mysql):
+def init(mysql, config):
     parameters = {
     }
-    # trans_stockinfo.transform(param=parameters, mysql=mysql)
+    trans_stockinfo.transform(mysql=mysql, config=config)
 
     parameters = {
     }
-    trans_futureinfo.transform(param=parameters, mysql=mysql)
+    # trans_futureinfo.transform(mysql=mysql, config=config)

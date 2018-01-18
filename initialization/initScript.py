@@ -1,15 +1,20 @@
 # -*- coding: UTF-8 -*-
 """
 初始化数据库脚本
+t_ProductProperty
 t_Exchange --
-t_InstrumentGroup x
 t_InstrumentProperty --
 t_Market --
 t_MarketProduct --
 t_MarketProductGroup --
 t_Product --
 t_ProductGroup --
-t_ProductProperty
+t_TradeSystem --
+t_TradeSystemSettlementGroup --
+t_BusinessConfig --
+t_ClientProductRight --
+t_PartProductRight --
+t_PartProductRole --
 """
 
 import json
@@ -31,6 +36,9 @@ def initScript(mysql, path):
     __generate_table('t_TradeSystem', mysql, path)
     __generate_table('t_TradeSystemSettlementGroup', mysql, path)
     __generate_table('t_BusinessConfig', mysql, path)
+    __generate_table('t_ClientProductRight', mysql, path)
+    __generate_table('t_PartProductRight', mysql, path)
+    __generate_table('t_PartProductRole', mysql, path)
 
 
 # 通用生成sql语句并执行
