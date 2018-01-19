@@ -14,14 +14,7 @@ from dbfread import DBF
 
 class trans_futureinfo:
     def __init__(self, configs):
-        if "Log" in configs:
-            self.logger = log.get_logger(category="trans_future",
-                                         file_Path=configs["Log"]["file_path"],
-                                         console_level=configs["Log"]["console_level"],
-                                         file_level=configs["Log"]["file_level"])
-        else:
-            self.logger = log.get_logger(category="trans_future")
-
+        self.logger = log.get_logger(category="trans_future", configs=configs)
         self.futures_filename = "PAR_FUTURES"
         self.gjshq_filename = "GJSHQ"
 

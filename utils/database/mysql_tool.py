@@ -6,13 +6,7 @@ from mysql.connector import pooling
 
 class mysql:
     def __init__(self, configs):
-        if "Log" in configs:
-            self.logger = log.get_logger(category="mysql",
-                                         file_Path=configs["Log"]["file_path"],
-                                         console_level=configs["Log"]["console_level"],
-                                         file_level=configs["Log"]["file_level"])
-        else:
-            self.logger = log.get_logger(category="mysql")
+        self.logger = log.get_logger(category="mysql", configs=configs)
         db_config = {
             "user": configs["MySQL"]["user"],
             "password": configs["MySQL"]["password"],

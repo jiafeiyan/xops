@@ -6,14 +6,7 @@ from utils.logger.log import log
 
 class oracle:
     def __init__(self, configs):
-        if "Log" in configs:
-            self.logger = log.get_logger(category="oracle",
-                                         file_Path=configs["Log"]["file_path"],
-                                         console_level=configs["Log"]["console_level"],
-                                         file_level=configs["Log"]["file_level"])
-        else:
-            self.logger = log.get_logger(category="oracle")
-
+        self.logger = log.get_logger(category="oracle", configs=configs)
         _user = configs["Oracle"]["user"]
         _password = configs["Oracle"]["password"]
         _host = configs["Oracle"]["host"]

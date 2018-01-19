@@ -2,7 +2,7 @@
   "name" : "Log",
   "module" : {
     "file_path": "",
-    "console_level": "INFO",
+    "console_level": "DEBUG",
     "file_level": "INFO"
   }
 }

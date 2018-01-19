@@ -13,14 +13,7 @@ from dbfread import DBF
 
 class trans_stockinfo:
     def __init__(self, configs):
-        if "Log" in configs:
-            self.logger = log.get_logger(category="trans_stock",
-                                         file_Path=configs["Log"]["file_path"],
-                                         console_level=configs["Log"]["console_level"],
-                                         file_level=configs["Log"]["file_level"])
-        else:
-            self.logger = log.get_logger(category="trans_stock")
-
+        self.logger = log.get_logger(category="trans_stock", configs=configs)
         self.stock_filename = "PAR_STOCK"
         self.qy_info_filename = "PAR_QY_INFO"
 
