@@ -42,21 +42,21 @@ class trans_futureinfo:
         if dbfs is None:
             return
 
-        mysql = self.configs['db_instance']
+        mysqlDB = self.configs['db_instance']
         # ===========处理futures_dbf写入t_Instrument表==============
-        self.__t_Instrument(mysql=mysql, dbf=dbfs[0])
+        self.__t_Instrument(mysqlDB=mysqlDB, dbf=dbfs[0])
 
         # ===========处理futures_dbf写入t_TradingSegmentAttr表==============
-        self.__t_TradingSegmentAttr(mysql=mysql, dbf=dbfs[0], config=self.configs)
+        self.__t_TradingSegmentAttr(mysqlDB=mysqlDB, dbf=dbfs[0], config=self.configs)
 
         # ===========处理gjshq_dbf写入t_MarketData表 ==============
-        self.__t_MarketData(mysql=mysql, dbf=dbfs[1])
+        self.__t_MarketData(mysqlDB=mysqlDB, dbf=dbfs[1])
 
         # ===========判断并写入t_InstrumentProperty表(如果存在不写入)==============
-        self.__t_InstrumentProperty(mysql=mysql, dbf=dbfs[0])
+        self.__t_InstrumentProperty(mysqlDB=mysqlDB, dbf=dbfs[0])
 
     # 读取处理PAR_FUTURES文件
-    def __t_Instrument(self, mysql, dbf):
+    def __t_Instrument(self, mysqlDB, dbf):
         futures_dbf = dbf
         # 判断合约是否已存在
         dbf_futures = []
@@ -71,7 +71,7 @@ class trans_futureinfo:
         sql_futures = sql_futures[0:-1] + ")"
 
         # 查询存在数据
-        for future in mysql.select(sql_futures):
+        for future in mysqlDB.select(sql_futures):
             exist_futures.append(str(future[0]))
 
         # 获取差集
@@ -115,11 +115,11 @@ class trans_futureinfo:
             if future['ZQDM'] in exist_futures:
                 sql_update_params.append(
                     (future['ZQMC'], future['JYDW'], future['ZQDM'], self.self_conf[future['JYSC'].encode('UTF-8')]))
-        mysql.executemany(sql_insert_futures, sql_insert_params)
-        mysql.executemany(sql_update_futures, sql_update_params)
+        mysqlDB.executemany(sql_insert_futures, sql_insert_params)
+        mysqlDB.executemany(sql_update_futures, sql_update_params)
 
     # 读取处理GJSHQ文件
-    def __t_MarketData(self, mysql, dbf):
+    def __t_MarketData(self, mysqlDB, dbf):
         gjshq_dbf = dbf
         # 判断贵金属行情是否已存在
         dbf_gjshq = []
@@ -134,7 +134,7 @@ class trans_futureinfo:
         sql_gjshq = sql_gjshq[0:-1] + ")"
 
         # 查询存在数据
-        for hq in mysql.select(sql_gjshq):
+        for hq in mysqlDB.select(sql_gjshq):
             exist_gjshq.append(str(hq[0]))
 
         # 获取差集
@@ -175,11 +175,11 @@ class trans_futureinfo:
                 sql_update_params.append(
                     (hq['KPJ'], hq['ZGJ'], hq['ZDJ'], hq['CJL'], hq['CJJE'], hq['SPJ'], hq['JQPJJ'],
                      self.self_conf[hq['JYSC'].encode('UTF-8')], hq['HYDM']))
-        mysql.executemany(sql_insert_gjshq, sql_insert_params)
-        mysql.executemany(sql_update_gjshq, sql_update_params)
+        mysqlDB.executemany(sql_insert_gjshq, sql_insert_params)
+        mysqlDB.executemany(sql_update_gjshq, sql_update_params)
 
     # 写入t_InstrumentProperty
-    def __t_InstrumentProperty(self, mysql, dbf):
+    def __t_InstrumentProperty(self, mysqlDB, dbf):
         dbf_futures = []
         exist_futures = []
         sql_Property = " SELECT InstrumentID " + \
@@ -193,7 +193,7 @@ class trans_futureinfo:
         sql_Property = sql_Property[0:-1] + ")"
 
         # 查询存在数据
-        for future in mysql.select(sql_Property):
+        for future in mysqlDB.select(sql_Property):
             exist_futures.append(str(future[0]))
 
         # 获取差集
@@ -214,9 +214,9 @@ class trans_futureinfo:
                 sql_params.append((self.self_conf[future['JYSC'].encode('UTF-8')], future['SSRQ'], future['SSRQ'],
                                    '99991219', '99991219', '99991219', 0, 1000000, 100,
                                    1000000, 100, 0.01, 0, future['ZQDM'], 1))
-        mysql.executemany(sql_Property, sql_params)
+        mysqlDB.executemany(sql_Property, sql_params)
 
-    def __t_TradingSegmentAttr(self, mysql, dbf, config):
+    def __t_TradingSegmentAttr(self, mysqlDB, dbf, config):
         # 判断合约是否已存在
         dbf_futures = []
         exist_segment = []
@@ -230,7 +230,7 @@ class trans_futureinfo:
         sql_segment = sql_segment[0:-1] + ") GROUP BY InstrumentID"
 
         # 查询存在数据
-        for future in mysql.select(sql_segment):
+        for future in mysqlDB.select(sql_segment):
             exist_segment.append(str(future[0]))
 
         # 获取差集
@@ -269,8 +269,8 @@ class trans_futureinfo:
                     sql_update_params.append((
                         attr[2], attr[3], attr[4], SGID, future['ZQDM'], attr[1]
                     ))
-        mysql.executemany(sql_insert_segment, sql_insert_params)
-        mysql.executemany(sql_update_segment, sql_update_params)
+        mysqlDB.executemany(sql_insert_segment, sql_insert_params)
+        mysqlDB.executemany(sql_update_segment, sql_update_params)
 
     def __check_file(self):
         env_dist = os.environ

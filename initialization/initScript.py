@@ -39,24 +39,24 @@ class initScript:
 
     def __load(self):
         self.logger.info("============== loading init data ==============")
-        mysql = self.configs['db_instance']
+        mysqlDB = self.configs['db_instance']
         path = self.configs['Path']['initialize']
-        self.__generate_table('t_Exchange', mysql, path)
-        self.__generate_table('t_Product', mysql, path)
-        self.__generate_table('t_ProductGroup', mysql, path)
-        self.__generate_table('t_Market', mysql, path)
-        self.__generate_table('t_MarketProduct', mysql, path)
-        self.__generate_table('t_MarketProductGroup', mysql, path)
-        self.__generate_table('t_SettlementGroup', mysql, path)
-        self.__generate_table('t_TradeSystem', mysql, path)
-        self.__generate_table('t_TradeSystemSettlementGroup', mysql, path)
-        self.__generate_table('t_BusinessConfig', mysql, path)
-        self.__generate_table('t_ClientProductRight', mysql, path)
-        self.__generate_table('t_PartProductRight', mysql, path)
-        self.__generate_table('t_PartProductRole', mysql, path)
+        self.__generate_table('t_Exchange', mysqlDB, path)
+        self.__generate_table('t_Product', mysqlDB, path)
+        self.__generate_table('t_ProductGroup', mysqlDB, path)
+        self.__generate_table('t_Market', mysqlDB, path)
+        self.__generate_table('t_MarketProduct', mysqlDB, path)
+        self.__generate_table('t_MarketProductGroup', mysqlDB, path)
+        self.__generate_table('t_SettlementGroup', mysqlDB, path)
+        self.__generate_table('t_TradeSystem', mysqlDB, path)
+        self.__generate_table('t_TradeSystemSettlementGroup', mysqlDB, path)
+        self.__generate_table('t_BusinessConfig', mysqlDB, path)
+        self.__generate_table('t_ClientProductRight', mysqlDB, path)
+        self.__generate_table('t_PartProductRight', mysqlDB, path)
+        self.__generate_table('t_PartProductRole', mysqlDB, path)
 
     # 通用生成sql语句并执行
-    def __generate_table(self, tableName, mysql, path):
+    def __generate_table(self, tableName, mysqlDB, path):
         # 加载json数据文件
         path = "%s%s%s%s" % (path, os.path.sep, tableName, ".json")
         if not os.path.exists(path):
@@ -75,9 +75,9 @@ class initScript:
         for data in jsonData:
             sql_params.append(data)
         # 插入配置数据之前，先清空表
-        mysql.execute("DELETE FROM " + tableName)
+        mysqlDB.execute("DELETE FROM " + tableName)
         # 插入数据
-        mysql.executemany(template_sql, sql_params)
+        mysqlDB.executemany(template_sql, sql_params)
 
 
 if __name__ == '__main__':
