@@ -51,7 +51,7 @@ class trans_stockinfo:
         self.__t_SecurityProfit(mysqlDB=mysqlDB, dbf=dbfs[1])
 
         # ===========判断并写入t_InstrumentProperty表(如果存在不写入)==============
-        self.__t_InstrumentProperty(mysqlDB=mysqlDB, dbf=dbfs[0])
+        self.__t_InstrumentProperty(mysql=mysqlDB, dbf=dbfs[0])
 
     # 读取处理PAR_STOCK文件
     def __t_Instrument(self, mysqlDB, dbf):
@@ -75,8 +75,8 @@ class trans_stockinfo:
         # 获取差集
         inexist_stock = list(set(dbf_stock) ^ set(exist_stock))
         self.logger.info("%s%d%s" % ("dbf导入stock条数：", len(dbf_stock), "条"))
-        self.logger.info("%s%d%s" % ("t_Instrument存在：", len(exist_stock), "条"))
-        self.logger.info("%s%d%s" % ("t_Instrument不存在：", len(inexist_stock), "条"))
+        self.logger.info("%s%d%s" % ("t_Instrument中stock存在：", len(exist_stock), "条"))
+        self.logger.info("%s%d%s" % ("t_Instrument中stock不存在：", len(inexist_stock), "条"))
 
         # 不存在插入记录
         sql_insert_Instrument = """INSERT INTO siminfo.t_Instrument (

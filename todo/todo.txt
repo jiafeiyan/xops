@@ -11,6 +11,7 @@ https://www.cnblogs.com/dkblog/archive/2011/08/26/2155018.html
 
 dbf -> siminfo -> sync -> csv
 
+txt gb2312
 
 
 

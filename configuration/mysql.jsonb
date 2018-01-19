@@ -1,0 +1,11 @@
+{
+  "name" : "MySQL",
+  "module" : {
+    "user": "root",
+    "password": "admin",
+    "host": "192.188.188.101",
+    "port": 3306,
+    "database": "siminfo",
+    "pool_size": 20
+  }
+}

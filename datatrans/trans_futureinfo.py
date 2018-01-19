@@ -77,8 +77,8 @@ class trans_futureinfo:
         # 获取差集
         inexist_futures = list(set(dbf_futures) ^ set(exist_futures))
         self.logger.info("%s%d%s" % ("dbf导入futures条数：", len(dbf_futures), "条"))
-        self.logger.info("%s%d%s" % ("t_Instrument存在：", len(exist_futures), "条"))
-        self.logger.info("%s%d%s" % ("t_Instrument不存在：", len(inexist_futures), "条"))
+        self.logger.info("%s%d%s" % ("t_Instrument中futures存在：", len(exist_futures), "条"))
+        self.logger.info("%s%d%s" % ("t_Instrument中futures不存在：", len(inexist_futures), "条"))
 
         # 不存在插入记录
         sql_insert_futures = """INSERT INTO siminfo.t_Instrument (
@@ -106,9 +106,14 @@ class trans_futureinfo:
             if future['ZQDM'] in inexist_futures:
                 # 判断行业类型是否为CP,如果是为期权，其余为期货
                 ProductClass = '1'
+                OptionsType = '0'
                 if str(future['HYLX']) == 'C' or str(future['HYLX']) == 'P':
                     ProductClass = '2'
-                sql_insert_params.append((self.self_conf[future['JYSC'].encode('UTF-8')], "2", None, "0",
+                    if str(future['HYLX']) == 'C':
+                        OptionsType = '1'
+                    elif str(future['HYLX']) == 'P':
+                        OptionsType = '2'
+                sql_insert_params.append((self.self_conf[future['JYSC'].encode('UTF-8')], "2", None, OptionsType,
                                           future['JYDW'], 1, future['ZQDM'], future['ZQMC'],
                                           2099, 12, "012", future['JYPZ'], ProductClass))
                 continue
@@ -189,7 +194,6 @@ class trans_futureinfo:
             dbf_futures.append(future['ZQDM'])
             sql_values = "('" + future['ZQDM'] + "', '" + self.self_conf[future['JYSC'].encode('UTF-8')] + "') "
             sql_Property = sql_Property + sql_values + ","
-
         sql_Property = sql_Property[0:-1] + ")"
 
         # 查询存在数据

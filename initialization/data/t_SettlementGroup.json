@@ -1,8 +1,9 @@
 [
-  ["SG01","SG01","SH","CNY"],
-  ["SG02","SG02","SZ","CNY"],
-  ["SG03","SG03","SHFE","CNY"],
-  ["SG04","SG04","DCE","CNY"],
-  ["SG05","SG05","CZCE","CNY"],
-  ["SG06","SG06","CFFEX","CNY"]
+  ["SG01","SG01","SSE","4","CNY"],
+  ["SG02","SG02","SZSE","4","CNY"],
+  ["SG03","SG03","SHFE","1","CNY"],
+  ["SG04","SG04","DCE","1","CNY"],
+  ["SG05","SG05","CZCE","1","CNY"],
+  ["SG06","SG06","CFFEX","1","CNY"],
+  ["SG07","SG07","SSE","2","CNY"]
 ]
