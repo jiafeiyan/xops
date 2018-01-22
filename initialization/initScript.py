@@ -48,6 +48,13 @@ class initScript:
         self.__generate_table('t_ClientProductRight', mysqlDB, path)
         self.__generate_table('t_PartProductRight', mysqlDB, path)
         self.__generate_table('t_PartProductRole', mysqlDB, path)
+        self.__generate_table('t_BrokerSystem', mysqlDB, path)
+        self.__generate_table('t_BrokerSystemSettlementGroup', mysqlDB, path)
+        self.__generate_table('t_Participant', mysqlDB, path)
+        self.__generate_table('t_Account', mysqlDB, path)
+        self.__generate_table('t_TradingAccount', mysqlDB, path)
+        self.__generate_table('t_ClearingTradingPart', mysqlDB, path)
+        self.__generate_table('t_TradeSystemBrokerSystem', mysqlDB, path)
 
     # 通用生成sql语句并执行
     def __generate_table(self, tableName, mysqlDB, path):

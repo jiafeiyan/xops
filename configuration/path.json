@@ -1,6 +1,7 @@
 {
   "name" : "Path",
   "module" : {
-    "initialize": "E:/GithubResponsity/my_python_util/initialization/data"
+    "initialize": "E:/GithubResponsity/my_python_util/initialization/data",
+    "relation": "E:/GithubResponsity/my_python_util/initialization/template"
   }
 }

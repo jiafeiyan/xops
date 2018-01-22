@@ -40,6 +40,12 @@ class trans_stockinfo:
         # ===========处理futures_dbf写入t_TradingSegmentAttr表==============
         self.__t_TradingSegmentAttr(mysqlDB=mysqlDB, dbf=dbfs[0], config=self.configs)
 
+        # ===========处理futures_dbf写入t_MarginRate表==============
+        self.__t_MarginRate(mysqlDB=mysqlDB, dbf=dbfs[0], config=self.configs)
+
+        # ===========处理futures_dbf写入t_MarginRateDetail表==============
+        self.__t_MarginRateDetail(mysqlDB=mysqlDB, dbf=dbfs[0], config=self.configs)
+
         # ===========处理info_dbf写入t_SecurityProfit表===========
         self.__t_SecurityProfit(mysqlDB=mysqlDB, dbf=dbfs[1])
 
@@ -269,6 +275,12 @@ class trans_stockinfo:
         mysqlDB.executemany(sql_insert_segment, sql_insert_params)
         mysqlDB.executemany(sql_update_segment, sql_update_params)
 
+    def __t_MarginRate(self, mysqlDB, dbf, config):
+        pass
+
+    def __t_MarginRateDetail(self, mysqlDB, dbf, config):
+        pass
+
     def __check_file(self):
         env_dist = os.environ
         # 判断环境变量是否存在HOME配置
@@ -304,7 +316,7 @@ class trans_stockinfo:
 
     # 主要读取TradingSegmentAttr配置数据
     def __loadJSON(self, tableName, config):
-        path = "%s%s%s%s" % (config['Path']['initialize'], os.path.sep, tableName, ".json")
+        path = "%s%s%s%s" % (config['Path']['template'], os.path.sep, tableName, ".json")
         if not os.path.exists(path):
             self.logger.error("文件" + tableName + ".json不存在")
             return None

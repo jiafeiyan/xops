@@ -304,7 +304,7 @@ class trans_futureinfo:
 
     # 主要读取TradingSegmentAttr配置数据
     def __loadJSON(self, tableName, config):
-        path = "%s%s%s%s" % (config['Path']['initialize'], os.path.sep, tableName, ".json")
+        path = "%s%s%s%s" % (config['Path']['template'], os.path.sep, tableName, ".json")
         if not os.path.exists(path):
             self.logger.error("文件" + tableName + ".json不存在")
             return None
