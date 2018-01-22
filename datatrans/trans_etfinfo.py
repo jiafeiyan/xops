@@ -26,16 +26,16 @@ class trans_etfinfo:
 
         mysqlDB = self.configs['db_instance']
         # ===========处理etf_txt写入t_Instrument表==============
-        # self.__t_Instrument(mysqlDB=mysqlDB, etf_list=etf_list)
+        self.__t_Instrument(mysqlDB=mysqlDB, etf_list=etf_list)
 
-        # ===========判断并写入t_InstrumentProperty表(如果存在不写入)==============
-        # self.__t_InstrumentProperty(mysqlDB=mysqlDB, etf_list=etf_list)
+        # ===========判断并写入t_InstrumentProperty表(未更新)==============
+        self.__t_InstrumentProperty(mysqlDB=mysqlDB, etf_list=etf_list)
 
         # ===========处理stock_dbf写入t_MarginRate表(未更新)==============
         self.__t_MarginRate(mysqlDB=mysqlDB, etf_list=etf_list, config=self.configs)
 
         # ===========处理stock_dbf写入t_MarginRateDetail表==============
-        # self.__t_MarginRateDetail(mysqlDB=mysqlDB, etf_list=etf_list, config=self.configs)
+        self.__t_MarginRateDetail(mysqlDB=mysqlDB, etf_list=etf_list, config=self.configs)
 
     # 读取处理reff03文件
     def __t_Instrument(self, mysqlDB, etf_list):
@@ -156,6 +156,7 @@ class trans_etfinfo:
         # 获取模板文件
         template = self.__loadJSON(tableName='t_MarginRate', config=config)
         if template is None:
+            self.logger.error("t_MarginRate template is None")
             return
         sql_marginrate = " SELECT InstrumentID " + \
                          " FROM t_MarginRate " + \
@@ -176,8 +177,8 @@ class trans_etfinfo:
 
         # 获取差集
         inexist_rate = list(set(all_etf) ^ set(exist_rate))
-        self.logger.info("%s%d%s" % ("stock导入t_MarginRate存在：", len(exist_rate), "个合约"))
-        self.logger.info("%s%d%s" % ("stock导入t_MarginRate不存在：", len(inexist_rate), "个合约"))
+        self.logger.info("%s%d%s" % ("etf导入t_MarginRate存在：", len(exist_rate), "个合约"))
+        self.logger.info("%s%d%s" % ("etf导入t_MarginRate不存在：", len(inexist_rate), "个合约"))
 
         # 不存在插入记录
         sql_insert_rate = """INSERT INTO t_MarginRate (
@@ -195,7 +196,67 @@ class trans_etfinfo:
 
     # 写入t_MarginRateDetail
     def __t_MarginRateDetail(self, mysqlDB, etf_list, config):
-        pass
+        # 判断合约是否已存在
+        all_etf = []
+        exist_detail = []
+        # 获取模板文件
+        template = self.__loadJSON(tableName='t_MarginRateDetail', config=config)
+        if template is None:
+            self.logger.error("t_MarginRateDetail template is None")
+            return
+        sql_marginratedetail = " SELECT InstrumentID " + \
+                               " FROM t_MarginRateDetail " + \
+                               " WHERE (SettlementGroupID, TradingRole, HedgeFlag, " \
+                               " InstrumentID, ParticipantID, ClientID) in ("
+        for etf in etf_list:
+            all_etf.append(etf.SecurityID)
+            SGID = self.SettlementGroupID
+            sql_values = "('" + SGID + \
+                         "', '" + template[SGID][1] + \
+                         "', '" + template[SGID][2] + \
+                         "', '" + etf.SecurityID + \
+                         "', '" + template[SGID][7] + \
+                         "', '" + template[SGID][8] + \
+                         "') "
+            sql_marginratedetail = sql_marginratedetail + sql_values + ","
+        sql_marginratedetail = sql_marginratedetail[0:-1] + ") "
+
+        for etf in mysqlDB.select(sql_marginratedetail):
+            exist_detail.append(str(etf[0]))
+
+        # 获取差集
+        inexist_detail = list(set(all_etf) ^ set(exist_detail))
+        self.logger.info("%s%d%s" % ("etf导入t_MarginRateDetail存在：", len(exist_detail), "个合约"))
+        self.logger.info("%s%d%s" % ("etf导入t_MarginRateDetail不存在：", len(inexist_detail), "个合约"))
+
+        # 不存在插入记录
+        sql_insert_detail = """INSERT INTO t_MarginRateDetail (
+                                      SettlementGroupID,TradingRole,HedgeFlag,
+                                      ValueMode,LongMarginRatio,ShortMarginRatio,
+                                      InstrumentID,ParticipantID,ClientID
+                                  ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
+        # 存在更新记录
+        sql_update_detail = """UPDATE t_MarginRateDetail
+                                      SET ValueMode=%s,LongMarginRatio=%s,ShortMarginRatio=%s
+                                      WHERE SettlementGroupID=%s AND TradingRole=%s AND HedgeFlag=%s
+                                      AND InstrumentID=%s AND ParticipantID=%s AND ClientID=%s"""
+        sql_insert_params = []
+        sql_update_params = []
+        for etf in etf_list:
+            SGID = self.SettlementGroupID
+            # 插入记录
+            if etf.SecurityID in inexist_detail:
+                sql_insert_params.append((SGID, template[SGID][1], template[SGID][2], template[SGID][3],
+                                          template[SGID][4], etf.MarginUnit, etf.SecurityID,
+                                          template[SGID][7], template[SGID][8]))
+                continue
+            # 更新记录
+            if etf.SecurityID in exist_detail:
+                sql_update_params.append((template[SGID][3], template[SGID][4], etf.MarginUnit,
+                                          SGID, template[SGID][1], template[SGID][2],
+                                          etf.SecurityID, template[SGID][7], template[SGID][8]))
+        mysqlDB.executemany(sql_insert_detail, sql_insert_params)
+        mysqlDB.executemany(sql_update_detail, sql_update_params)
 
     def __check_file(self):
         env_dist = os.environ

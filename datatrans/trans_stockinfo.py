@@ -284,6 +284,7 @@ class trans_stockinfo:
         # 获取模板文件
         template = self.__loadJSON(tableName='t_MarginRate', config=config)
         if template is None:
+            self.logger.error("t_MarginRate template is None")
             return
         sql_marginrate = " SELECT InstrumentID " + \
                          " FROM t_MarginRate " + \
@@ -324,7 +325,67 @@ class trans_stockinfo:
 
     # 写入t_MarginRateDetail
     def __t_MarginRateDetail(self, mysqlDB, dbf, config):
-        pass
+        # 判断合约是否存在
+        dbf_stock = []
+        exist_detail = []
+        # 获取模板文件
+        template = self.__loadJSON(tableName='t_MarginRateDetail', config=config)
+        if template is None:
+            self.logger.error("t_MarginRateDetail template is None")
+            return
+        sql_marginratedetail = " SELECT InstrumentID " + \
+                               " FROM t_MarginRateDetail " + \
+                               " WHERE (SettlementGroupID, TradingRole, HedgeFlag, " \
+                               " InstrumentID, ParticipantID, ClientID) in ("
+        for stock in dbf:
+            dbf_stock.append(stock['ZQDM'])
+            SGID = self.self_conf[str(stock['SCDM'])]
+            sql_values = "('" + SGID + \
+                         "', '" + template[SGID][1] + \
+                         "', '" + template[SGID][2] + \
+                         "', '" + stock['ZQDM'] + \
+                         "', '" + template[SGID][7] + \
+                         "', '" + template[SGID][8] + \
+                         "') "
+            sql_marginratedetail = sql_marginratedetail + sql_values + ","
+        sql_marginratedetail = sql_marginratedetail[0:-1] + ") "
+
+        for stock in mysqlDB.select(sql_marginratedetail):
+            exist_detail.append(str(stock[0]))
+
+        # 获取差集
+        inexist_detail = list(set(dbf_stock) ^ set(exist_detail))
+        self.logger.info("%s%d%s" % ("stock导入t_MarginRateDetail存在：", len(exist_detail), "个合约"))
+        self.logger.info("%s%d%s" % ("stock导入t_MarginRateDetail不存在：", len(inexist_detail), "个合约"))
+
+        # 不存在插入记录
+        sql_insert_detail = """INSERT INTO t_MarginRateDetail (
+                                SettlementGroupID,TradingRole,HedgeFlag,
+                                ValueMode,LongMarginRatio,ShortMarginRatio,
+                                InstrumentID,ParticipantID,ClientID
+                            ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
+        # 存在更新记录
+        sql_update_detail = """UPDATE t_MarginRateDetail
+                                SET ValueMode=%s,LongMarginRatio=%s,ShortMarginRatio=%s
+                                WHERE SettlementGroupID=%s AND TradingRole=%s AND HedgeFlag=%s
+                                AND InstrumentID=%s AND ParticipantID=%s AND ClientID=%s"""
+        sql_insert_params = []
+        sql_update_params = []
+        for stock in dbf:
+            SGID = self.self_conf[str(stock['SCDM'])]
+            # 插入记录
+            if stock['ZQDM'] in inexist_detail:
+                sql_insert_params.append((SGID, template[SGID][1], template[SGID][2], template[SGID][3],
+                                          template[SGID][4], template[SGID][5], stock['ZQDM'],
+                                          template[SGID][7], template[SGID][8]))
+                continue
+            # 更新记录
+            if stock['ZQDM'] in exist_detail:
+                sql_update_params.append((template[SGID][3], template[SGID][4], template[SGID][5],
+                                          SGID, template[SGID][1], template[SGID][2],
+                                          stock['ZQDM'], template[SGID][7], template[SGID][8]))
+        mysqlDB.executemany(sql_insert_detail, sql_insert_params)
+        mysqlDB.executemany(sql_update_detail, sql_update_params)
 
     def __check_file(self):
         env_dist = os.environ
