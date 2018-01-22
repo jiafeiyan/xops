@@ -37,19 +37,19 @@ class trans_stockinfo:
         # ===========处理stock_dbf写入t_Instrument表==============
         self.__t_Instrument(mysqlDB=mysqlDB, dbf=dbfs[0])
 
-        # ===========处理futures_dbf写入t_TradingSegmentAttr表==============
+        # ===========处理stock_dbf写入t_TradingSegmentAttr表==============
         self.__t_TradingSegmentAttr(mysqlDB=mysqlDB, dbf=dbfs[0], config=self.configs)
 
-        # ===========处理futures_dbf写入t_MarginRate表==============
+        # ===========处理stock_dbf写入t_MarginRate表(未更新)==============
         self.__t_MarginRate(mysqlDB=mysqlDB, dbf=dbfs[0], config=self.configs)
 
-        # ===========处理futures_dbf写入t_MarginRateDetail表==============
+        # ===========处理stock_dbf写入t_MarginRateDetail表==============
         self.__t_MarginRateDetail(mysqlDB=mysqlDB, dbf=dbfs[0], config=self.configs)
 
         # ===========处理info_dbf写入t_SecurityProfit表===========
         self.__t_SecurityProfit(mysqlDB=mysqlDB, dbf=dbfs[1])
 
-        # ===========判断并写入t_InstrumentProperty表(如果存在不写入)==============
+        # ===========判断并写入t_InstrumentProperty表(未更新)==============
         self.__t_InstrumentProperty(mysql=mysqlDB, dbf=dbfs[0])
 
     # 读取处理PAR_STOCK文件
@@ -219,6 +219,7 @@ class trans_stockinfo:
                                    1000000, 100, 0.01, 0, stock['ZQDM'], 1))
         mysqlDB.executemany(sql_Property, sql_params)
 
+    # 写入t_TradingSegmentAttr
     def __t_TradingSegmentAttr(self, mysqlDB, dbf, config):
         # 判断合约是否已存在
         dbf_stock = []
@@ -238,8 +239,8 @@ class trans_stockinfo:
 
         # 获取差集
         inexist_segment = list(set(dbf_stock) ^ set(exist_segment))
-        self.logger.info("%s%d%s" % ("future导入t_TradingSegmentAttr存在：", len(exist_segment), "个合约"))
-        self.logger.info("%s%d%s" % ("future导入t_TradingSegmentAttr不存在：", len(inexist_segment), "个合约"))
+        self.logger.info("%s%d%s" % ("stock导入t_TradingSegmentAttr存在：", len(exist_segment), "个合约"))
+        self.logger.info("%s%d%s" % ("stock导入t_TradingSegmentAttr不存在：", len(inexist_segment), "个合约"))
 
         # 不存在插入记录
         sql_insert_segment = """INSERT INTO t_TradingSegmentAttr (
@@ -275,9 +276,53 @@ class trans_stockinfo:
         mysqlDB.executemany(sql_insert_segment, sql_insert_params)
         mysqlDB.executemany(sql_update_segment, sql_update_params)
 
+    # 写入t_MarginRate
     def __t_MarginRate(self, mysqlDB, dbf, config):
-        pass
+        # 判断合约是否存在
+        dbf_stock = []
+        exist_rate = []
+        # 获取模板文件
+        template = self.__loadJSON(tableName='t_MarginRate', config=config)
+        if template is None:
+            return
+        sql_marginrate = " SELECT InstrumentID " + \
+                         " FROM t_MarginRate " + \
+                         " WHERE (SettlementGroupID, MarginCalcID, InstrumentID, ParticipantID) in ("
+        for stock in dbf:
+            dbf_stock.append(stock['ZQDM'])
+            SGID = self.self_conf[str(stock['SCDM'])]
+            sql_values = "('" + SGID + \
+                         "', '" + template[SGID][1] + \
+                         "', '" + stock['ZQDM'] + \
+                         "', '" + template[SGID][3] + \
+                         "') "
+            sql_marginrate = sql_marginrate + sql_values + ","
+        sql_marginrate = sql_marginrate[0:-1] + ") "
 
+        for stock in mysqlDB.select(sql_marginrate):
+            exist_rate.append(str(stock[0]))
+
+        # 获取差集
+        inexist_rate = list(set(dbf_stock) ^ set(exist_rate))
+        self.logger.info("%s%d%s" % ("stock导入t_MarginRate存在：", len(exist_rate), "个合约"))
+        self.logger.info("%s%d%s" % ("stock导入t_MarginRate不存在：", len(inexist_rate), "个合约"))
+
+        # 不存在插入记录
+        sql_insert_rate = """INSERT INTO t_MarginRate (
+                                SettlementGroupID,
+                                MarginCalcID,
+                                InstrumentID,
+                                ParticipantID
+                            ) VALUES (%s,%s,%s,%s)"""
+        sql_insert_params = []
+        for stock in dbf:
+            # 插入记录
+            if stock['ZQDM'] in inexist_rate:
+                SGID = self.self_conf[str(stock['SCDM'])]
+                sql_insert_params.append((SGID, template[SGID][1], stock['ZQDM'], template[SGID][3]))
+        mysqlDB.executemany(sql_insert_rate, sql_insert_params)
+
+    # 写入t_MarginRateDetail
     def __t_MarginRateDetail(self, mysqlDB, dbf, config):
         pass
 
@@ -314,7 +359,7 @@ class trans_stockinfo:
         info.load()
         return stock.records, info.records
 
-    # 主要读取TradingSegmentAttr配置数据
+    # 主要读取template数据
     def __loadJSON(self, tableName, config):
         path = "%s%s%s%s" % (config['Path']['template'], os.path.sep, tableName, ".json")
         if not os.path.exists(path):

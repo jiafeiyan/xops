@@ -42,10 +42,16 @@ class trans_futureinfo:
         # ===========处理futures_dbf写入t_TradingSegmentAttr表==============
         self.__t_TradingSegmentAttr(mysqlDB=mysqlDB, dbf=dbfs[0], config=self.configs)
 
+        # ===========处理futures_dbf写入t_MarginRate表(未更新)==============
+        self.__t_MarginRate(mysqlDB=mysqlDB, dbf=dbfs[0], config=self.configs)
+
+        # ===========处理futures_dbf写入t_MarginRateDetail表==============
+        self.__t_MarginRateDetail(mysqlDB=mysqlDB, dbf=dbfs[0], config=self.configs)
+
         # ===========处理gjshq_dbf写入t_MarketData表 ==============
         self.__t_MarketData(mysqlDB=mysqlDB, dbf=dbfs[1])
 
-        # ===========判断并写入t_InstrumentProperty表(如果存在不写入)==============
+        # ===========判断并写入t_InstrumentProperty表(未更新)==============
         self.__t_InstrumentProperty(mysqlDB=mysqlDB, dbf=dbfs[0])
 
     # 读取处理PAR_FUTURES文件
@@ -213,6 +219,7 @@ class trans_futureinfo:
                                    1000000, 100, 0.01, 0, future['ZQDM'], 1))
         mysqlDB.executemany(sql_Property, sql_params)
 
+    # 写入t_TradingSegmentAttr
     def __t_TradingSegmentAttr(self, mysqlDB, dbf, config):
         # 判断合约是否已存在
         dbf_futures = []
@@ -269,6 +276,58 @@ class trans_futureinfo:
         mysqlDB.executemany(sql_insert_segment, sql_insert_params)
         mysqlDB.executemany(sql_update_segment, sql_update_params)
 
+    # 写入t_MarginRate
+    def __t_MarginRate(self, mysqlDB, dbf, config):
+        # 判断合约是否存在
+        dbf_futures = []
+        exist_rate = []
+        # 获取模板文件
+        template = self.__loadJSON(tableName='t_MarginRate', config=config)
+        if template is None:
+            return
+        sql_marginrate = " SELECT InstrumentID " + \
+                         " FROM t_MarginRate " + \
+                         " WHERE (SettlementGroupID, MarginCalcID, InstrumentID, ParticipantID) in ("
+        for future in dbf:
+            dbf_futures.append(future['ZQDM'])
+            SGID = self.self_conf[future['JYSC'].encode('UTF-8')]
+            if SGID in template:
+                sql_values = "('" + SGID + \
+                             "', '" + template[SGID][1] + \
+                             "', '" + future['ZQDM'] + \
+                             "', '" + template[SGID][3] + \
+                             "') "
+            sql_marginrate = sql_marginrate + sql_values + ","
+        sql_marginrate = sql_marginrate[0:-1] + ") "
+
+        for future in mysqlDB.select(sql_marginrate):
+            exist_rate.append(str(future[0]))
+
+        # 获取差集
+        inexist_rate = list(set(dbf_futures) ^ set(exist_rate))
+        self.logger.info("%s%d%s" % ("future导入t_MarginRate存在：", len(exist_rate), "个合约"))
+        self.logger.info("%s%d%s" % ("future导入t_MarginRate不存在：", len(inexist_rate), "个合约"))
+
+        # 不存在插入记录
+        sql_insert_rate = """INSERT INTO t_MarginRate (
+                                       SettlementGroupID,
+                                       MarginCalcID,
+                                       InstrumentID,
+                                       ParticipantID
+                                   ) VALUES (%s,%s,%s,%s)"""
+        sql_insert_params = []
+        for future in dbf:
+            # 插入记录
+            if future['ZQDM'] in inexist_rate:
+                SGID = self.self_conf[future['JYSC'].encode('UTF-8')]
+                if SGID in template:
+                    sql_insert_params.append((SGID, template[SGID][1], future['ZQDM'], template[SGID][3]))
+        mysqlDB.executemany(sql_insert_rate, sql_insert_params)
+
+    # 写入t_MarginRateDetail
+    def __t_MarginRateDetail(self, mysqlDB, dbf, config):
+        pass
+
     def __check_file(self):
         env_dist = os.environ
         # 判断环境变量是否存在HOME配置
@@ -302,7 +361,7 @@ class trans_futureinfo:
         info.load()
         return stock.records, info.records
 
-    # 主要读取TradingSegmentAttr配置数据
+    # 主要读取template数据
     def __loadJSON(self, tableName, config):
         path = "%s%s%s%s" % (config['Path']['template'], os.path.sep, tableName, ".json")
         if not os.path.exists(path):

@@ -2,6 +2,7 @@
 
 import os
 import datetime
+import json
 
 from utils import parse_args
 from utils import load
@@ -25,9 +26,16 @@ class trans_etfinfo:
 
         mysqlDB = self.configs['db_instance']
         # ===========处理etf_txt写入t_Instrument表==============
-        self.__t_Instrument(mysqlDB=mysqlDB, etf_list=etf_list)
+        # self.__t_Instrument(mysqlDB=mysqlDB, etf_list=etf_list)
+
         # ===========判断并写入t_InstrumentProperty表(如果存在不写入)==============
-        self.__t_InstrumentProperty(mysqlDB=mysqlDB, etf_list=etf_list)
+        # self.__t_InstrumentProperty(mysqlDB=mysqlDB, etf_list=etf_list)
+
+        # ===========处理stock_dbf写入t_MarginRate表(未更新)==============
+        self.__t_MarginRate(mysqlDB=mysqlDB, etf_list=etf_list, config=self.configs)
+
+        # ===========处理stock_dbf写入t_MarginRateDetail表==============
+        # self.__t_MarginRateDetail(mysqlDB=mysqlDB, etf_list=etf_list, config=self.configs)
 
     # 读取处理reff03文件
     def __t_Instrument(self, mysqlDB, etf_list):
@@ -140,6 +148,55 @@ class trans_etfinfo:
                                    0, etf.SecurityID, 1))
         mysqlDB.executemany(sql_Property, sql_params)
 
+    # 写入t_MarginRate
+    def __t_MarginRate(self, mysqlDB, etf_list, config):
+        # 判断合约是否已存在
+        all_etf = []
+        exist_rate = []
+        # 获取模板文件
+        template = self.__loadJSON(tableName='t_MarginRate', config=config)
+        if template is None:
+            return
+        sql_marginrate = " SELECT InstrumentID " + \
+                         " FROM t_MarginRate " + \
+                         " WHERE (SettlementGroupID, MarginCalcID, InstrumentID, ParticipantID) in ("
+        for etf in etf_list:
+            all_etf.append(etf.SecurityID)
+            SGID = self.SettlementGroupID
+            sql_values = "('" + SGID + \
+                         "', '" + template[SGID][1] + \
+                         "', '" + etf.SecurityID + \
+                         "', '" + template[SGID][3] + \
+                         "') "
+            sql_marginrate = sql_marginrate + sql_values + ","
+        sql_marginrate = sql_marginrate[0:-1] + ")"
+
+        for etf in mysqlDB.select(sql_marginrate):
+            exist_rate.append(str(etf[0]))
+
+        # 获取差集
+        inexist_rate = list(set(all_etf) ^ set(exist_rate))
+        self.logger.info("%s%d%s" % ("stock导入t_MarginRate存在：", len(exist_rate), "个合约"))
+        self.logger.info("%s%d%s" % ("stock导入t_MarginRate不存在：", len(inexist_rate), "个合约"))
+
+        # 不存在插入记录
+        sql_insert_rate = """INSERT INTO t_MarginRate (
+                                        SettlementGroupID,
+                                        MarginCalcID,
+                                        InstrumentID,
+                                        ParticipantID
+                                    ) VALUES (%s,%s,%s,%s)"""
+        sql_insert_params = []
+        for etf in etf_list:
+            if etf.SecurityID in inexist_rate:
+                SGID = self.SettlementGroupID
+                sql_insert_params.append((SGID, template[SGID][1], etf.SecurityID, template[SGID][3]))
+        mysqlDB.executemany(sql_insert_rate, sql_insert_params)
+
+    # 写入t_MarginRateDetail
+    def __t_MarginRateDetail(self, mysqlDB, etf_list, config):
+        pass
+
     def __check_file(self):
         env_dist = os.environ
         # 判断环境变量是否存在HOME配置
@@ -165,6 +222,15 @@ class trans_etfinfo:
             VO = etfVO(lines.split("|"))
             etf_list.append(VO)
         return etf_list
+
+    # 主要读取template数据
+    def __loadJSON(self, tableName, config):
+        path = "%s%s%s%s" % (config['Path']['template'], os.path.sep, tableName, ".json")
+        if not os.path.exists(path):
+            self.logger.error("文件" + tableName + ".json不存在")
+            return None
+        f = open(path)
+        return json.load(f)
 
 
 if __name__ == '__main__':
