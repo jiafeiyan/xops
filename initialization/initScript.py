@@ -1,20 +1,26 @@
 # -*- coding: UTF-8 -*-
 """
 初始化数据库脚本
-t_ProductProperty
-t_Exchange --
-t_InstrumentProperty --
-t_Market --
-t_MarketProduct --
-t_MarketProductGroup --
-t_Product --
-t_ProductGroup --
-t_TradeSystem --
-t_TradeSystemSettlementGroup --
-t_BusinessConfig --
-t_ClientProductRight --
-t_PartProductRight --
-t_PartProductRole --
+t_Exchange
+t_Product
+t_ProductGroup
+t_Market
+t_MarketProduct
+t_MarketProductGroup
+t_SettlementGroup
+t_TradeSystem
+t_TradeSystemSettlementGroup
+t_BusinessConfig
+t_ClientProductRight
+t_PartProductRight
+t_PartProductRole
+t_BrokerSystem
+t_BrokerSystemSettlementGroup
+t_Participant
+t_Account
+t_TradingAccount
+t_ClearingTradingPart
+t_TradeSystemBrokerSystem
 """
 
 import json
@@ -35,26 +41,10 @@ class initScript:
         self.logger.info("============== loading init data ==============")
         mysqlDB = self.configs['db_instance']
         path = self.configs['Path']['initialize']
-        self.__generate_table('t_Exchange', mysqlDB, path)
-        self.__generate_table('t_Product', mysqlDB, path)
-        self.__generate_table('t_ProductGroup', mysqlDB, path)
-        self.__generate_table('t_Market', mysqlDB, path)
-        self.__generate_table('t_MarketProduct', mysqlDB, path)
-        self.__generate_table('t_MarketProductGroup', mysqlDB, path)
-        self.__generate_table('t_SettlementGroup', mysqlDB, path)
-        self.__generate_table('t_TradeSystem', mysqlDB, path)
-        self.__generate_table('t_TradeSystemSettlementGroup', mysqlDB, path)
-        self.__generate_table('t_BusinessConfig', mysqlDB, path)
-        self.__generate_table('t_ClientProductRight', mysqlDB, path)
-        self.__generate_table('t_PartProductRight', mysqlDB, path)
-        self.__generate_table('t_PartProductRole', mysqlDB, path)
-        self.__generate_table('t_BrokerSystem', mysqlDB, path)
-        self.__generate_table('t_BrokerSystemSettlementGroup', mysqlDB, path)
-        self.__generate_table('t_Participant', mysqlDB, path)
-        self.__generate_table('t_Account', mysqlDB, path)
-        self.__generate_table('t_TradingAccount', mysqlDB, path)
-        self.__generate_table('t_ClearingTradingPart', mysqlDB, path)
-        self.__generate_table('t_TradeSystemBrokerSystem', mysqlDB, path)
+        if os.path.exists(path):
+            for fileName in os.listdir(path):
+                fileName = fileName[:fileName.rfind('.')]
+                self.__generate_table(str(fileName), mysqlDB, path)
 
     # 通用生成sql语句并执行
     def __generate_table(self, tableName, mysqlDB, path):

@@ -6,7 +6,7 @@ from mysql.connector import pooling
 
 class mysql:
     def __init__(self, configs):
-        self.logger = log.get_logger(category="mysql", configs=configs)
+        self.logger = log.get_logger(category="mysql")
         db_config = {
             "user": configs["MySQL"]["user"],
             "password": configs["MySQL"]["password"],
@@ -60,6 +60,7 @@ class mysql:
                 cursor.execute(sql)
             else:
                 cursor.execute(sql, params)
+            self.logger.debug("effect " + str(cursor.rowcount) + " record ")
             cnx.commit()
         except Exception as err:
             self.logger.error(err)
@@ -74,6 +75,7 @@ class mysql:
             self.logger.debug({"sql": sql, "params": params})
             cursor = cnx.cursor()
             cursor.executemany(sql, params)
+            self.logger.debug("effect " + str(str(cursor.rowcount)) + " record ")
             cnx.commit()
         except Exception as err:
             cnx.rollback()
