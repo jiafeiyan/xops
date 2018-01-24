@@ -1,8 +1,7 @@
 {
-  "name" : "Log",
-  "module" : {
+  "default" : {
     "file_path": "",
-    "console_level": "DEBUG",
-    "file_level": "INFO"
+    "file_level": "INFO",
+    "console_level": "DEBUG"
   }
 }

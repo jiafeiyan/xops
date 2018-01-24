@@ -33,20 +33,27 @@ t_TradingSegmentAttr          t_CurrTradingSegmentAttr
 """
 
 from utils import log
-from utils import parse_args
-from utils import load
+from utils import parse_conf_args
+from utils import Configuration
 from utils import mysql
 
 
 class toSyncAll:
-    def __init__(self, tradeSystem, configs):
-        self.logger = log.get_logger(category="toSyncAll", configs=configs)
-        self.configs = configs
-        self.tradeSystemID = tradeSystem
+    def __init__(self, context, configs):
+        tradeSystemID = configs.get("tradeSystemID")
+        log_conf = None if context.get("log") is None else context.get("log").get(configs.get("logId"))
+        # 初始化日志
+        self.logger = log.get_logger(category="toSyncAll", configs=log_conf)
+        if log_conf is None:
+            self.logger.warning(__file__ + "未配置Log日志")
+        # 初始化数据库连接
+        self.mysqlDB = mysql(configs=context.get("mysql")[configs.get("mysqlId")])
+        # 初始化tradeSystemID
+        self.tradeSystemID = tradeSystemID
         self.__convert_sync()
 
     def __convert_sync(self):
-        mysqlDB = self.configs['db_instance']
+        mysqlDB = self.mysqlDB
 
         # 同步数据(存在数据先删除)
         self.__t_Account(mysqlDB)
@@ -395,19 +402,7 @@ class toSyncAll:
 
 
 if __name__ == '__main__':
-    args = parse_args('-tradeSystemID')
-
-    if not args.tradeSystemID:
-        print "缺少参数 -tradeSystemID"
-        exit()
-
-    # 交易系统代码
-    tradeSystemID = args.tradeSystemID
-    # 读取参数文件
-    conf = load(args.conf)
-    # 建立mysql数据库连接
-    mysql_instance = mysql(configs=conf)
-    conf["db_instance"] = mysql_instance
-
+    base_dir, config_names, config_files = parse_conf_args(__file__, config_names=["mysql","log"])
+    context, conf = Configuration.load(base_dir=base_dir, config_names=config_names, config_files=config_files)
     # 初始化脚本数据
-    toSyncAll(tradeSystemID, conf)
+    toSyncAll(context=context, configs=conf)

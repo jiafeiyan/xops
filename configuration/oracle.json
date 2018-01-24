@@ -1,6 +1,5 @@
 {
-  "name" : "Oracle",
-  "module" : {
+  "simplatform_base" : {
     "user": "chenyan",
     "password": "chenyan",
     "host": "192.168.99.100",

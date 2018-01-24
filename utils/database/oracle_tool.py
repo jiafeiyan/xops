@@ -6,14 +6,14 @@ from utils.logger.log import log
 
 class oracle:
     def __init__(self, configs):
-        self.logger = log.get_logger(category="oracle", configs=configs)
-        _user = configs["Oracle"]["user"]
-        _password = configs["Oracle"]["password"]
-        _host = configs["Oracle"]["host"]
-        _port = configs["Oracle"]["port"]
-        _sid = configs["Oracle"]["sid"]
-        _min = configs["Oracle"]["pool_min"]
-        _max = configs["Oracle"]["pool_max"]
+        self.logger = log.get_logger(category="oracle")
+        _user = configs["user"]
+        _password = configs["password"]
+        _host = configs["host"]
+        _port = configs["port"]
+        _sid = configs["sid"]
+        _min = configs["pool_min"]
+        _max = configs["pool_max"]
         self.__connect(_user, _password, _host, _port, _sid, _min, _max)
 
     def __connect(self, user, password, host, port, sid, _min, _max):

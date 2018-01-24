@@ -4,19 +4,26 @@ import os
 import datetime
 import json
 
-from utils import parse_args
-from utils import load
-from utils import mysql
 from utils import log
+from utils import parse_conf_args
+from utils import Configuration
+from utils import mysql
 from etf_entity import etfVO
 
 
 class trans_etfinfo:
-    def __init__(self, configs):
-        self.logger = log.get_logger(category="trans_future", configs=configs)
+    def __init__(self, context, configs):
+        log_conf = None if context.get("log") is None else context.get("log").get(configs.get("logId"))
+        # 初始化日志
+        self.logger = log.get_logger(category="trans_future", configs=log_conf)
+        if log_conf is None:
+            self.logger.warning(__file__ + "未配置Log日志")
+        # 初始化数据库连接
+        self.mysqlDB = mysql(configs=context.get("mysql")[configs.get("mysqlId")])
+        # 初始化模板路径
+        self.initTemplate = context.get("init")[configs.get("initId")]
         self.etf_filename = "reff03"
         self.SettlementGroupID = "SG07"
-        self.configs = configs
         self.__transform()
 
     def __transform(self):
@@ -24,7 +31,7 @@ class trans_etfinfo:
         if etf_list is None:
             return
 
-        mysqlDB = self.configs['db_instance']
+        mysqlDB = self.mysqlDB
         # ===========处理etf_txt写入t_Instrument表==============
         self.__t_Instrument(mysqlDB=mysqlDB, etf_list=etf_list)
 
@@ -32,10 +39,10 @@ class trans_etfinfo:
         self.__t_InstrumentProperty(mysqlDB=mysqlDB, etf_list=etf_list)
 
         # ===========处理stock_dbf写入t_MarginRate表(未更新)==============
-        self.__t_MarginRate(mysqlDB=mysqlDB, etf_list=etf_list, config=self.configs)
+        self.__t_MarginRate(mysqlDB=mysqlDB, etf_list=etf_list)
 
         # ===========处理stock_dbf写入t_MarginRateDetail表==============
-        self.__t_MarginRateDetail(mysqlDB=mysqlDB, etf_list=etf_list, config=self.configs)
+        self.__t_MarginRateDetail(mysqlDB=mysqlDB, etf_list=etf_list)
 
     # 读取处理reff03文件
     def __t_Instrument(self, mysqlDB, etf_list):
@@ -149,12 +156,12 @@ class trans_etfinfo:
         mysqlDB.executemany(sql_Property, sql_params)
 
     # 写入t_MarginRate
-    def __t_MarginRate(self, mysqlDB, etf_list, config):
+    def __t_MarginRate(self, mysqlDB, etf_list):
         # 判断合约是否已存在
         all_etf = []
         exist_rate = []
         # 获取模板文件
-        template = self.__loadJSON(tableName='t_MarginRate', config=config)
+        template = self.__loadJSON(tableName='t_MarginRate')
         if template is None:
             self.logger.error("t_MarginRate template is None")
             return
@@ -195,12 +202,12 @@ class trans_etfinfo:
         mysqlDB.executemany(sql_insert_rate, sql_insert_params)
 
     # 写入t_MarginRateDetail
-    def __t_MarginRateDetail(self, mysqlDB, etf_list, config):
+    def __t_MarginRateDetail(self, mysqlDB, etf_list):
         # 判断合约是否已存在
         all_etf = []
         exist_detail = []
         # 获取模板文件
-        template = self.__loadJSON(tableName='t_MarginRateDetail', config=config)
+        template = self.__loadJSON(tableName='t_MarginRateDetail')
         if template is None:
             self.logger.error("t_MarginRateDetail template is None")
             return
@@ -285,8 +292,8 @@ class trans_etfinfo:
         return etf_list
 
     # 主要读取template数据
-    def __loadJSON(self, tableName, config):
-        path = "%s%s%s%s" % (config['Path']['template'], os.path.sep, tableName, ".json")
+    def __loadJSON(self, tableName):
+        path = "%s%s%s%s" % (self.initTemplate['initTemplate'], os.path.sep, tableName, ".json")
         if not os.path.exists(path):
             self.logger.error("文件" + tableName + ".json不存在")
             return None
@@ -295,14 +302,7 @@ class trans_etfinfo:
 
 
 if __name__ == '__main__':
-    args = parse_args()
-
-    # 读取参数文件
-    conf = load(args.conf)
-
-    # 建立mysql数据库连接
-    mysql_instance = mysql(configs=conf)
-    conf["db_instance"] = mysql_instance
-
+    base_dir, config_names, config_files = parse_conf_args(__file__, config_names=["mysql", "init"])
+    context, conf = Configuration.load(base_dir=base_dir, config_names=config_names, config_files=config_files)
     # 启动future脚本
-    trans_etfinfo(conf)
+    trans_etfinfo(context=context, configs=conf)

@@ -1,19 +1,44 @@
 # -*- coding: UTF-8 -*-
 
+import os
 import json
-from utils.logger.log import log
 
-log = log.get_logger(category="config")
 
-def load(args):
-    _merge_config = {}
-    for f in args:
-        jsonData = __getConfig(filename=f)
-        log.info("loading config module ==> " + jsonData['name'])
-        _merge_config[jsonData['name']] = jsonData['module']
-    return _merge_config
+class Configuration:
+    @staticmethod
+    def load(base_dir, config_names, config_files):
+        context = {}
+        conf = {}
 
-# 获取config配置文件
-def __getConfig(filename):
-    f = open(filename)
-    return json.load(f)
+        config_base_dir = base_dir
+
+        if config_base_dir is None:
+            config_base_dir = os.environ.get("SIM_PLATFORM_CONFIG_HOME", None)
+
+        if config_base_dir is not None and config_names is not None:
+            for config_name in config_names:
+                config_file = os.path.join(config_base_dir, config_name + ".json")
+
+                context.update({config_name: Configuration.load_json(config_file)})
+
+        if config_files is not None:
+            for config_file in config_files:
+                if config_file is not None and os.path.exists(config_file):
+                    conf.update(Configuration.load_json(config_file))
+
+        return context, conf
+
+    @staticmethod
+    def find_selfconfig(file_name):
+        self_config_file = file_name[:-3] + ".json"
+        if os.path.exists(self_config_file):
+            return self_config_file
+        return None
+
+    @staticmethod
+    def load_json(file_name):
+        f = open(file_name)
+
+        config = json.load(f)
+
+        return config

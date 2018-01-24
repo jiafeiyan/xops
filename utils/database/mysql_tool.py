@@ -8,13 +8,13 @@ class mysql:
     def __init__(self, configs):
         self.logger = log.get_logger(category="mysql")
         db_config = {
-            "user": configs["MySQL"]["user"],
-            "password": configs["MySQL"]["password"],
-            "host": configs["MySQL"]["host"],
-            "port": configs["MySQL"]["port"],
-            "database": configs["MySQL"]["database"]
+            "user": configs["user"],
+            "password": configs["password"],
+            "host": configs["host"],
+            "port": configs["port"],
+            "database": configs["database"]
         }
-        self.__connect(db_config=db_config, pool_size=configs["MySQL"]["pool_size"])
+        self.__connect(db_config=db_config, pool_size=configs["pool_size"])
 
     def __connect(self, db_config, pool_size):
         self.pool = pooling.MySQLConnectionPool(pool_size=pool_size, **db_config)

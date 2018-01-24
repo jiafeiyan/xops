@@ -13,21 +13,30 @@ t_InstrumentProperty
 import csv
 import os
 
-from utils import parse_args
-from utils import load
-from utils import mysql
 from utils import log
+from utils import parse_conf_args
+from utils import Configuration
+from utils import mysql
 
 
 class future_to_csv:
-    def __init__(self, tradeSystem, configs):
-        self.logger = log.get_logger(category="future_to_csv", configs=configs)
-        self.configs = configs
-        self.tradeSystemID = tradeSystem
+    def __init__(self, context, configs):
+        tradeSystemID = configs.get("tradeSystemID")
+        log_conf = None if context.get("log") is None else context.get("log").get(configs.get("logId"))
+        # 初始化日志
+        self.logger = log.get_logger(category="future_to_csv", configs=log_conf)
+        if log_conf is None:
+            self.logger.warning(__file__ + "未配置Log日志")
+        # 初始化数据库连接
+        self.mysqlDB = mysql(configs=context.get("mysql")[configs.get("mysqlId")])
+        # 初始化tradeSystemID
+        self.tradeSystemID = tradeSystemID
+        # 初始化生成CSV文件路径
+        self.csv_path = context.get("csv")[configs.get("csv")]['path']
         self.__to_csv()
 
     def __to_csv(self):
-        mysqlDB = self.configs['db_instance']
+        mysqlDB = self.mysqlDB
         self.__data_to_csv("t_Account", mysqlDB)
         # siminfo.time and SettlementID = 1
         self.__data_to_csv("t_BaseReserveAccount", mysqlDB)
@@ -172,9 +181,9 @@ class future_to_csv:
     # 生成csv文件
     def __produce_csv(self, table_name, columns, csv_data):
         self.logger.info("%s%s%s" % ("开始生成 ", table_name, ".csv"))
-        path = "%s%s%s%s" % (self.configs['Path']['csv'], os.path.sep, table_name, '.csv')
-        if not os.path.exists(self.configs['Path']['csv']):
-            os.makedirs(self.configs['Path']['csv'])
+        path = "%s%s%s%s" % (str(self.csv_path), os.path.sep, table_name, '.csv')
+        if not os.path.exists(str(self.csv_path)):
+            os.makedirs(str(self.csv_path))
         with open(path, 'wb') as csvfile:
             if "quoting" in columns and columns['quoting']:
                 writer = csv.writer(csvfile, quoting=csv.QUOTE_ALL)
@@ -186,19 +195,7 @@ class future_to_csv:
 
 
 if __name__ == '__main__':
-    args = parse_args('-tradeSystemID')
-
-    if not args.tradeSystemID:
-        print "缺少参数 -tradeSystemID"
-        exit()
-
-    # 交易系统代码
-    tradeSystemID = args.tradeSystemID
-    # 读取参数文件
-    conf = load(args.conf)
-    # 建立mysql数据库连接
-    mysql_instance = mysql(configs=conf)
-    conf["db_instance"] = mysql_instance
-
+    base_dir, config_names, config_files = parse_conf_args(__file__, config_names=["mysql", "log", "csv"])
+    context, conf = Configuration.load(base_dir=base_dir, config_names=config_names, config_files=config_files)
     # 启动脚本
-    future_to_csv(tradeSystemID, conf)
+    future_to_csv(context=context, configs=conf)

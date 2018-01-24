@@ -26,10 +26,10 @@ class log:
         file_path = None
         file_level = logging.INFO
         # 读取配置
-        if configs is not None and "Log" in configs:
-            file_path = configs['Log']['file_path']
-            file_level = configs['Log']['file_level']
-            root_handler.setLevel(configs['Log']['console_level'])
+        if configs is not None:
+            file_path = configs['file_path']
+            file_level = configs['file_level']
+            root_handler.setLevel(configs['console_level'])
         logger = logging.getLogger(category)
         if not logger.handlers:
             # 设置全局日志级别
