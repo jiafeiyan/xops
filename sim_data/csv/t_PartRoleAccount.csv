@@ -1,0 +1,4 @@
+"TradingDay","SettlementGroupID","SettlementID","ParticipantID","TradingRole","AccountID"
+"20180123","SG01","1","0001","1","000101"
+"20180123","SG02","1","0002","1","000201"
+"20180123","SG07","1","0007","1","000701"

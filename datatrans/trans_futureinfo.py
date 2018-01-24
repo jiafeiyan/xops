@@ -90,12 +90,12 @@ class trans_futureinfo:
                                    DeliveryYear,DeliveryMonth,AdvanceMonth
                                )SELECT %s,t1.ProductID,t1.ProductGroupID,t1.ProductID,t1.ProductClass,
                                         %s,%s,%s,%s,%s,%s,%s,%s,%s,%s
-                                   FROM t_Product t1, t_ProductGroup t2
+                                   FROM siminfo.t_Product t1, siminfo.t_ProductGroup t2
                                    WHERE t1.SettlementGroupID = t2.SettlementGroupID
                                    AND t1.ProductGroupID = t2.ProductGroupID
                                    AND t2.CommodityID = %s AND t1.ProductClass = %s"""
         # 存在更新记录
-        sql_update_futures = """UPDATE t_Instrument
+        sql_update_futures = """UPDATE siminfo.t_Instrument
                                         SET InstrumentName=%s,VolumeMultiple=%s
                                         WHERE InstrumentID = %s
                                         AND SettlementGroupID = %s"""
@@ -157,7 +157,7 @@ class trans_futureinfo:
                                         CurrDelta,UpdateTime,UpdateMillisec,InstrumentID
                                    )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
         # 存在更新记录
-        sql_update_gjshq = """UPDATE t_MarketData 
+        sql_update_gjshq = """UPDATE siminfo.t_MarketData 
                                     SET OpenPrice = %s,
                                         HighestPrice = %s,
                                         LowestPrice = %s,
@@ -187,7 +187,7 @@ class trans_futureinfo:
         dbf_futures = []
         exist_futures = []
         sql_Property = " SELECT InstrumentID " + \
-                       " FROM t_InstrumentProperty " + \
+                       " FROM siminfo.t_InstrumentProperty " + \
                        " WHERE (InstrumentID,SettlementGroupID) in ("
         for future in dbf:
             dbf_futures.append(future['ZQDM'])
@@ -205,7 +205,7 @@ class trans_futureinfo:
         self.logger.info("%s%d%s" % ("future导入t_InstrumentProperty不存在：", len(inexist_futures), "条"))
 
         # 插入不存在记录
-        sql_Property = """INSERT INTO t_InstrumentProperty (
+        sql_Property = """INSERT INTO siminfo.t_InstrumentProperty (
                                          SettlementGroupID,CreateDate,OpenDate,ExpireDate,StartDelivDate,
                                          EndDelivDate,BasisPrice,MaxMarketOrderVolume,MinMarketOrderVolume,
                                          MaxLimitOrderVolume,MinLimitOrderVolume,PriceTick,
@@ -243,13 +243,13 @@ class trans_futureinfo:
         self.logger.info("%s%d%s" % ("future导入t_TradingSegmentAttr不存在：", len(inexist_segment), "个合约"))
 
         # 不存在插入记录
-        sql_insert_segment = """INSERT INTO t_TradingSegmentAttr (
+        sql_insert_segment = """INSERT INTO siminfo.t_TradingSegmentAttr (
                                     SettlementGroupID,TradingSegmentSN,
                                     TradingSegmentName,StartTime,
                                     InstrumentStatus,InstrumentID
                                 ) VALUES (%s,%s,%s,%s,%s,%s)"""
         # 存在更新记录
-        sql_update_segment = """UPDATE t_TradingSegmentAttr
+        sql_update_segment = """UPDATE siminfo.t_TradingSegmentAttr
                                     SET TradingSegmentName=%s,
                                      StartTime=%s,InstrumentStatus=%s
                                     WHERE SettlementGroupID=%s AND InstrumentID=%s AND TradingSegmentSN=%s"""
@@ -287,7 +287,7 @@ class trans_futureinfo:
             self.logger.error("t_MarginRate template is None")
             return
         sql_marginrate = " SELECT InstrumentID " + \
-                         " FROM t_MarginRate " + \
+                         " FROM siminfo.t_MarginRate " + \
                          " WHERE (SettlementGroupID, MarginCalcID, InstrumentID, ParticipantID) in ("
         for future in dbf:
             dbf_futures.append(future['ZQDM'])
@@ -310,7 +310,7 @@ class trans_futureinfo:
         self.logger.info("%s%d%s" % ("future导入t_MarginRate不存在：", len(inexist_rate), "个合约"))
 
         # 不存在插入记录
-        sql_insert_rate = """INSERT INTO t_MarginRate (
+        sql_insert_rate = """INSERT INTO siminfo.t_MarginRate (
                                        SettlementGroupID,
                                        MarginCalcID,
                                        InstrumentID,
@@ -336,7 +336,7 @@ class trans_futureinfo:
             self.logger.error("t_MarginRateDetail template is None")
             return
         sql_marginratedetail = " SELECT InstrumentID " + \
-                               " FROM t_MarginRateDetail " + \
+                               " FROM siminfo.t_MarginRateDetail " + \
                                " WHERE (SettlementGroupID, TradingRole, HedgeFlag, " \
                                " InstrumentID, ParticipantID, ClientID) in ("
         for future in dbf:
@@ -362,13 +362,13 @@ class trans_futureinfo:
         self.logger.info("%s%d%s" % ("future导入t_MarginRateDetail不存在：", len(inexist_detail), "个合约"))
 
         # 不存在插入记录
-        sql_insert_detail = """INSERT INTO t_MarginRateDetail (
+        sql_insert_detail = """INSERT INTO siminfo.t_MarginRateDetail (
                                         SettlementGroupID,TradingRole,HedgeFlag,
                                         ValueMode,LongMarginRatio,ShortMarginRatio,
                                         InstrumentID,ParticipantID,ClientID
                                     ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
         # 存在更新记录
-        sql_update_detail = """UPDATE t_MarginRateDetail
+        sql_update_detail = """UPDATE siminfo.t_MarginRateDetail
                                         SET ValueMode=%s,LongMarginRatio=%s,ShortMarginRatio=%s
                                         WHERE SettlementGroupID=%s AND TradingRole=%s AND HedgeFlag=%s
                                         AND InstrumentID=%s AND ParticipantID=%s AND ClientID=%s"""

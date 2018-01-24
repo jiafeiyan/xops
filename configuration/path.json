@@ -2,6 +2,7 @@
   "name" : "Path",
   "module" : {
     "initialize": "E:/GithubResponsity/my_python_util/initialization/data",
-    "template": "E:/GithubResponsity/my_python_util/initialization/template"
+    "template": "E:/GithubResponsity/my_python_util/initialization/template",
+    "csv": "E:/GithubResponsity/my_python_util/sim_data/csv"
   }
 }

@@ -4,7 +4,7 @@ import sys
 import datetime
 
 rootLogger = logging.getLogger()
-formatter = logging.Formatter('%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: '
+formatter = logging.Formatter('%(asctime)s [%(process)d-%(thread)d] - %(filename)s[line:%(lineno)d] - %(levelname)s: '
                               '%(message)s')
 if not rootLogger.handlers:
     root_handler = logging.StreamHandler(sys.stdout)

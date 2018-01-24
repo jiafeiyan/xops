@@ -68,6 +68,25 @@ class mysql:
             cursor.close()
             cnx.close()
 
+    # 传入多个sql和参数的集合，进行事物执行
+    # 数据结构 [dict(sql="", params=())]
+    def executetransaction(self, sqls_params):
+        cnx = self.get_cnx()
+        try:
+            cnx.start_transaction()
+            cursor = cnx.cursor()
+            for data in sqls_params:
+                if data['params'] is None:
+                    cursor.execute(data['sql'])
+                else:
+                    cursor.execute(data['sql'], data['params'])
+            cnx.commit()
+        except Exception as err:
+            self.logger.error(err)
+        finally:
+            cursor.close()
+            cnx.close()
+
     # 批量执行
     def executemany(self, sql, params):
         cnx = self.get_cnx()

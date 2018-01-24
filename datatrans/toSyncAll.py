@@ -1,13 +1,9 @@
 # -*- coding: UTF-8 -*-
 
-from utils import log
-from utils import parse_args
-from utils import load
-from utils import mysql
-
 """
 将siminfo数据同步到sync
 t_Account                     t_Account
+t_BaseReserveAccount          t_BaseReserveAccount
 t_BrokerSystem
 t_BrokerSystemSettlementGroup
 t_BusinessConfig              t_BusinessConfig
@@ -15,9 +11,9 @@ t_ClearingTradingPart         t_ClearingTradingPart
 t_ClientProductRight          t_ClientProductRight
 t_Exchange                    t_Exchange
 t_Instrument                  t_Instrument
-t_InstrumentProperty
-t_MarginRate
-t_MarginRateDetail
+t_InstrumentProperty          t_CurrInstrumentProperty
+t_MarginRate                  t_CurrMarginRate
+t_MarginRateDetail            t_CurrMarginRateDetail
 t_Market                      t_Market
 t_MarketData                  t_MarketData
 t_MarketProduct               t_MarketProduct
@@ -33,8 +29,14 @@ t_TradeSystem
 t_TradeSystemBrokerSystem     t_TradeSystemBrokerSystem
 t_TradeSystemSettlementGroup
 t_TradingAccount              t_TradingAccount
-t_TradingSegmentAttr
+t_TradingSegmentAttr          t_CurrTradingSegmentAttr
 """
+
+from utils import log
+from utils import parse_args
+from utils import load
+from utils import mysql
+
 
 class toSyncAll:
     def __init__(self, tradeSystem, configs):
@@ -46,8 +48,9 @@ class toSyncAll:
     def __convert_sync(self):
         mysqlDB = self.configs['db_instance']
 
-        # 同步数据
+        # 同步数据(存在数据先删除)
         self.__t_Account(mysqlDB)
+        self.__t_BaseReserveAccount(mysqlDB)
         self.__t_BusinessConfig(mysqlDB)
         self.__t_ClearingTradingPart(mysqlDB)
         self.__t_ClientProductRight(mysqlDB)
@@ -59,183 +62,337 @@ class toSyncAll:
         self.__t_MarketProductGroup(mysqlDB)
         self.__t_PartProductRight(mysqlDB)
         self.__t_PartProductRole(mysqlDB)
+        self.__t_PartRoleAccount(mysqlDB)
         self.__t_Participant(mysqlDB)
         self.__t_SettlementGroup(mysqlDB)
         self.__t_TradeSystemBrokerSystem(mysqlDB)
         self.__t_TradingAccount(mysqlDB)
 
+        self.__t_CurrInstrumentProperty(mysqlDB)
+        self.__t_CurrMarginRate(mysqlDB)
+        self.__t_CurrMarginRateDetail(mysqlDB)
+        self.__t_CurrTradingSegmentAttr(mysqlDB)
+
     def __t_Account(self, mysqlDB):
         table_name = "t_Account"
-        sql = """INSERT INTO sync.""" + table_name + """ SELECT %s,
+        self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
+        delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
+        self.logger.info("同步" + table_name + " ==>> sync")
+        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
                           t.SettlementGroupID, t.AccountID, t.ParticipantID, t.Currency
-                          FROM siminfo.""" + table_name + """ t 
-                          WHERE NOT EXISTS ( SELECT 1 FROM sync.""" + table_name + """ t1 
-                          WHERE t.SettlementGroupID = t1.SettlementGroupID 
-                          AND t.AccountID = t1.AccountID)"""
-        mysqlDB.execute(sql, (self.tradeSystemID,))
+                          FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
+                          WHERE t.SettlementGroupID = t2.SettlementGroupID
+                          AND t2.TradeSystemID=%s"""
+        trans = [dict(sql=delete, params=(self.tradeSystemID,)),
+                 dict(sql=sql, params=(self.tradeSystemID,))]
+        mysqlDB.executetransaction(trans)
+
+    def __t_BaseReserveAccount(self, mysqlDB):
+        table_name = "t_BaseReserveAccount"
+        self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
+        delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
+        self.logger.info("同步" + table_name + " ==>> sync")
+        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
+                           t.SettlementGroupID, t.ParticipantID, t.AccountID, t.Reserve
+                           FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
+                           WHERE t.SettlementGroupID = t2.SettlementGroupID 
+                           AND t2.TradeSystemID=%s"""
+        trans = [dict(sql=delete, params=(self.tradeSystemID,)),
+                 dict(sql=sql, params=(self.tradeSystemID,))]
+        mysqlDB.executetransaction(trans)
 
     def __t_BusinessConfig(self, mysqlDB):
         table_name = "t_BusinessConfig"
-        sql = """INSERT INTO sync.""" + table_name + """ SELECT %s, 
+        self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
+        delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
+        self.logger.info("同步" + table_name + " ==>> sync")
+        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
                         t.SettlementGroupID, t.FunctionCode, t.OperationType, t.Description
-                        FROM siminfo.""" + table_name + """ t 
-                        WHERE NOT EXISTS ( SELECT 1 FROM sync.""" + table_name + """ t1 
-                        WHERE t.SettlementGroupID = t1.SettlementGroupID 
-                        AND t.FunctionCode = t1.FunctionCode)"""
-        mysqlDB.execute(sql, (self.tradeSystemID,))
+                        FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
+                        WHERE t.SettlementGroupID = t2.SettlementGroupID 
+                        AND t2.TradeSystemID=%s"""
+        trans = [dict(sql=delete, params=(self.tradeSystemID,)),
+                 dict(sql=sql, params=(self.tradeSystemID,))]
+        mysqlDB.executetransaction(trans)
 
     def __t_ClearingTradingPart(self, mysqlDB):
         table_name = "t_ClearingTradingPart"
-        sql = """INSERT INTO sync.""" + table_name + """ SELECT %s, 
+        self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
+        delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
+        self.logger.info("同步" + table_name + " ==>> sync")
+        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
                         t.ClearingPartID, t.ParticipantID
-                        FROM siminfo.""" + table_name + """ t 
-                        WHERE NOT EXISTS ( SELECT 1 FROM sync.""" + table_name + """ t1 
-                        WHERE t.ClearingPartID = t1.ClearingPartID 
-                        AND t.ParticipantID = t1.ParticipantID)"""
-        mysqlDB.execute(sql, (self.tradeSystemID,))
+                        FROM siminfo.""" + table_name + """ t,siminfo.t_Participant t3,siminfo.t_TradeSystemSettlementGroup t2
+                        WHERE t.ParticipantID = t3.ParticipantID AND t3.SettlementGroupID = t2.SettlementGroupID 
+                        AND t2.TradeSystemID=%s"""
+        trans = [dict(sql=delete, params=(self.tradeSystemID,)),
+                 dict(sql=sql, params=(self.tradeSystemID,))]
+        mysqlDB.executetransaction(trans)
 
     def __t_ClientProductRight(self, mysqlDB):
         table_name = "t_ClientProductRight"
-        sql = """INSERT INTO sync.""" + table_name + """ SELECT %s, 
+        self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
+        delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
+        self.logger.info("同步" + table_name + " ==>> sync")
+        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID, 
                        t.SettlementGroupID, t.ProductID, t.ClientID, t.TradingRight
-                       FROM siminfo.""" + table_name + """ t 
-                       WHERE NOT EXISTS ( SELECT 1 FROM sync.""" + table_name + """ t1 
-                       WHERE t.SettlementGroupID = t1.SettlementGroupID 
-                       AND t.ProductID = t1.ProductID
-                       AND t.ClientID = t1.ClientID
-                       AND t.TradingRight = t1.TradingRight)"""
-        mysqlDB.execute(sql, (self.tradeSystemID,))
+                       FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
+                       WHERE t.SettlementGroupID = t2.SettlementGroupID 
+                       AND t2.TradeSystemID=%s"""
+        trans = [dict(sql=delete, params=(self.tradeSystemID,)),
+                 dict(sql=sql, params=(self.tradeSystemID,))]
+        mysqlDB.executetransaction(trans)
 
     def __t_Exchange(self, mysqlDB):
         table_name = "t_Exchange"
-        sql = """INSERT INTO sync.""" + table_name + """ SELECT %s, 
+        self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
+        delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
+        self.logger.info("同步" + table_name + " ==>> sync")
+        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID, 
                           t.ExchangeID, t.ExchangeName 
-                          FROM siminfo.""" + table_name + """ t 
-                          WHERE NOT EXISTS ( SELECT 1 FROM sync.""" + table_name + """ t1 
-                          WHERE t.ExchangeID = t1.ExchangeID)"""
-        mysqlDB.execute(sql, (self.tradeSystemID,))
+                          FROM siminfo.""" + table_name + """ t, siminfo.t_SettlementGroup t3,siminfo.t_TradeSystemSettlementGroup t2
+                          WHERE t.ExchangeID = t3.ExchangeID AND t3.SettlementGroupID = t2.SettlementGroupID
+                          AND t2.TradeSystemID=%s
+                          GROUP BY t2.TradeSystemID,t.ExchangeID,t.ExchangeName"""
+        trans = [dict(sql=delete, params=(self.tradeSystemID,)),
+                 dict(sql=sql, params=(self.tradeSystemID,))]
+        mysqlDB.executetransaction(trans)
 
     def __t_Instrument(self, mysqlDB):
         table_name = "t_Instrument"
-        sql = """INSERT INTO sync.""" + table_name + """ SELECT %s,
+        self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
+        delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
+        self.logger.info("同步" + table_name + " ==>> sync")
+        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
                       t.SettlementGroupID,t.ProductID,t.ProductGroupID,t.UnderlyingInstrID,
                       t.ProductClass,t.PositionType,t.StrikePrice,t.OptionsType,t.VolumeMultiple,
                       t.UnderlyingMultiple,t.InstrumentID,t.InstrumentName,
                       t.DeliveryYear,t.DeliveryMonth,t.AdvanceMonth,%s
-                      FROM siminfo.""" + table_name + """ t 
-                      WHERE NOT EXISTS ( SELECT 1 FROM sync.""" + table_name + """ t1 
-                      WHERE t.SettlementGroupID = t1.SettlementGroupID
-                      AND t.InstrumentID = t1.InstrumentID)"""
-        mysqlDB.execute(sql, (self.tradeSystemID, 1))
+                      FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
+                      WHERE t.SettlementGroupID = t2.SettlementGroupID 
+                      AND t2.TradeSystemID=%s"""
+        trans = [dict(sql=delete, params=(self.tradeSystemID,)),
+                 dict(sql=sql, params=(1, self.tradeSystemID))]
+        mysqlDB.executetransaction(trans)
 
     def __t_Market(self, mysqlDB):
         table_name = "t_Market"
-        sql = """INSERT INTO sync.""" + table_name + """ SELECT %s, 
+        self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
+        delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
+        self.logger.info("同步" + table_name + " ==>> sync")
+        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID, 
                               t.SettlementGroupID, t.MarketID, t.MarketName
-                              FROM siminfo.""" + table_name + """ t 
-                              WHERE NOT EXISTS ( SELECT 1 FROM sync.""" + table_name + """ t1 
-                              WHERE t.SettlementGroupID = t1.SettlementGroupID 
-                              AND t.MarketID = t1.MarketID)"""
-        mysqlDB.execute(sql, (self.tradeSystemID,))
+                              FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
+                              WHERE t.SettlementGroupID = t2.SettlementGroupID 
+                              AND t2.TradeSystemID=%s"""
+        trans = [dict(sql=delete, params=(self.tradeSystemID,)),
+                 dict(sql=sql, params=(self.tradeSystemID,))]
+        mysqlDB.executetransaction(trans)
 
     def __t_MarketData(self, mysqlDB):
         table_name = "t_MarketData"
-        sql = """INSERT INTO sync.""" + table_name + """ SELECT %s, 
+        self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
+        delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
+        self.logger.info("同步" + table_name + " ==>> sync")
+        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID, 
                               t.SettlementGroupID,t.LastPrice,t.PreSettlementPrice,t.PreClosePrice,t.PreOpenInterest,
                               t.OpenPrice,t.HighestPrice,t.LowestPrice,t.Volume,t.Turnover,t.OpenInterest,t.ClosePrice,
                               t.SettlementPrice,t.UpperLimitPrice,t.LowerLimitPrice,t.PreDelta,t.CurrDelta,
                               t.UpdateTime,t.UpdateMillisec,t.InstrumentID
-                              FROM siminfo.""" + table_name + """ t 
-                              WHERE NOT EXISTS ( SELECT 1 FROM sync.""" + table_name + """ t1 
-                              WHERE t.SettlementGroupID = t1.SettlementGroupID 
-                              AND t.InstrumentID = t1.InstrumentID)"""
-        mysqlDB.execute(sql, (self.tradeSystemID,))
+                              FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
+                              WHERE t.SettlementGroupID = t2.SettlementGroupID 
+                              AND t2.TradeSystemID=%s"""
+        trans = [dict(sql=delete, params=(self.tradeSystemID,)),
+                 dict(sql=sql, params=(self.tradeSystemID,))]
+        mysqlDB.executetransaction(trans)
 
     def __t_MarketProduct(self, mysqlDB):
         table_name = "t_MarketProduct"
-        sql = """INSERT INTO sync.""" + table_name + """ SELECT %s, 
+        self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
+        delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
+        self.logger.info("同步" + table_name + " ==>> sync")
+        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
                               t.SettlementGroupID,t.MarketID,t.ProductID
-                              FROM siminfo.""" + table_name + """ t 
-                              WHERE NOT EXISTS ( SELECT 1 FROM sync.""" + table_name + """ t1 
-                              WHERE t.SettlementGroupID = t1.SettlementGroupID 
-                              AND t.MarketID = t1.MarketID
-                              AND t.ProductID = t1.ProductID)"""
-        mysqlDB.execute(sql, (self.tradeSystemID,))
+                              FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
+                              WHERE t.SettlementGroupID = t2.SettlementGroupID
+                              AND t2.TradeSystemID=%s"""
+        trans = [dict(sql=delete, params=(self.tradeSystemID,)),
+                 dict(sql=sql, params=(self.tradeSystemID,))]
+        mysqlDB.executetransaction(trans)
 
     def __t_MarketProductGroup(self, mysqlDB):
         table_name = "t_MarketProductGroup"
-        sql = """INSERT INTO sync.""" + table_name + """ SELECT %s, 
+        self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
+        delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
+        self.logger.info("同步" + table_name + " ==>> sync")
+        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
                               t.SettlementGroupID,t.MarketID,t.ProductGroupID
-                              FROM siminfo.""" + table_name + """ t 
-                              WHERE NOT EXISTS ( SELECT 1 FROM sync.""" + table_name + """ t1 
-                              WHERE t.SettlementGroupID = t1.SettlementGroupID 
-                              AND t.MarketID = t1.MarketID
-                              AND t.ProductGroupID = t1.ProductGroupID)"""
-        mysqlDB.execute(sql, (self.tradeSystemID,))
+                              FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
+                              WHERE t.SettlementGroupID = t2.SettlementGroupID 
+                              AND t2.TradeSystemID=%s"""
+        trans = [dict(sql=delete, params=(self.tradeSystemID,)),
+                 dict(sql=sql, params=(self.tradeSystemID,))]
+        mysqlDB.executetransaction(trans)
 
     def __t_PartProductRight(self, mysqlDB):
         table_name = "t_PartProductRight"
-        sql = """INSERT INTO sync.""" + table_name + """ SELECT %s, 
+        self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
+        delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
+        self.logger.info("同步" + table_name + " ==>> sync")
+        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
                               t.SettlementGroupID,t.ProductID,t.ParticipantID,t.TradingRight
-                              FROM siminfo.""" + table_name + """ t 
-                              WHERE NOT EXISTS ( SELECT 1 FROM sync.""" + table_name + """ t1 
-                              WHERE t.SettlementGroupID = t1.SettlementGroupID 
-                              AND t.ProductID = t1.ProductID
-                              AND t.ParticipantID = t1.ParticipantID)"""
-        mysqlDB.execute(sql, (self.tradeSystemID,))
+                              FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
+                              WHERE t.SettlementGroupID = t2.SettlementGroupID 
+                              AND t2.TradeSystemID=%s"""
+        trans = [dict(sql=delete, params=(self.tradeSystemID,)),
+                 dict(sql=sql, params=(self.tradeSystemID,))]
+        mysqlDB.executetransaction(trans)
 
     def __t_PartProductRole(self, mysqlDB):
-            table_name = "t_PartProductRole"
-            sql = """INSERT INTO sync.""" + table_name + """ SELECT %s, 
-                                  t.SettlementGroupID,t.ParticipantID,t.ProductID,t.TradingRole
-                                  FROM siminfo.""" + table_name + """ t 
-                                  WHERE NOT EXISTS ( SELECT 1 FROM sync.""" + table_name + """ t1 
-                                  WHERE t.SettlementGroupID = t1.SettlementGroupID 
-                                  AND t.ParticipantID = t1.ParticipantID
-                                  AND t.ProductID = t1.ProductID
-                                  AND t.TradingRole = t1.TradingRole)"""
-            mysqlDB.execute(sql, (self.tradeSystemID,))
+        table_name = "t_PartProductRole"
+        self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
+        delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
+        self.logger.info("同步" + table_name + " ==>> sync")
+        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
+                              t.SettlementGroupID,t.ParticipantID,t.ProductID,t.TradingRole
+                              FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
+                              WHERE t.SettlementGroupID = t2.SettlementGroupID 
+                              AND t2.TradeSystemID=%s"""
+        trans = [dict(sql=delete, params=(self.tradeSystemID,)),
+                 dict(sql=sql, params=(self.tradeSystemID,))]
+        mysqlDB.executetransaction(trans)
+
+    def __t_PartRoleAccount(self, mysqlDB):
+        table_name = "t_PartRoleAccount"
+        self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
+        delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
+        self.logger.info("同步" + table_name + " ==>> sync")
+        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
+                              t.SettlementGroupID,t.ParticipantID,t.TradingRole,t.AccountID
+                              FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
+                              WHERE t.SettlementGroupID = t2.SettlementGroupID 
+                              AND t2.TradeSystemID=%s"""
+        trans = [dict(sql=delete, params=(self.tradeSystemID,)),
+                 dict(sql=sql, params=(self.tradeSystemID,))]
+        mysqlDB.executetransaction(trans)
 
     def __t_Participant(self, mysqlDB):
-            table_name = "t_Participant"
-            sql = """INSERT INTO sync.""" + table_name + """ SELECT %s, 
-                                  t.SettlementGroupID,t.ParticipantID,t.ParticipantName,t.ParticipantAbbr,
-                                  t.MemberType,t.IsActive
-                                  FROM siminfo.""" + table_name + """ t 
-                                  WHERE NOT EXISTS ( SELECT 1 FROM sync.""" + table_name + """ t1 
-                                  WHERE t.SettlementGroupID = t1.SettlementGroupID 
-                                  AND t.ParticipantID = t1.ParticipantID)"""
-            mysqlDB.execute(sql, (self.tradeSystemID,))
+        table_name = "t_Participant"
+        self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
+        delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
+        self.logger.info("同步" + table_name + " ==>> sync")
+        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
+                              t.SettlementGroupID,t.ParticipantID,t.ParticipantName,t.ParticipantAbbr,
+                              t.MemberType,t.IsActive
+                              FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
+                              WHERE t.SettlementGroupID = t2.SettlementGroupID 
+                              AND t2.TradeSystemID=%s"""
+        trans = [dict(sql=delete, params=(self.tradeSystemID,)),
+                 dict(sql=sql, params=(self.tradeSystemID,))]
+        mysqlDB.executetransaction(trans)
 
     def __t_SettlementGroup(self, mysqlDB):
-                table_name = "t_SettlementGroup"
-                sql = """INSERT INTO sync.""" + table_name + """ SELECT %s, 
-                                      t.SettlementGroupID,t.SettlementGroupName,t.ExchangeID,
-                                      t.SettlementGroupType,t.Currency
-                                      FROM siminfo.""" + table_name + """ t 
-                                      WHERE NOT EXISTS ( SELECT 1 FROM sync.""" + table_name + """ t1 
-                                      WHERE t.SettlementGroupID = t1.SettlementGroupID)"""
-                mysqlDB.execute(sql, (self.tradeSystemID,))
+        table_name = "t_SettlementGroup"
+        self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
+        delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
+        self.logger.info("同步" + table_name + " ==>> sync")
+        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
+                              t.SettlementGroupID,t.SettlementGroupName,t.ExchangeID,
+                              t.SettlementGroupType,t.Currency
+                              FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
+                              WHERE t.SettlementGroupID = t2.SettlementGroupID
+                              AND t2.TradeSystemID=%s"""
+        trans = [dict(sql=delete, params=(self.tradeSystemID,)),
+                 dict(sql=sql, params=(self.tradeSystemID,))]
+        mysqlDB.executetransaction(trans)
 
     def __t_TradeSystemBrokerSystem(self, mysqlDB):
-                table_name = "t_TradeSystemBrokerSystem"
-                sql = """INSERT INTO sync.""" + table_name + """ SELECT t.TradeSystemID,t.BrokerSystemID
-                                      FROM siminfo.""" + table_name + """ t 
-                                      WHERE NOT EXISTS ( SELECT 1 FROM sync.""" + table_name + """ t1 
-                                      WHERE t.TradeSystemID = t1.TradeSystemID
-                                      AND t.BrokerSystemID = t1.BrokerSystemID)"""
-                mysqlDB.execute(sql)
+        table_name = "t_TradeSystemBrokerSystem"
+        self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
+        delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
+        self.logger.info("同步" + table_name + " ==>> sync")
+        sql = """INSERT INTO sync.""" + table_name + """ SELECT t.TradeSystemID,t.BrokerSystemID
+                              FROM siminfo.""" + table_name + """ t
+                              WHERE  t.TradeSystemID=%s"""
+        trans = [dict(sql=delete, params=(self.tradeSystemID,)),
+                 dict(sql=sql, params=(self.tradeSystemID,))]
+        mysqlDB.executetransaction(trans)
 
     def __t_TradingAccount(self, mysqlDB):
-                table_name = "t_TradingAccount"
-                sql = """INSERT INTO sync.""" + table_name + """ SELECT %s, 
-                                      SettlementGroupID,PreBalance,CurrMargin,CloseProfit,Premium,Deposit,Withdraw,
-                                      Balance,Available,AccountID,FrozenMargin,FrozenPremium
-                                      FROM siminfo.""" + table_name + """ t 
-                                      WHERE NOT EXISTS ( SELECT 1 FROM sync.""" + table_name + """ t1 
-                                      WHERE t.SettlementGroupID = t1.SettlementGroupID
-                                      AND t.AccountID = t1.AccountID)"""
-                mysqlDB.execute(sql, (self.tradeSystemID,))
+        table_name = "t_TradingAccount"
+        self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
+        delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
+        self.logger.info("同步" + table_name + " ==>> sync")
+        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
+                              t.SettlementGroupID,PreBalance,CurrMargin,CloseProfit,Premium,Deposit,Withdraw,
+                              Balance,Available,AccountID,FrozenMargin,FrozenPremium
+                              FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
+                              WHERE t.SettlementGroupID = t2.SettlementGroupID 
+                              AND t2.TradeSystemID=%s"""
+        trans = [dict(sql=delete, params=(self.tradeSystemID,)),
+                 dict(sql=sql, params=(self.tradeSystemID,))]
+        mysqlDB.executetransaction(trans)
+
+    def __t_CurrInstrumentProperty(self, mysqlDB):
+        table_name = "InstrumentProperty"
+        self.logger.info("删除sync.t_CurrInstrumentProperty下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
+        delete = "DELETE FROM sync.t_Curr" + table_name + " WHERE TradeSystemID=%s"
+        self.logger.info("同步siminfo.t_InstrumentProperty ==>> sync.t_CurrInstrumentProperty")
+        sql = """INSERT INTO sync.t_Curr""" + table_name + """ SELECT t2.TradeSystemID,
+                              t.SettlementGroupID,CreateDate,OpenDate,ExpireDate,StartDelivDate,EndDelivDate,
+                                BasisPrice,MaxMarketOrderVolume,MinMarketOrderVolume,MaxLimitOrderVolume,
+                                MinLimitOrderVolume,PriceTick,AllowDelivPersonOpen,InstrumentID,InstLifePhase,%s
+                              FROM siminfo.t_""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
+                              WHERE t.SettlementGroupID = t2.SettlementGroupID 
+                              AND t2.TradeSystemID=%s"""
+        trans = [dict(sql=delete, params=(self.tradeSystemID,)),
+                 dict(sql=sql, params=(1, self.tradeSystemID))]
+        mysqlDB.executetransaction(trans)
+
+    def __t_CurrMarginRate(self, mysqlDB):
+        table_name = "MarginRate"
+        self.logger.info("删除sync.t_CurrMarginRate下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
+        delete = "DELETE FROM sync.t_Curr" + table_name + " WHERE TradeSystemID=%s"
+        self.logger.info("同步siminfo.t_MarginRate ==>> sync.t_CurrMarginRate")
+        sql = """INSERT INTO sync.t_Curr""" + table_name + """ SELECT t2.TradeSystemID,
+                              t.SettlementGroupID,MarginCalcID,InstrumentID,ParticipantID
+                              FROM siminfo.t_""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
+                              WHERE t.SettlementGroupID = t2.SettlementGroupID 
+                              AND t2.TradeSystemID=%s"""
+        trans = [dict(sql=delete, params=(self.tradeSystemID,)),
+                 dict(sql=sql, params=(self.tradeSystemID,))]
+        mysqlDB.executetransaction(trans)
+
+    def __t_CurrMarginRateDetail(self, mysqlDB):
+        table_name = "MarginRateDetail"
+        self.logger.info("删除sync.t_CurrMarginRateDetail下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
+        delete = "DELETE FROM sync.t_Curr" + table_name + " WHERE TradeSystemID=%s"
+        self.logger.info("同步siminfo.t_MarginRateDetail ==>> sync.t_CurrMarginRateDetail")
+        sql = """INSERT INTO sync.t_Curr""" + table_name + """ SELECT t2.TradeSystemID,
+                             t.SettlementGroupID,TradingRole,HedgeFlag,ValueMode,LongMarginRatio,
+                             ShortMarginRatio,InstrumentID,ParticipantID,ClientID
+                             FROM siminfo.t_""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
+                             WHERE t.SettlementGroupID = t2.SettlementGroupID 
+                             AND t2.TradeSystemID=%s"""
+        trans = [dict(sql=delete, params=(self.tradeSystemID,)),
+                 dict(sql=sql, params=(self.tradeSystemID,))]
+        mysqlDB.executetransaction(trans)
+
+    def __t_CurrTradingSegmentAttr(self, mysqlDB):
+        table_name = "TradingSegmentAttr"
+        self.logger.info("删除sync.t_CurrTradingSegmentAttr下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
+        delete = "DELETE FROM sync.t_Curr" + table_name + " WHERE TradeSystemID=%s"
+        self.logger.info("同步siminfo.t_TradingSegmentAttr ==>> sync.t_CurrTradingSegmentAttr")
+        sql = """INSERT INTO sync.t_Curr""" + table_name + """ SELECT t2.TradeSystemID, 
+                             t.SettlementGroupID,TradingSegmentSN,TradingSegmentName,
+                             StartTime,InstrumentStatus,InstrumentID
+                             FROM siminfo.t_""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
+                             WHERE t.SettlementGroupID = t2.SettlementGroupID
+                             AND t2.TradeSystemID=%s"""
+        trans = [dict(sql=delete, params=(self.tradeSystemID,)),
+                 dict(sql=sql, params=(self.tradeSystemID,))]
+        mysqlDB.executetransaction(trans)
+
 
 if __name__ == '__main__':
     args = parse_args('-tradeSystemID')

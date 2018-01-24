@@ -21,6 +21,7 @@ t_Account
 t_TradingAccount
 t_ClearingTradingPart
 t_TradeSystemBrokerSystem
+t_BaseReserveAccount
 """
 
 import json
@@ -58,7 +59,7 @@ class initScript:
         self.logger.info("%s%s%s%s%s" % ("配置文件初始化数据 ", tableName, " ==> 共", len(jsonData), "条"))
         if not len(jsonData) > 0:
             self.logger.error(tableName + "没有数据")
-        template_sql = 'INSERT INTO ' + tableName + ' VALUES ('
+        template_sql = 'INSERT INTO siminfo.' + tableName + ' VALUES ('
         for _ in jsonData[0]:
             template_sql = template_sql + "%s,"
         template_sql = template_sql[0:-1] + ")"
@@ -66,7 +67,7 @@ class initScript:
         for data in jsonData:
             sql_params.append(data)
         # 插入配置数据之前，先清空表
-        mysqlDB.execute("DELETE FROM " + tableName)
+        mysqlDB.execute("DELETE FROM siminfo." + tableName)
         # 插入数据
         mysqlDB.executemany(template_sql, sql_params)
 

@@ -50,7 +50,7 @@ class trans_stockinfo:
         self.__t_SecurityProfit(mysqlDB=mysqlDB, dbf=dbfs[1])
 
         # ===========判断并写入t_InstrumentProperty表(未更新)==============
-        self.__t_InstrumentProperty(mysql=mysqlDB, dbf=dbfs[0])
+        self.__t_InstrumentProperty(mysqlDB=mysqlDB, dbf=dbfs[0])
 
     # 读取处理PAR_STOCK文件
     def __t_Instrument(self, mysqlDB, dbf):
@@ -88,7 +88,7 @@ class trans_stockinfo:
                                    DeliveryYear,DeliveryMonth,AdvanceMonth
                                )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
         # 存在更新记录
-        sql_update_Instrument = """UPDATE t_Instrument
+        sql_update_Instrument = """UPDATE siminfo.t_Instrument
                                        SET InstrumentName = %s
                                        WHERE InstrumentID = %s
                                        AND SettlementGroupID = %s"""
@@ -155,7 +155,7 @@ class trans_stockinfo:
                                    AfterRate,Price
                                )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
         # 存在更新记录
-        sql_update_qy_info = """UPDATE t_SecurityProfit
+        sql_update_qy_info = """UPDATE siminfo.t_SecurityProfit
                                    SET DJDate=%s,CQDate=%s,EndDate=%s,
                                    DZDate=%s,BeforeRate=%s,
                                    AfterRate=%s,Price=%s
@@ -186,7 +186,7 @@ class trans_stockinfo:
         dbf_stock = []
         exist_stock = []
         sql_Property = " SELECT InstrumentID " + \
-                       " FROM t_InstrumentProperty " + \
+                       " FROM siminfo.t_InstrumentProperty " + \
                        " WHERE (InstrumentID, SettlementGroupID) in ("
         for stock in dbf:
             dbf_stock.append(stock['ZQDM'])
@@ -205,7 +205,7 @@ class trans_stockinfo:
         self.logger.info("%s%d%s" % ("stock导入t_InstrumentProperty不存在：", len(inexist_stock), "条"))
 
         # 插入不存在记录
-        sql_Property = """INSERT INTO t_InstrumentProperty (
+        sql_Property = """INSERT INTO siminfo.t_InstrumentProperty (
                                       SettlementGroupID,CreateDate,OpenDate,ExpireDate,StartDelivDate,
                                       EndDelivDate,BasisPrice,MaxMarketOrderVolume,MinMarketOrderVolume,
                                       MaxLimitOrderVolume,MinLimitOrderVolume,PriceTick,
@@ -243,13 +243,13 @@ class trans_stockinfo:
         self.logger.info("%s%d%s" % ("stock导入t_TradingSegmentAttr不存在：", len(inexist_segment), "个合约"))
 
         # 不存在插入记录
-        sql_insert_segment = """INSERT INTO t_TradingSegmentAttr (
+        sql_insert_segment = """INSERT INTO siminfo.t_TradingSegmentAttr (
                                         SettlementGroupID,TradingSegmentSN,
                                         TradingSegmentName,StartTime,
                                         InstrumentStatus,InstrumentID
                                     ) VALUES (%s,%s,%s,%s,%s,%s)"""
         # 存在更新记录
-        sql_update_segment = """UPDATE t_TradingSegmentAttr
+        sql_update_segment = """UPDATE siminfo.t_TradingSegmentAttr
                                         SET TradingSegmentName=%s,
                                          StartTime=%s,InstrumentStatus=%s
                                         WHERE SettlementGroupID=%s AND InstrumentID=%s AND TradingSegmentSN=%s"""
@@ -287,7 +287,7 @@ class trans_stockinfo:
             self.logger.error("t_MarginRate template is None")
             return
         sql_marginrate = " SELECT InstrumentID " + \
-                         " FROM t_MarginRate " + \
+                         " FROM siminfo.t_MarginRate " + \
                          " WHERE (SettlementGroupID, MarginCalcID, InstrumentID, ParticipantID) in ("
         for stock in dbf:
             dbf_stock.append(stock['ZQDM'])
@@ -334,7 +334,7 @@ class trans_stockinfo:
             self.logger.error("t_MarginRateDetail template is None")
             return
         sql_marginratedetail = " SELECT InstrumentID " + \
-                               " FROM t_MarginRateDetail " + \
+                               " FROM siminfo.t_MarginRateDetail " + \
                                " WHERE (SettlementGroupID, TradingRole, HedgeFlag, " \
                                " InstrumentID, ParticipantID, ClientID) in ("
         for stock in dbf:
@@ -359,13 +359,13 @@ class trans_stockinfo:
         self.logger.info("%s%d%s" % ("stock导入t_MarginRateDetail不存在：", len(inexist_detail), "个合约"))
 
         # 不存在插入记录
-        sql_insert_detail = """INSERT INTO t_MarginRateDetail (
+        sql_insert_detail = """INSERT INTO siminfo.t_MarginRateDetail (
                                 SettlementGroupID,TradingRole,HedgeFlag,
                                 ValueMode,LongMarginRatio,ShortMarginRatio,
                                 InstrumentID,ParticipantID,ClientID
                             ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
         # 存在更新记录
-        sql_update_detail = """UPDATE t_MarginRateDetail
+        sql_update_detail = """UPDATE siminfo.t_MarginRateDetail
                                 SET ValueMode=%s,LongMarginRatio=%s,ShortMarginRatio=%s
                                 WHERE SettlementGroupID=%s AND TradingRole=%s AND HedgeFlag=%s
                                 AND InstrumentID=%s AND ParticipantID=%s AND ClientID=%s"""

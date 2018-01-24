@@ -5,6 +5,8 @@ from utils import load
 from utils import mysql
 from datatrans import trans_stockinfo
 from datatrans import trans_futureinfo
+from datatrans import trans_etfinfo
+from datatrans import toSyncAll
 from initialization import initScript
 
 if __name__ == '__main__':
@@ -13,7 +15,7 @@ if __name__ == '__main__':
     # 读取参数文件
     conf = load(args.conf)
 
-    # 建立mysql数据库连接
+    # 建立mysql数据库连接池
     mysql_instance = mysql(configs=conf)
     conf["db_instance"] = mysql_instance
 
@@ -24,3 +26,8 @@ if __name__ == '__main__':
     trans_stockinfo(conf)
     # 启动future脚本
     trans_futureinfo(conf)
+    # 启动etf脚本
+    trans_etfinfo(conf)
+
+    # 同步sync数据
+    toSyncAll('0001', conf)
