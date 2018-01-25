@@ -1,4 +1,5 @@
 {
   "mysqlId": "simplatform_base",
-  "logId": "default"
+  "logId": "default",
+  "initId": "init_base"
 }

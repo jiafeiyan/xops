@@ -28,20 +28,27 @@ import json
 import os
 
 from utils import log
-from utils import parse_args
-from utils import load
+from utils import parse_conf_args
+from utils import Configuration
 from utils import mysql
 
 class initScript:
-    def __init__(self, configs):
-        self.logger = log.get_logger(category="initScript", configs=configs)
-        self.configs = configs
+    def __init__(self, context, configs):
+        log_conf = None if context.get("log") is None else context.get("log").get(configs.get("logId"))
+        # 初始化日志
+        self.logger = log.get_logger(category="initScript", configs=log_conf)
+        if log_conf is None:
+            self.logger.warning("initScript未配置Log日志")
+        # 初始化数据库连接
+        self.mysqlDB = mysql(configs=context.get("mysql")[configs.get("mysqlId")])
+        # 初始化模板路径
+        self.initTemplate = context.get("init")[configs.get("initId")]
         self.__load()
 
     def __load(self):
         self.logger.info("============== loading init data ==============")
-        mysqlDB = self.configs['db_instance']
-        path = self.configs['Path']['initialize']
+        mysqlDB = self.mysqlDB
+        path = self.initTemplate['initTable']
         if os.path.exists(path):
             for fileName in os.listdir(path):
                 fileName = fileName[:fileName.rfind('.')]
@@ -73,14 +80,7 @@ class initScript:
 
 
 if __name__ == '__main__':
-    args = parse_args()
-
-    # 读取参数文件
-    conf = load(args.conf)
-
-    # 建立mysql数据库连接
-    mysql_instance = mysql(configs=conf)
-    conf["db_instance"] = mysql_instance
-
+    base_dir, config_names, config_files = parse_conf_args(__file__, config_names=["mysql", "init"])
+    context, conf = Configuration.load(base_dir=base_dir, config_names=config_names, config_files=config_files)
     # 初始化脚本数据
-    initScript(conf)
+    initScript(context=context, configs=conf)

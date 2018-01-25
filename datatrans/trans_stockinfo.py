@@ -4,19 +4,26 @@ import os
 import datetime
 import json
 
-from utils import parse_args
-from utils import load
+from utils import parse_conf_args
+from utils import Configuration
 from utils import mysql
 from utils import log
 from dbfread import DBF
 
 
 class trans_stockinfo:
-    def __init__(self, configs):
-        self.logger = log.get_logger(category="trans_stock", configs=configs)
+    def __init__(self, context, configs):
+        log_conf = None if context.get("log") is None else context.get("log").get(configs.get("logId"))
+        # 初始化日志
+        self.logger = log.get_logger(category="trans_stock", configs=log_conf)
+        if log_conf is None:
+            self.logger.warning("trans_stock未配置Log日志")
+        # 初始化数据库连接
+        self.mysqlDB = mysql(configs=context.get("mysql")[configs.get("mysqlId")])
+        # 初始化模板路径
+        self.initTemplate = context.get("init")[configs.get("initId")]
         self.stock_filename = "PAR_STOCK"
         self.qy_info_filename = "PAR_QY_INFO"
-
         # 结算组ID和交易所对应关系
         self.self_conf = {
             "1": "SG01",
@@ -24,7 +31,6 @@ class trans_stockinfo:
             "3": "SG99",
             "4": "SG98"
         }
-        self.configs = configs
         self.__transform()
 
     def __transform(self):
@@ -33,18 +39,18 @@ class trans_stockinfo:
         if dbfs is None:
             return
 
-        mysqlDB = self.configs['db_instance']
+        mysqlDB = self.mysqlDB
         # ===========处理stock_dbf写入t_Instrument表==============
         self.__t_Instrument(mysqlDB=mysqlDB, dbf=dbfs[0])
 
         # ===========处理stock_dbf写入t_TradingSegmentAttr表==============
-        self.__t_TradingSegmentAttr(mysqlDB=mysqlDB, dbf=dbfs[0], config=self.configs)
+        self.__t_TradingSegmentAttr(mysqlDB=mysqlDB, dbf=dbfs[0])
 
         # ===========处理stock_dbf写入t_MarginRate表(未更新)==============
-        self.__t_MarginRate(mysqlDB=mysqlDB, dbf=dbfs[0], config=self.configs)
+        self.__t_MarginRate(mysqlDB=mysqlDB, dbf=dbfs[0])
 
         # ===========处理stock_dbf写入t_MarginRateDetail表==============
-        self.__t_MarginRateDetail(mysqlDB=mysqlDB, dbf=dbfs[0], config=self.configs)
+        self.__t_MarginRateDetail(mysqlDB=mysqlDB, dbf=dbfs[0])
 
         # ===========处理info_dbf写入t_SecurityProfit表===========
         self.__t_SecurityProfit(mysqlDB=mysqlDB, dbf=dbfs[1])
@@ -220,7 +226,7 @@ class trans_stockinfo:
         mysqlDB.executemany(sql_Property, sql_params)
 
     # 写入t_TradingSegmentAttr
-    def __t_TradingSegmentAttr(self, mysqlDB, dbf, config):
+    def __t_TradingSegmentAttr(self, mysqlDB, dbf):
         # 判断合约是否已存在
         dbf_stock = []
         exist_segment = []
@@ -255,7 +261,7 @@ class trans_stockinfo:
                                         WHERE SettlementGroupID=%s AND InstrumentID=%s AND TradingSegmentSN=%s"""
         sql_insert_params = []
         sql_update_params = []
-        SegmentAttr = self.__loadJSON(tableName='t_TradingSegmentAttr', config=config)
+        SegmentAttr = self.__loadJSON(tableName='t_TradingSegmentAttr')
         if SegmentAttr is None:
             return
         for stock in dbf:
@@ -277,12 +283,12 @@ class trans_stockinfo:
         mysqlDB.executemany(sql_update_segment, sql_update_params)
 
     # 写入t_MarginRate
-    def __t_MarginRate(self, mysqlDB, dbf, config):
+    def __t_MarginRate(self, mysqlDB, dbf):
         # 判断合约是否存在
         dbf_stock = []
         exist_rate = []
         # 获取模板文件
-        template = self.__loadJSON(tableName='t_MarginRate', config=config)
+        template = self.__loadJSON(tableName='t_MarginRate')
         if template is None:
             self.logger.error("t_MarginRate template is None")
             return
@@ -324,12 +330,12 @@ class trans_stockinfo:
         mysqlDB.executemany(sql_insert_rate, sql_insert_params)
 
     # 写入t_MarginRateDetail
-    def __t_MarginRateDetail(self, mysqlDB, dbf, config):
+    def __t_MarginRateDetail(self, mysqlDB, dbf):
         # 判断合约是否存在
         dbf_stock = []
         exist_detail = []
         # 获取模板文件
-        template = self.__loadJSON(tableName='t_MarginRateDetail', config=config)
+        template = self.__loadJSON(tableName='t_MarginRateDetail')
         if template is None:
             self.logger.error("t_MarginRateDetail template is None")
             return
@@ -421,8 +427,8 @@ class trans_stockinfo:
         return stock.records, info.records
 
     # 主要读取template数据
-    def __loadJSON(self, tableName, config):
-        path = "%s%s%s%s" % (config['Path']['template'], os.path.sep, tableName, ".json")
+    def __loadJSON(self, tableName):
+        path = "%s%s%s%s" % (self.initTemplate['initTemplate'], os.path.sep, tableName, ".json")
         if not os.path.exists(path):
             self.logger.error("文件" + tableName + ".json不存在")
             return None
@@ -431,14 +437,7 @@ class trans_stockinfo:
 
 
 if __name__ == '__main__':
-    args = parse_args()
-
-    # 读取参数文件
-    conf = load(args.conf)
-
-    # 建立mysql数据库连接
-    mysql_instance = mysql(configs=conf)
-    conf["db_instance"] = mysql_instance
-
+    base_dir, config_names, config_files = parse_conf_args(__file__, config_names=["mysql", "init"])
+    context, conf = Configuration.load(base_dir=base_dir, config_names=config_names, config_files=config_files)
     # 启动stock脚本
-    trans_stockinfo(conf)
+    trans_stockinfo(context=context, configs=conf)

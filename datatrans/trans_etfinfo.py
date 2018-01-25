@@ -17,7 +17,7 @@ class trans_etfinfo:
         # 初始化日志
         self.logger = log.get_logger(category="trans_future", configs=log_conf)
         if log_conf is None:
-            self.logger.warning(__file__ + "未配置Log日志")
+            self.logger.warning("trans_etfinfo未配置Log日志")
         # 初始化数据库连接
         self.mysqlDB = mysql(configs=context.get("mysql")[configs.get("mysqlId")])
         # 初始化模板路径
@@ -304,5 +304,5 @@ class trans_etfinfo:
 if __name__ == '__main__':
     base_dir, config_names, config_files = parse_conf_args(__file__, config_names=["mysql", "init"])
     context, conf = Configuration.load(base_dir=base_dir, config_names=config_names, config_files=config_files)
-    # 启动future脚本
+    # 启动etf脚本
     trans_etfinfo(context=context, configs=conf)

@@ -45,7 +45,7 @@ class toSyncAll:
         # 初始化日志
         self.logger = log.get_logger(category="toSyncAll", configs=log_conf)
         if log_conf is None:
-            self.logger.warning(__file__ + "未配置Log日志")
+            self.logger.warning("toSyncAll未配置Log日志")
         # 初始化数据库连接
         self.mysqlDB = mysql(configs=context.get("mysql")[configs.get("mysqlId")])
         # 初始化tradeSystemID
