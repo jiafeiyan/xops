@@ -52,7 +52,7 @@ class future_to_csv:
         # 初始化日志
         self.logger = log.get_logger(category="future_to_csv", configs=log_conf)
         if log_conf is None:
-            self.logger.warning(__file__ + "未配置Log日志")
+            self.logger.warning("future_to_csv未配置Log日志")
         # 初始化数据库连接
         self.mysqlDB = mysql(configs=context.get("mysql")[configs.get("mysqlId")])
         # 初始化tradeSystemID
@@ -310,6 +310,7 @@ class future_to_csv:
     def __produce_csv(self, table_name, columns, csv_data):
         self.logger.info("%s%s%s" % ("开始生成 ", table_name, ".csv"))
         path = "%s%s%s%s" % (str(self.csv_path), os.path.sep, table_name, '.csv')
+        # 如果不存在目录则先创建
         if not os.path.exists(str(self.csv_path)):
             os.makedirs(str(self.csv_path))
         with open(path, 'wb') as csvfile:

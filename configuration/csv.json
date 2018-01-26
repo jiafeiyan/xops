@@ -1,5 +1,6 @@
 {
   "csv_base": {
-    "path": "E:/GithubResponsity/my_python_util/sim_data/csv"
+    "path": "E:/GithubResponsity/my_python_util/sim_data/csv",
+    "counter": "E:/GithubResponsity/my_python_util/sim_data/counter"
   }
 }
