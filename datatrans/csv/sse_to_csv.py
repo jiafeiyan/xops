@@ -34,6 +34,7 @@ class sse_to_csv:
         self.__data_to_csv("BUProxy", mysqlDB)
         self.__data_to_csv("ExchangeTradingDay", mysqlDB)
         self.__data_to_csv("Investor", mysqlDB)
+        self.__data_to_csv("SSEMarketData", mysqlDB)
         self.__data_to_csv("SSEBusinessUnitAccount", mysqlDB)
         self.__data_to_csv("SSEPosition", mysqlDB)
         self.__data_to_csv("SSEShareholderAccount", mysqlDB)
@@ -69,6 +70,35 @@ class sse_to_csv:
                                 '' AS CloseDate,'1' AS STATUS,'' AS Contacter,'' AS Fax,'' AS Telephone,'' AS Email,
                                 '' AS Address,'' AS ZipCode,'' AS InnerBranchID,'' AS Operways
                                 FROM siminfo.t_Investor"""),
+            SSEMarketData=dict(columns=("TradingDay", "SecurityID", "ExchangeID", "SecurityName", "PreClosePrice",
+                                        "OpenPrice", "Volume", "Turnover", "TradingCount", "LastPrice", "HighestPrice",
+                                        "LowestPrice", "BidPrice1", "AskPrice1", "UpperLimitPrice", "LowerLimitPrice",
+                                        "PERatio1", "PERatio2", "PriceUpDown1", "PriceUpDown2", "OpenInterest",
+                                        "BidVolume1", "AskVolume1", "BidPrice2", "BidVolume2", "AskPrice2",
+                                        "AskVolume2", "BidPrice3", "BidVolume3", "AskPrice3", "AskVolume3",
+                                        "BidPrice4", "BidVolume4", "AskPrice4", "AskVolume4", "BidPrice5", "BidVolume5",
+                                        "AskPrice5", "AskVolume5", "UpdateTime", "UpdateMillisec"),
+                               sql="""SELECT t.TradingDay AS TradingDay,t.InstrumentID AS SecurityID,
+                                                t1.ExchangeID AS ExchangeID,t2.InstrumentName AS SecurityName,
+                                                t.PreClosePrice AS PreClosePrice,t.OpenPrice AS OpenPrice,
+                                                t.Volume AS Volume,t.Turnover AS Turnover,"0" AS TradingCount,
+                                                t.LastPrice AS LastPrice,t.HighestPrice AS HighestPrice,
+                                                t.LowestPrice AS LowestPrice,'0' AS BidPrice1,'0' AS AskPrice1,
+                                                t.UpperLimitPrice AS UpperLimitPrice,t.LowerLimitPrice AS LowerLimitPrice,
+                                                '0' AS PERatio1,'0' AS PERatio2,'0' AS PriceUpDown1,'0' AS PriceUpDown2,
+                                                t.OpenInterest AS OpenInterest,'0' AS BidVolume1,'0' AS AskVolume1,
+                                                '0' AS BidPrice2,'0' AS BidVolume2,'0' AS AskPrice2,'0' AS AskVolume2,
+                                                '0' AS BidPrice3,'0' AS BidVolume3,'0' AS AskPrice3,'0' AS AskVolume3,
+                                                '0' AS BidPrice4,'0' AS BidVolume4,'0' AS AskPrice4,'0' AS AskVolume4,
+                                                '0' AS BidPrice5,'0' AS BidVolume5,'0' AS AskPrice5,'0' AS AskVolume5,
+                                                t.UpdateTime AS UpdateTime,t.UpdateMillisec AS UpdateMillisec
+                                            FROM siminfo.t_MarketData t,siminfo.t_SettlementGroup t1,
+                                                  siminfo.t_Instrument t2
+                                            WHERE t.SettlementGroupID = t1.SettlementGroupID
+                                            AND t.SettlementGroupID = t2.SettlementGroupID
+                                            AND t.InstrumentID = t2.InstrumentID
+                                            AND t.SettlementGroupID = %s""",
+                               params=(self.settlementGroupID,)),
             SSEBusinessUnitAccount=dict(columns=("InvestorID", "BusinessUnitID", "ExchangeID", "MarketID",
                                                  "ShareholderID", "TradingCodeClass", "ProductID", "AccountID",
                                                  "CurrencyID", "UserID"),
