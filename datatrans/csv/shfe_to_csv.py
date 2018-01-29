@@ -30,7 +30,7 @@ class shfe_to_csv:
 
     def __to_csv(self):
         mysqlDB = self.mysqlDB
-        self.__data_to_csv("ShfeInstrumentMarginRate", mysqlDB)
+        self.__data_to_csv("ShfeInstrument", mysqlDB)
         self.__data_to_csv("InvestorTradingUser", mysqlDB)
         self.__data_to_csv("MaxMarginProductGroup", mysqlDB)
         self.__data_to_csv("PartBroker", mysqlDB)
@@ -41,15 +41,32 @@ class shfe_to_csv:
 
     def __data_to_csv(self, csv_name, mysqlDB):
         table_sqls = dict(
-            ShfeInstrumentMarginRate=dict(columns=("ExchangeID", "InstrumentID", "InvestorRange", "BrokerID",
-                                                   "InvestorID", "InvestUnitID", "HedgeFlag", "LongMarginRatioByMoney",
-                                                   "LongMarginRatioByVolume", "ShortMarginRatioByMoney",
-                                                   "ShortMarginRatioByVolume"),
-                                          sql="""SELECT '0001' AS BrokerID,t.InvestorID AS InvestorID,
-                                                    t.InvestorID AS InvestUnitID,t.InvestorID AS UserID
-                                                FROM siminfo.t_InvestorClient t
-                                                WHERE t.SettlementGroupID = %s""",
-                                          params=(self.settlementGroupID,)),
+            ShfeInstrument=dict(columns=("InstrumentID", "ExchangeID", "InstrumentName", "ExchangeInstID", "ProductID",
+                                         "ProductClass", "DeliveryYear", "DeliveryMonth", "MaxMarketOrderVolume",
+                                         "MinMarketOrderVolume", "MaxLimitOrderVolume", "MinLimitOrderVolume",
+                                         "VolumeMultiple", "PriceTick", "CreateDate", "OpenDate", "ExpireDate",
+                                         "StartDelivDate", "EndDelivDate", "InstLifePhase", "IsTrading", "PositionMode",
+                                         "PositionDateMode", "LongMarginRatio", "ShortMarginRatio",
+                                         "MaxMarginSideAlgorithm", "UnderlyingInstrID", "StrikePrice", "OptionsType",
+                                         "UnderlyingMultiple", "CombinationType"),
+                                sql="""SELECT t.InstrumentID,t2.ExchangeID,t.InstrumentName,
+                                            t.InstrumentID as ExchangeInstID,t.ProductID,t.ProductClass,t.DeliveryYear,
+                                            t.DeliveryMonth,t1.MaxMarketOrderVolume,t1.MinMarketOrderVolume,
+                                            t1.MaxLimitOrderVolume,t1.MinLimitOrderVolume,t.VolumeMultiple,t1.PriceTick,
+                                            t1.CreateDate,t1.OpenDate,t1.ExpireDate,t1.StartDelivDate,t1.EndDelivDate,
+                                            t1.InstLifePhase,'1' as IsTrading,'1' as PositionMode,
+                                            '1' as PositionDateMode,t3.LongMarginRatio,t3.ShortMarginRatio,
+                                            '' as MaxMarginSideAlgorithm,t.UnderlyingInstrID,t.StrikePrice,
+                                            t.OptionsType,t.UnderlyingMultiple,'' as CombinationType
+                                        FROM t_Instrument t,t_InstrumentProperty t1,t_SettlementGroup t2,
+                                            t_MarginRateDetail t3
+                                        WHERE t.SettlementGroupID = t1.SettlementGroupID
+                                        AND t.SettlementGroupID = t2.SettlementGroupID
+                                        AND t.SettlementGroupID = t3.SettlementGroupID
+                                        AND t.InstrumentID = t3.InstrumentID
+                                        AND t.InstrumentID = t1.InstrumentID
+                                        AND t.SettlementGroupID = %s""",
+                                params=(self.settlementGroupID,)),
             InvestorTradingUser=dict(columns=("BrokerID", "InvestorID", "InvestUnitID", "UserID"),
                                      sql="""SELECT '0001' AS BrokerID,t.InvestorID AS InvestorID,
                                                     t.InvestorID AS InvestUnitID,t.InvestorID AS UserID

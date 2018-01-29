@@ -142,7 +142,7 @@ class sse_to_csv:
                                                     t1.ExchangeID AS ExchangeID,t2.MarketID AS MarketID,
                                                     t.ClientID AS ShareholderID,'a' AS TradingCodeClass,
                                                     '0' AS ProductID,t.InvestorID AS AccountID,
-                                                    'CNY' AS CurrencyID,t3.UserID
+                                                    t1.Currency AS CurrencyID,t3.UserID
                                                 FROM siminfo.t_InvestorClient t,siminfo.t_SettlementGroup t1,
                                                     siminfo.t_Market t2,siminfo.t_User t3
                                                 WHERE t.SettlementGroupID = t1.SettlementGroupID
@@ -161,10 +161,10 @@ class sse_to_csv:
                                         t3.ExchangeID AS ExchangeID,t.InstrumentID AS SecurityID,'1000000' AS HistoryPos,
                                         '0' AS HistoryPosFrozen,'0' AS TodayBSPos,'0' AS TodayBSPosFrozen,
                                         '0' AS TodayPRPos,'0' AS TodayPRPosFrozen,'0' AS TodaySMPos,
-                                        '0' AS TodaySMPosFrozen,'0' AS HistoryPosCost,'0' AS TotalPosCost,
-                                        '0' AS MarginBuyPos,'0' AS ShortSellPos,'0' AS TodayShortSellPos,
-                                        '1000000' AS PrePosition,'1000000' AS AvailablePosition,
-                                        '1000000' AS CurrentPosition
+                                        '0' AS TodaySMPosFrozen,t.YdPositionCost AS HistoryPosCost,
+                                        t.YdPositionCost AS TotalPosCost,'0' AS MarginBuyPos,'0' AS ShortSellPos,
+                                        '0' AS TodayShortSellPos,t.YdPosition AS PrePosition,
+                                        t.YdPosition AS AvailablePosition,t.YdPosition AS CurrentPosition
                                     FROM siminfo.t_ClientPosition t,siminfo.t_InvestorClient t1,
                                          siminfo.t_Market t2,siminfo.t_SettlementGroup t3
                                     WHERE t.ClientID = t1.ClientID
@@ -188,15 +188,17 @@ class sse_to_csv:
                                          "FetchLimit", "Deposit", "Withdraw", "FrozenMargin", "FrozenCash",
                                          "FrozenCommission", "CurrMargin", "Commission", "RoyaltyIn", "RoyaltyOut",
                                          "AccountOwner", "DepartmentID"),
-                                sql="""SELECT InvestorID AS AccountID,'CNY' AS CurrencyID,'1' AS AccountType,
-                                            Available AS PreDeposit,Available AS UsefulMoney,Available AS FetchLimit,
-                                            '0' AS Deposit,'0' AS Withdraw,'0' AS FrozenMargin,'0' AS FrozenCash,
-                                            '0' AS FrozenCommission,'0' AS CurrMargin,'0' AS Commission,
-                                            '0' AS RoyaltyIn,'0' AS RoyaltyOut,InvestorID AS AccountOwner,
-                                            '0001' AS DepartmentID 
-                                            FROM siminfo.t_InvestorFund t,siminfo.t_BrokerSystemSettlementGroup t1
-                                            WHERE t.BrokerSystemID = t1.BrokerSystemID
-                                            AND t1.SettlementGroupID = %s""",
+                                sql="""SELECT t.InvestorID AS AccountID,t2.Currency AS CurrencyID,'1' AS AccountType,
+                                            t.Available AS PreDeposit,t.Available AS UsefulMoney,
+                                            t.Available AS FetchLimit,t.Deposit AS Deposit,t.Withdraw AS Withdraw,
+                                            '0' AS FrozenMargin,'0' AS FrozenCash,'0' AS FrozenCommission,
+                                            '0' AS CurrMargin,'0' AS Commission,'0' AS RoyaltyIn,'0' AS RoyaltyOut,
+                                            t.InvestorID AS AccountOwner,'0001' AS DepartmentID
+                                        FROM siminfo.t_InvestorFund t,siminfo.t_BrokerSystemSettlementGroup t1,
+                                            siminfo.t_SettlementGroup t2
+                                        WHERE t.BrokerSystemID = t1.BrokerSystemID
+                                        AND t1.SettlementGroupID = t2.SettlementGroupID
+                                        AND t1.SettlementGroupID = %s""",
                                 params=(self.settlementGroupID,)),
             TradingAgreement=dict(columns=("InvestorID", "TradingAgreementType", "EffectDay", "ExpireDay"),
                                   sql="""SELECT InvestorID,'0' AS TradingAgreementType,
