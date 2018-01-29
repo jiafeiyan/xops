@@ -35,6 +35,8 @@ class sse_to_csv:
         self.__data_to_csv("ExchangeTradingDay", mysqlDB)
         self.__data_to_csv("Investor", mysqlDB)
         self.__data_to_csv("SSEMarketData", mysqlDB)
+        # SecurityStatus=0，TotalEquity=''，CirculationEquity=''
+        self.__data_to_csv("SSESecurity", mysqlDB)
         self.__data_to_csv("SSEBusinessUnitAccount", mysqlDB)
         self.__data_to_csv("SSEPosition", mysqlDB)
         self.__data_to_csv("SSEShareholderAccount", mysqlDB)
@@ -99,6 +101,40 @@ class sse_to_csv:
                                             AND t.InstrumentID = t2.InstrumentID
                                             AND t.SettlementGroupID = %s""",
                                params=(self.settlementGroupID,)),
+            SSESecurity=dict(columns=("SecurityID", "ExchangeID", "SecurityName", "UnderlyingSecurityID", "MarketID",
+                                      "ProductID", "SecurityType", "CurrencyID", "OrderUnit", "BuyTradingUnit",
+                                      "SellTradingUnit", "MaxMarketOrderBuyVolume", "MinMarketOrderBuyVolume",
+                                      "MaxLimitOrderBuyVolume", "MinLimitOrderBuyVolume", "MaxMarketOrderSellVolume",
+                                      "MinMarketOrderSellVolume", "MaxLimitOrderSellVolume", "MinLimitOrderSellVolume",
+                                      "VolumeMultiple", "PriceTick", "OpenDate", "CloseDate", "PositionType",
+                                      "ParValue", "SecurityStatus", "BondInterest", "ConversionRate", "TotalEquity",
+                                      "CirculationEquity", "IsSupportPur", "IsSupportRed", "IsSupportTrade",
+                                      "IsCancelOrder", "IsCollateral"),
+                             sql="""SELECT t.InstrumentID AS SecurityID,t1.ExchangeID AS ExchangeID,
+                                           t.InstrumentName AS SecurityName,t.UnderlyingInstrID AS UnderlyingSecurityID,
+                                           t2.MarketID AS MarketID,t.ProductID AS ProductID,
+                                           t3.SecurityType AS SecurityType,t1.Currency AS CurrencyID,'1' AS OrderUnit,
+                                           '100' AS BuyTradingUnit,'1' AS SellTradingUnit,
+                                           '1000000' AS MaxMarketOrderBuyVolume,'100' AS MinMarketOrderBuyVolume,
+                                           '1000000' AS MaxLimitOrderBuyVolume,'100' AS MinLimitOrderBuyVolume,
+                                           '1000000' AS MaxMarketOrderSellVolume,'1' AS MinMarketOrderSellVolume,
+                                           '1000000' AS MaxLimitOrderSellVolume,'1' AS MinLimitOrderSellVolume,
+                                           t4.PriceTick AS PriceTick,t4.OpenDate AS OpenDate,'' AS CloseDate,
+                                           t.PositionType AS PositionType,'1' AS ParValue,'0' AS SecurityStatus,
+                                           '0' AS BondInterest,'0' AS ConversionRate,'' AS TotalEquity,
+                                           '' AS CirculationEquity,'0' AS IsSupportPur,'0' AS IsSupportRed,
+                                           '1' AS IsSupportTrade,'1' AS IsCancelOrder,'1' AS IsCollateral
+                                        FROM siminfo.t_Instrument t, siminfo.t_SettlementGroup t1,
+                                            siminfo.t_Market t2, siminfo.t_SecurityProfit t3,
+                                            siminfo.t_InstrumentProperty t4
+                                        WHERE t.SettlementGroupID = t1.SettlementGroupID
+                                        AND t.SettlementGroupID = t2.SettlementGroupID
+                                        AND t.SettlementGroupID = t3.SettlementGroupID
+                                        AND t.InstrumentID = t3.SecurityID
+                                        AND t.InstrumentID = t4.InstrumentID
+                                        AND t.SettlementGroupID = t4.SettlementGroupID
+                                        AND t.SettlementGroupID = %s""",
+                             params=(self.settlementGroupID,)),
             SSEBusinessUnitAccount=dict(columns=("InvestorID", "BusinessUnitID", "ExchangeID", "MarketID",
                                                  "ShareholderID", "TradingCodeClass", "ProductID", "AccountID",
                                                  "CurrencyID", "UserID"),
