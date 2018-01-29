@@ -45,18 +45,16 @@ class shfe_to_csv:
                                                    "InvestorID", "InvestUnitID", "HedgeFlag", "LongMarginRatioByMoney",
                                                    "LongMarginRatioByVolume", "ShortMarginRatioByMoney",
                                                    "ShortMarginRatioByVolume"),
-                                          sql="""SELECT t1.BrokerSystemID AS BrokerID,t.InvestorID AS InvestorID,
+                                          sql="""SELECT '0001' AS BrokerID,t.InvestorID AS InvestorID,
                                                     t.InvestorID AS InvestUnitID,t.InvestorID AS UserID
-                                                FROM siminfo.t_InvestorClient t,siminfo.t_BrokerSystemSettlementGroup t1
-                                                WHERE t.SettlementGroupID = t1.SettlementGroupID
-                                                AND t.SettlementGroupID = %s""",
+                                                FROM siminfo.t_InvestorClient t
+                                                WHERE t.SettlementGroupID = %s""",
                                           params=(self.settlementGroupID,)),
             InvestorTradingUser=dict(columns=("BrokerID", "InvestorID", "InvestUnitID", "UserID"),
-                                     sql="""SELECT t1.BrokerSystemID AS BrokerID,t.InvestorID AS InvestorID,
+                                     sql="""SELECT '0001' AS BrokerID,t.InvestorID AS InvestorID,
                                                     t.InvestorID AS InvestUnitID,t.InvestorID AS UserID
-                                                FROM siminfo.t_InvestorClient t,siminfo.t_BrokerSystemSettlementGroup t1
-                                                WHERE t.SettlementGroupID = t1.SettlementGroupID
-                                                AND t.SettlementGroupID = %s""",
+                                                FROM siminfo.t_InvestorClient t
+                                                WHERE t.SettlementGroupID = %s""",
                                      params=(self.settlementGroupID,)),
             MaxMarginProductGroup=dict(columns=("ExchangeID", "ProductID", "MaxMarginProductGroupId"),
                                        sql="""SELECT t1.ExchangeID AS ExchangeID,t.ProductID AS ProductID,
@@ -66,48 +64,40 @@ class shfe_to_csv:
                                                 and t.SettlementGroupID = %s""",
                                        params=(self.settlementGroupID,)),
             PartBroker=dict(columns=("BrokerID", "ExchangeID", "ParticipantID", "IsActive"),
-                            sql="""SELECT t3.BrokerSystemID AS BrokerID,t2.ExchangeID AS ExchangeID,
+                            sql="""SELECT '0001' AS BrokerID,t2.ExchangeID AS ExchangeID,
                                           t1.ParticipantID AS ParticipantID,'1' AS IsActive
-                                    FROM siminfo.t_Participant t1,siminfo.t_SettlementGroup t2,
-                                        siminfo.t_BrokerSystemSettlementGroup t3
+                                    FROM siminfo.t_Participant t1,siminfo.t_SettlementGroup t2
                                     WHERE t1.SettlementGroupID = t2.SettlementGroupID
-                                    AND t1.SettlementGroupID = t3.SettlementGroupID
                                     AND t1.SettlementGroupID = %s""",
                             params=(self.settlementGroupID,)),
             Trader=dict(columns=("BrokerID", "ExchangeID", "ParticipantID", "TraderID", "TraderClass",
                                  "TraderProperty", "Password", "OrderLocalID"),
-                        sql="""SELECT t3.BrokerSystemID AS BrokerID,t2.ExchangeID AS ExchangeID,
+                        sql="""SELECT '0001' AS BrokerID,t2.ExchangeID AS ExchangeID,
                                             t1.ParticipantID AS ParticipantID,'000101' AS TraderID,'1' AS TraderClass,
                                             '1' AS TraderProperty,'111111' AS PASSWORD,'' AS OrderLocalID
-                                        FROM siminfo.t_Participant t1,siminfo.t_SettlementGroup t2,
-                                            siminfo.t_BrokerSystemSettlementGroup t3
+                                        FROM siminfo.t_Participant t1,siminfo.t_SettlementGroup t2
                                         WHERE t1.SettlementGroupID = t2.SettlementGroupID
-                                        AND t1.SettlementGroupID = t3.SettlementGroupID
                                         AND t1.SettlementGroupID = %s""",
                         params=(self.settlementGroupID,)),
             TraderTopic=dict(columns=("BrokerID", "ParticipantID", "ExchangeID", "TraderID", "TraderClass",
                                       "TopicID", "SequenceNo"),
-                             sql="""SELECT t3.BrokerSystemID AS BrokerID,t.ParticipantID AS ParticipantID,
-                                        t2.ExchangeID AS ExchangeID,'000101' AS TraderID,'1' AS TraderClass,
-                                        t.TopicID AS TopicID,'0' AS SequenceNo
+                             sql="""SELECT '0001' AS BrokerID,t.ParticipantID AS ParticipantID,
+                                    t2.ExchangeID AS ExchangeID,'000101' AS TraderID,'1' AS TraderClass,
+                                    t.TopicID AS TopicID,'0' AS SequenceNo
                                     FROM siminfo.t_PartTopicSubscribe t,siminfo.t_Participant t1,
-                                        siminfo.t_SettlementGroup t2,siminfo.t_BrokerSystemSettlementGroup t3
+                                         siminfo.t_SettlementGroup t2
                                     WHERE t.ParticipantID = t1.ParticipantID
                                     AND t.SettlementGroupID = t1.SettlementGroupID
                                     AND t.SettlementGroupID = t2.SettlementGroupID
-                                    AND t.SettlementGroupID = t3.SettlementGroupID
                                     AND t.SettlementGroupID = %s""",
                              params=(self.settlementGroupID,)),
             TradingCodeMap=dict(columns=("BrokerID", "InvestorID", "InvestUnitID", "ExchangeID", "CLIENTID",
                                          "ClientIDMode", "IsActive"),
-                                sql="""SELECT t1.BrokerSystemID AS BrokerID,t.InvestorID AS InvestorID,
-                                            t.InvestorID AS InvestUnitID,t2.ExchangeID AS ExchangeID,
+                                sql="""SELECT '0001' AS BrokerID,t.InvestorID AS InvestorID,
+                                            t.InvestorID AS InvestUnitID,t1.ExchangeID AS ExchangeID,
                                             t.InvestorID AS CLIENTID,'1' AS ClientIDMode,'1' AS IsActive
-                                        FROM siminfo.t_InvestorClient t, siminfo.t_BrokerSystemSettlementGroup t1,
-                                            siminfo.t_SettlementGroup t2
-                                        WHERE t.SettlementGroupID = t1.SettlementGroupID
-                                        AND t.SettlementGroupID = t2.SettlementGroupID
-                                        AND t1.SettlementGroupID=%s""",
+                                        FROM siminfo.t_InvestorClient t,siminfo.t_SettlementGroup t1
+                                        WHERE t.SettlementGroupID = t1.SettlementGroupID AND t.SettlementGroupID=%s""",
                                 params=(self.settlementGroupID,)),
             TradingUser=dict(columns=("BrokerID", "UserID", "Password", "DRIdentityID", "UserType"),
                              sql="""SELECT '0001' AS BrokerID,t.InvestorID AS UserID,t.`Password` AS PASSWORD,
