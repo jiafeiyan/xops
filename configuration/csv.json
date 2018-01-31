@@ -1,6 +1,6 @@
 {
   "csv_base": {
-    "exchange": "/csvfiles/exchange",
-    "broker": "/csvfiles/broker"
+    "exchange": "${SIM_PLATFORM_HOME}/csvfiles/exchange",
+    "broker": "${SIM_PLATFORM_HOME}/csvfiles/broker"
   }
 }

@@ -1,6 +1,6 @@
 {
   "init_base": {
-    "initTable": "E:/GithubResponsity/my_python_util/initialization/data",
-    "initTemplate": "E:/GithubResponsity/my_python_util/initialization/template"
+    "initTable": "${SIM_PLATFORM_HOME}/initialization/data",
+    "initTemplate": "${SIM_PLATFORM_HOME}/initialization/template"
   }
 }

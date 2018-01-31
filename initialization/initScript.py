@@ -29,6 +29,7 @@ import os
 
 from utils import log
 from utils import parse_conf_args
+from utils import path
 from utils import Configuration
 from utils import mysql
 
@@ -48,20 +49,20 @@ class initScript:
     def __load(self):
         self.logger.info("============== loading init data ==============")
         mysqlDB = self.mysqlDB
-        path = self.initTemplate['initTable']
-        if os.path.exists(path):
-            for fileName in os.listdir(path):
+        _path = path.convert(self.initTemplate['initTable']).replace("\n", "")
+        if os.path.exists(_path):
+            for fileName in os.listdir(_path):
                 fileName = fileName[:fileName.rfind('.')]
-                self.__generate_table(str(fileName), mysqlDB, path)
+                self.__generate_table(str(fileName), mysqlDB, _path)
 
     # 通用生成sql语句并执行
-    def __generate_table(self, tableName, mysqlDB, path):
+    def __generate_table(self, tableName, mysqlDB, _path):
         # 加载json数据文件
-        path = "%s%s%s%s" % (path, os.path.sep, tableName, ".json")
-        if not os.path.exists(path):
+        _path = "%s%s%s%s" % (_path, os.path.sep, tableName, ".json")
+        if not os.path.exists(_path):
             self.logger.error("文件" + tableName + ".json不存在")
             return
-        f = open(path)
+        f = open(_path)
         jsonData = json.load(f)
         self.logger.info("%s%s%s%s%s" % ("配置文件初始化数据 ", tableName, " ==> 共", len(jsonData), "条"))
         if not len(jsonData) > 0:

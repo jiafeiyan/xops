@@ -6,6 +6,7 @@ import json
 
 from utils import log
 from utils import parse_conf_args
+from utils import path
 from utils import Configuration
 from utils import mysql
 from etf_entity import etfVO
@@ -352,11 +353,12 @@ class trans_etfinfo:
 
     # 主要读取template数据
     def __loadJSON(self, tableName):
-        path = "%s%s%s%s" % (self.initTemplate['initTemplate'], os.path.sep, tableName, ".json")
-        if not os.path.exists(path):
+        _output = path.convert(self.initTemplate['initTemplate']).replace("\n", "")
+        _path = "%s%s%s%s" % (_output, os.path.sep, tableName, ".json")
+        if not os.path.exists(_path):
             self.logger.error("文件" + tableName + ".json不存在")
             return None
-        f = open(path)
+        f = open(_path)
         return json.load(f)
 
 

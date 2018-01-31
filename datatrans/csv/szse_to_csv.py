@@ -9,6 +9,7 @@ import os
 
 from utils import log
 from utils import parse_conf_args
+from utils import path
 from utils import Configuration
 from utils import mysql
 
@@ -25,8 +26,8 @@ class szse_to_csv:
         # 初始化数据库连接
         self.mysqlDB = mysql(configs=context.get("mysql")[configs.get("mysqlId")])
         # 初始化生成柜台CSV文件路径
-        self.csv_path = context.get("csv")[configs.get("csv")]['broker'] + os.path.sep + "stock_szse"
-        self.csv_path = os.path.abspath(os.path.abspath('.') + str(self.csv_path) + os.path.sep + self.settlementGroupID)
+        output = path.convert(context.get("csv")[configs.get("csv")]['broker']).replace("\n", "")
+        self.csv_path = os.path.abspath(output + os.path.sep + "stock_szse" + os.path.sep + self.settlementGroupID)
         self.__to_csv()
 
     def __to_csv(self):
@@ -213,11 +214,11 @@ class szse_to_csv:
     # 生成csv文件
     def __produce_csv(self, csv_name, columns, csv_data):
         self.logger.info("%s%s%s" % ("开始生成 ", csv_name, ".csv"))
-        path = "%s%s%s%s" % (str(self.csv_path), os.path.sep, csv_name, '.csv')
+        _path = "%s%s%s%s" % (str(self.csv_path), os.path.sep, csv_name, '.csv')
         # 如果不存在目录则先创建
         if not os.path.exists(str(self.csv_path)):
             os.makedirs(str(self.csv_path))
-        with open(path, 'wb') as csvfile:
+        with open(_path, 'wb') as csvfile:
             if "quoting" in columns and columns['quoting']:
                 writer = csv.writer(csvfile, quoting=csv.QUOTE_ALL)
             else:

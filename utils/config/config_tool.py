@@ -3,7 +3,6 @@
 import os
 import json
 
-
 class Configuration:
     @staticmethod
     def load(base_dir, config_names, config_files):
@@ -13,7 +12,8 @@ class Configuration:
         config_base_dir = base_dir
 
         if config_base_dir is None:
-            config_base_dir = os.environ.get("SIM_PLATFORM_CONFIG_HOME", None)
+            config_base_dir = os.environ.get("SIM_PLATFORM_HOME", None)
+            config_base_dir += "\configuration"
 
         if config_base_dir is not None and config_names is not None:
             for config_name in config_names:
