@@ -32,47 +32,15 @@ class broker_sse_csv:
 
     def __to_csv(self):
         mysqlDB = self.mysqlDB
-        self.__data_to_csv("BusinessUnit", mysqlDB)
-        self.__data_to_csv("BUProxy", mysqlDB)
-        # ExchangeTradingDay exchangeid 1sse 2szse
-        self.__data_to_csv("ExchangeTradingDay", mysqlDB)
-        self.__data_to_csv("Investor", mysqlDB)
         self.__data_to_csv("SSEMarketData", mysqlDB)
         # SecurityStatus=0，TotalEquity=''，CirculationEquity=''
         self.__data_to_csv("SSESecurity", mysqlDB)
         self.__data_to_csv("SSEBusinessUnitAccount", mysqlDB)
         self.__data_to_csv("SSEPosition", mysqlDB)
         self.__data_to_csv("SSEShareholderAccount", mysqlDB)
-        self.__data_to_csv("TradingAccount", mysqlDB)
-        self.__data_to_csv("TradingAgreement", mysqlDB)
-        self.__data_to_csv("User", mysqlDB)
 
     def __data_to_csv(self, csv_name, mysqlDB):
         table_sqls = dict(
-            BUProxy=dict(columns=("UserID", "InvestorID", "BusinessUnitID"),
-                         sql="""SELECT InvestorID AS UserID,InvestorID AS InvestorID,InvestorID AS BusinessUnitID
-                                        FROM siminfo.t_Investor"""),
-            BusinessUnit=dict(columns=("InvestorID", "BusinessUnitID", "BusinessUnitName"),
-                              sql="""SELECT InvestorID,InvestorID AS BusinessUnitID,'Bu1' AS BusinessUnitName
-                                        FROM siminfo.t_Investor"""),
-            ExchangeTradingDay=dict(columns=("ExchangeID", "TradingDay"),
-                                    sql="""SELECT '1' AS ExchangeID,t.TradingDay
-                                            FROM siminfo.t_TradeSystemTradingDay t,
-                                                 siminfo.t_TradeSystemSettlementGroup t1
-                                            WHERE t.TradeSystemID = t1.TradeSystemID AND t1.SettlementGroupID=%s""",
-                                    params=(self.settlementGroupID,)),
-            Investor=dict(columns=("InvestorID", "DepartmentID", "InvestorType", "InvestorName", "IdCardType",
-                                   "IdCardNo", "ContractNo", "BirthDate", "Gender", "Professional", "Country",
-                                   "TaxNo", "LicenseNo", "RegisteredCapital", "RegisteredCurrency", "Mobile",
-                                   "RiskLevel", "Remark", "OpenDate", "CloseDate", "Status", "Contacter", "Fax",
-                                   "Telephone", "Email", "Address", "ZipCode", "InnerBranchID", "Operways"),
-                          sql="""SELECT InvestorID,'0001' AS DepartmentID,'0' AS InvestorType,InvestorName,
-                                '1' AS IdCardType,OpenID AS IdCardNo,'' AS ContractNo,'' AS BirthDate,'' AS Gender,
-                                '' AS Professional,'' AS Country,'' AS TaxNo,'' AS LicenseNo,'0' AS RegisteredCapital,
-                                '' AS RegisteredCurrency,'' AS Mobile,'' AS RiskLevel,'' AS Remark,'' AS OpenDate,
-                                '' AS CloseDate,'1' AS STATUS,'' AS Contacter,'' AS Fax,'' AS Telephone,'' AS Email,
-                                '' AS Address,'' AS ZipCode,'' AS InnerBranchID,'' AS Operways
-                                FROM siminfo.t_Investor"""),
             SSEMarketData=dict(columns=("TradingDay", "SecurityID", "ExchangeID", "SecurityName", "PreClosePrice",
                                         "OpenPrice", "Volume", "Turnover", "TradingCount", "LastPrice", "HighestPrice",
                                         "LowestPrice", "BidPrice1", "AskPrice1", "UpperLimitPrice", "LowerLimitPrice",
@@ -178,34 +146,6 @@ class broker_sse_csv:
                                                 FROM siminfo.t_InvestorClient t
                                                 WHERE t.SettlementGroupID = %s""",
                                        params=(self.settlementGroupID,)),
-            TradingAccount=dict(columns=("AccountID", "CurrencyID", "AccountType", "PreDeposit", "UsefulMoney",
-                                         "FetchLimit", "Deposit", "Withdraw", "FrozenMargin", "FrozenCash",
-                                         "FrozenCommission", "CurrMargin", "Commission", "RoyaltyIn", "RoyaltyOut",
-                                         "AccountOwner", "DepartmentID"),
-                                sql="""SELECT t.InvestorID AS AccountID,t2.Currency AS CurrencyID,'1' AS AccountType,
-                                            t.Available AS PreDeposit,t.Available AS UsefulMoney,
-                                            t.Available AS FetchLimit,t.Deposit AS Deposit,t.Withdraw AS Withdraw,
-                                            '0' AS FrozenMargin,'0' AS FrozenCash,'0' AS FrozenCommission,
-                                            '0' AS CurrMargin,'0' AS Commission,'0' AS RoyaltyIn,'0' AS RoyaltyOut,
-                                            t.InvestorID AS AccountOwner,'0001' AS DepartmentID
-                                        FROM siminfo.t_InvestorFund t,siminfo.t_BrokerSystemSettlementGroup t1,
-                                            siminfo.t_SettlementGroup t2
-                                        WHERE t.BrokerSystemID = t1.BrokerSystemID
-                                        AND t1.SettlementGroupID = t2.SettlementGroupID
-                                        AND t1.SettlementGroupID = %s""",
-                                params=(self.settlementGroupID,)),
-            TradingAgreement=dict(columns=("InvestorID", "TradingAgreementType", "EffectDay", "ExpireDay"),
-                                  sql="""SELECT InvestorID,'0' AS TradingAgreementType,
-                                          '20170101' AS EffectDay,'20500101' AS ExpireDay
-                                         FROM siminfo.t_Investor"""),
-            User=dict(columns=("UserID", "UserName", "UserType", "DepartmentID", "UserPassword", "LoginLimit",
-                               "PasswordFailLimit", "Status", "Contacter", "Fax", "Telephone", "Email", "Address",
-                               "ZipCode", "OpenDate", "CloseDate"),
-                      sql="""SELECT InvestorID AS UserID,InvestorName AS UserName,'2' AS UserType,
-                              '0001' AS DepartmentID,PASSWORD AS UserPassword,'3' AS LoginLimit,
-                              '3' AS PasswordFailLimit,'1' AS STATUS,'' AS Contacter,'' AS Fax,'' AS Telephone,
-                              '' AS Email,'' AS Address,'' AS ZipCode,'' AS OpenDate,'' AS CloseDate
-                              FROM siminfo.t_Investor"""),
         )
         # 查询siminfo数据库数据内容
         csv_data = mysqlDB.select(table_sqls[csv_name]["sql"], table_sqls[csv_name].get("params"))
