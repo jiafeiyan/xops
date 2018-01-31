@@ -41,25 +41,26 @@ import os
 
 from utils import log
 from utils import parse_conf_args
+from utils import path
 from utils import Configuration
 from utils import mysql
 
 
-class future_to_csv:
+class exchange_stock_csv:
     def __init__(self, context, configs):
         tradeSystemID = configs.get("tradeSystemID")
         log_conf = None if context.get("log") is None else context.get("log").get(configs.get("logId"))
         # 初始化日志
-        self.logger = log.get_logger(category="future_to_csv", configs=log_conf)
+        self.logger = log.get_logger(category="exchange_stock_csv", configs=log_conf)
         if log_conf is None:
-            self.logger.warning("future_to_csv未配置Log日志")
+            self.logger.warning("exchange_stock_csv未配置Log日志")
         # 初始化数据库连接
         self.mysqlDB = mysql(configs=context.get("mysql")[configs.get("mysqlId")])
         # 初始化tradeSystemID
         self.tradeSystemID = tradeSystemID
         # 初始化生成CSV文件路径
-        self.csv_path = context.get("csv")[configs.get("csv")]['exchange']
-        self.csv_path = os.path.abspath(os.path.abspath('.') + str(self.csv_path) + os.path.sep + self.tradeSystemID)
+        output = path.convert(context.get("csv")[configs.get("csv")]['exchange'])
+        self.csv_path = os.path.join(output,  str(configs.get("tradeSystemID")))
         self.__to_csv()
 
     def __to_csv(self):
@@ -308,11 +309,11 @@ class future_to_csv:
     # 生成csv文件
     def __produce_csv(self, table_name, columns, csv_data):
         self.logger.info("%s%s%s" % ("开始生成 ", table_name, ".csv"))
-        path = "%s%s%s%s" % (str(self.csv_path), os.path.sep, table_name, '.csv')
+        _path = "%s%s%s%s" % (str(self.csv_path), os.path.sep, table_name, '.csv')
         # 如果不存在目录则先创建
         if not os.path.exists(str(self.csv_path)):
             os.makedirs(str(self.csv_path))
-        with open(path, 'wb') as csvfile:
+        with open(_path, 'wb') as csvfile:
             if "quoting" in columns and columns['quoting']:
                 writer = csv.writer(csvfile, quoting=csv.QUOTE_ALL)
             else:
@@ -326,4 +327,4 @@ if __name__ == '__main__':
     base_dir, config_names, config_files = parse_conf_args(__file__, config_names=["mysql", "log", "csv"])
     context, conf = Configuration.load(base_dir=base_dir, config_names=config_names, config_files=config_files)
     # 启动脚本
-    future_to_csv(context=context, configs=conf)
+    exchange_stock_csv(context=context, configs=conf)

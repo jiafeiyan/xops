@@ -1,0 +1,10 @@
+{
+    "Archives" : [{
+        "host" : "root_101",
+        "items" : [{
+          "basedir" :"/root",
+          "sources" : "temp",
+          "target" : "databak/mydbf_`date +%Y%m%d`.tar.gz"
+        }]
+    }]
+}

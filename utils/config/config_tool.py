@@ -13,7 +13,7 @@ class Configuration:
 
         if config_base_dir is None:
             config_base_dir = os.environ.get("SIM_PLATFORM_HOME", None)
-            config_base_dir += "\configuration"
+            config_base_dir = os.path.join(config_base_dir, "configuration")
 
         if config_base_dir is not None and config_names is not None:
             for config_name in config_names:

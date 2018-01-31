@@ -49,7 +49,7 @@ class initScript:
     def __load(self):
         self.logger.info("============== loading init data ==============")
         mysqlDB = self.mysqlDB
-        _path = path.convert(self.initTemplate['initTable']).replace("\n", "")
+        _path = path.convert(self.initTemplate['initTable'])
         if os.path.exists(_path):
             for fileName in os.listdir(_path):
                 fileName = fileName[:fileName.rfind('.')]
@@ -81,7 +81,7 @@ class initScript:
 
 
 if __name__ == '__main__':
-    base_dir, config_names, config_files = parse_conf_args(__file__, config_names=["mysql", "init"])
+    base_dir, config_names, config_files = parse_conf_args(__file__, config_names=["mysql", "log", "init"])
     context, conf = Configuration.load(base_dir=base_dir, config_names=config_names, config_files=config_files)
     # 初始化脚本数据
     initScript(context=context, configs=conf)

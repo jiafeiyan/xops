@@ -14,20 +14,20 @@ from utils import Configuration
 from utils import mysql
 
 
-class sse_to_csv:
+class broker_sse_csv:
     def __init__(self, context, configs):
         # 初始化settlementGroupID
         self.settlementGroupID = configs.get("settlementGroupID")
         log_conf = None if context.get("log") is None else context.get("log").get(configs.get("logId"))
         # 初始化日志
-        self.logger = log.get_logger(category="sse_to_csv", configs=log_conf)
+        self.logger = log.get_logger(category="broker_sse_csv", configs=log_conf)
         if log_conf is None:
-            self.logger.warning("sse_to_csv未配置Log日志")
+            self.logger.warning("broker_sse_csv未配置Log日志")
         # 初始化数据库连接
         self.mysqlDB = mysql(configs=context.get("mysql")[configs.get("mysqlId")])
         # 初始化生成柜台CSV文件路径
-        output = path.convert(context.get("csv")[configs.get("csv")]['broker']).replace("\n", "")
-        self.csv_path = os.path.abspath(output + os.path.sep + "stock_sse" + os.path.sep + self.settlementGroupID)
+        output = path.convert(context.get("csv")[configs.get("csv")]['broker'])
+        self.csv_path = os.path.join(output, str(configs.get("csvRoute")), str(configs.get("settlementGroupID")))
         self.__to_csv()
 
     def __to_csv(self):
@@ -230,7 +230,7 @@ class sse_to_csv:
 
 
 if __name__ == '__main__':
-    base_dir, config_names, config_files = parse_conf_args(__file__, config_names=["mysql", "csv"])
+    base_dir, config_names, config_files = parse_conf_args(__file__, config_names=["mysql", "log", "csv"])
     context, conf = Configuration.load(base_dir=base_dir, config_names=config_names, config_files=config_files)
     # 启动脚本
-    sse_to_csv(context=context, configs=conf)
+    broker_sse_csv(context=context, configs=conf)

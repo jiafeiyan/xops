@@ -491,7 +491,7 @@ class trans_stockinfo:
 
     # 主要读取template数据
     def __loadJSON(self, tableName):
-        _output = path.convert(self.initTemplate['initTemplate']).replace("\n", "")
+        _output = path.convert(self.initTemplate['initTemplate'])
         _path = "%s%s%s%s" % (_output, os.path.sep, tableName, ".json")
         if not os.path.exists(_path):
             self.logger.error("文件" + tableName + ".json不存在")
@@ -501,7 +501,7 @@ class trans_stockinfo:
 
 
 if __name__ == '__main__':
-    base_dir, config_names, config_files = parse_conf_args(__file__, config_names=["mysql", "init"])
+    base_dir, config_names, config_files = parse_conf_args(__file__, config_names=["mysql", "log", "init"])
     context, conf = Configuration.load(base_dir=base_dir, config_names=config_names, config_files=config_files)
     # 启动stock脚本
     trans_stockinfo(context=context, configs=conf)

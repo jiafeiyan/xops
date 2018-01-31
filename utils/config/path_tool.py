@@ -16,4 +16,4 @@ class path:
             param_path = param_path.replace("${", "%")
             param_path = param_path.replace("}", "%")
         output = os.popen("echo " + param_path)
-        return output.readline()
+        return output.readline().replace("\n", "")

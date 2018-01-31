@@ -1,0 +1,10 @@
+{
+  "mysqlId" : "simplatform_base",
+  "activities" : [{
+    "code": "0002",
+    "name": "华鑫股票大赛",
+    "begin":"20180316",
+    "end":"20180616",
+    "settlement_groups" : ["SG01"]
+  }]
+}
