@@ -52,6 +52,9 @@ class trans_stockinfo:
         # ===========处理stock_dbf写入t_MarginRateDetail表==============
         self.__t_MarginRateDetail(mysqlDB=mysqlDB, dbf=dbfs[0])
 
+        # ===========处理stock_dbf写入t_PriceBanding表==============
+        self.__t_PriceBanding(mysqlDB=mysqlDB, dbf=dbfs[0])
+
         # ===========处理info_dbf写入t_SecurityProfit表===========
         self.__t_SecurityProfit(mysqlDB=mysqlDB, dbf=dbfs[1])
 
@@ -90,12 +93,13 @@ class trans_stockinfo:
                                    ProductClass,PositionType,
                                    StrikePrice,OptionsType,
                                    VolumeMultiple,UnderlyingMultiple,
+                                   TotalEquity,CirculationEquity,
                                    InstrumentID,InstrumentName,
                                    DeliveryYear,DeliveryMonth,AdvanceMonth
-                               )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
+                               )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
         # 存在更新记录
         sql_update_Instrument = """UPDATE siminfo.t_Instrument
-                                       SET InstrumentName = %s
+                                       SET InstrumentName=%s,TotalEquity=%s,CirculationEquity=%s
                                        WHERE InstrumentID = %s
                                        AND SettlementGroupID = %s"""
         sql_insert_params = []
@@ -117,11 +121,13 @@ class trans_stockinfo:
                                           ProductGroupID,
                                           ProductID,
                                           "4", "2", None, "0",
-                                          1, 1, stock['ZQDM'], stock['ZQJC'],
+                                          1, 1, stock['ZGB'], stock['LTGB'],
+                                          stock['ZQDM'], stock['ZQJC'],
                                           2099, 12, "012"))
                 continue
             if stock['ZQDM'] in exist_stock:
-                sql_update_params.append((stock['ZQJC'], stock['ZQDM'], self.self_conf[str(stock['SCDM'])]))
+                sql_update_params.append(( stock['ZQJC'], stock['ZGB'], stock['LTGB'],
+                                          stock['ZQDM'], self.self_conf[str(stock['SCDM'])]))
         mysqlDB.executemany(sql_insert_Instrument, sql_insert_params)
         mysqlDB.executemany(sql_update_Instrument, sql_update_params)
 
@@ -392,6 +398,62 @@ class trans_stockinfo:
                                           stock['ZQDM'], template[SGID][7], template[SGID][8]))
         mysqlDB.executemany(sql_insert_detail, sql_insert_params)
         mysqlDB.executemany(sql_update_detail, sql_update_params)
+
+    # 写入t_PriceBanding
+    def __t_PriceBanding(self, mysqlDB, dbf):
+        # 判断合约是否存在
+        dbf_stock = []
+        exist_price = []
+        # 获取模板文件
+        template = self.__loadJSON(tableName='t_PriceBanding')
+        if template is None:
+            self.logger.error("t_PriceBanding template is None")
+            return
+        sql_pricebanding = "SELECT InstrumentID FROM siminfo.t_PriceBanding " \
+                           "WHERE (SettlementGroupID,InstrumentID,TradingSegmentSN) in ("
+        for stock in dbf:
+            dbf_stock.append(stock['ZQDM'])
+            SGID = self.self_conf[str(stock['SCDM'])]
+            sql_values = "('" + SGID + \
+                         "', '" + stock['ZQDM'] + \
+                         "', '" + template[SGID][7] + \
+                         "') "
+            sql_pricebanding = sql_pricebanding + sql_values + ","
+        sql_pricebanding = sql_pricebanding[0:-1] + ") "
+
+        for stock in mysqlDB.select(sql_pricebanding):
+            exist_price.append(str(stock[0]))
+
+        # 获取差集
+        inexist_price = list(set(dbf_stock) ^ set(exist_price))
+        self.logger.info("%s%d%s" % ("stock导入t_PriceBanding存在：", len(exist_price), "个合约"))
+        self.logger.info("%s%d%s" % ("stock导入t_PriceBanding不存在：", len(inexist_price), "个合约"))
+
+        # 不存在插入记录
+        sql_insert_price = """INSERT INTO siminfo.t_PriceBanding (
+                                SettlementGroupID,PriceLimitType,ValueMode,RoundingMode,
+                                UpperValue,LowerValue,InstrumentID,TradingSegmentSN
+                            ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s) """
+        # 存在更新记录
+        sql_update_price = """UPDATE siminfo.t_PriceBanding
+                                SET PriceLimitType=%s,ValueMode=%s,RoundingMode=%s,UpperValue=%s,LowerValue=%s
+                                WHERE SettlementGroupID=%s AND InstrumentID=%s AND TradingSegmentSN=%s"""
+        sql_insert_params = []
+        sql_update_params = []
+        for stock in dbf:
+            SGID = self.self_conf[str(stock['SCDM'])]
+            if stock['ZQDM'] in inexist_price:
+                sql_insert_params.append((SGID, template[SGID][1], template[SGID][2], template[SGID][3],
+                                          template[SGID][4], template[SGID][5], stock['ZQDM'],
+                                          template[SGID][7]))
+                continue
+            # 更新记录
+            if stock['ZQDM'] in exist_price:
+                sql_update_params.append((template[SGID][1], template[SGID][2], template[SGID][3],
+                                          template[SGID][4], template[SGID][5], SGID, stock['ZQDM'],
+                                          template[SGID][7]))
+        mysqlDB.executemany(sql_insert_price, sql_insert_params)
+        mysqlDB.executemany(sql_update_price, sql_update_params)
 
     def __check_file(self):
         env_dist = os.environ

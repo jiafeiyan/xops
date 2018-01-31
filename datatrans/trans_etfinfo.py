@@ -15,7 +15,7 @@ class trans_etfinfo:
     def __init__(self, context, configs):
         log_conf = None if context.get("log") is None else context.get("log").get(configs.get("logId"))
         # 初始化日志
-        self.logger = log.get_logger(category="trans_future", configs=log_conf)
+        self.logger = log.get_logger(category="trans_etfinfo", configs=log_conf)
         if log_conf is None:
             self.logger.warning("trans_etfinfo未配置Log日志")
         # 初始化数据库连接
@@ -38,11 +38,14 @@ class trans_etfinfo:
         # ===========判断并写入t_InstrumentProperty表(未更新)==============
         self.__t_InstrumentProperty(mysqlDB=mysqlDB, etf_list=etf_list)
 
-        # ===========处理stock_dbf写入t_MarginRate表(未更新)==============
+        # ===========处理etf_txt写入t_MarginRate表(未更新)==============
         self.__t_MarginRate(mysqlDB=mysqlDB, etf_list=etf_list)
 
-        # ===========处理stock_dbf写入t_MarginRateDetail表==============
+        # ===========处理etf_txt写入t_MarginRateDetail表==============
         self.__t_MarginRateDetail(mysqlDB=mysqlDB, etf_list=etf_list)
+
+        # ===========处理etf_txt写入t_PriceBanding表==============
+        self.__t_PriceBanding(mysqlDB=mysqlDB, etf_list=etf_list)
 
     # 读取处理reff03文件
     def __t_Instrument(self, mysqlDB, etf_list):
@@ -264,6 +267,62 @@ class trans_etfinfo:
                                           etf.SecurityID, template[SGID][7], template[SGID][8]))
         mysqlDB.executemany(sql_insert_detail, sql_insert_params)
         mysqlDB.executemany(sql_update_detail, sql_update_params)
+
+    # 写入t_PriceBanding
+    def __t_PriceBanding(self, mysqlDB, etf_list):
+        # 判断合约是否存在
+        all_etf = []
+        exist_price = []
+        # 获取模板文件
+        template = self.__loadJSON(tableName='t_PriceBanding')
+        if template is None:
+            self.logger.error("t_PriceBanding template is None")
+            return
+        sql_pricebanding = "SELECT InstrumentID FROM siminfo.t_PriceBanding " \
+                           "WHERE (SettlementGroupID,InstrumentID,TradingSegmentSN) in ("
+        for etf in etf_list:
+            all_etf.append(etf.SecurityID)
+            SGID = self.SettlementGroupID
+            sql_values = "('" + SGID + \
+                         "', '" + etf.SecurityID + \
+                         "', '" + template[SGID][7] + \
+                         "') "
+            sql_pricebanding = sql_pricebanding + sql_values + ","
+        sql_pricebanding = sql_pricebanding[0:-1] + ") "
+
+        for etf in mysqlDB.select(sql_pricebanding):
+            exist_price.append(str(etf[0]))
+
+        # 获取差集
+        inexist_price = list(set(all_etf) ^ set(exist_price))
+        self.logger.info("%s%d%s" % ("etf导入t_PriceBanding存在：", len(exist_price), "个合约"))
+        self.logger.info("%s%d%s" % ("etf导入t_PriceBanding不存在：", len(inexist_price), "个合约"))
+
+        # 不存在插入记录
+        sql_insert_price = """INSERT INTO siminfo.t_PriceBanding (
+                                       SettlementGroupID,PriceLimitType,ValueMode,RoundingMode,
+                                       UpperValue,LowerValue,InstrumentID,TradingSegmentSN
+                                   ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s) """
+        # 存在更新记录
+        sql_update_price = """UPDATE siminfo.t_PriceBanding
+                                       SET PriceLimitType=%s,ValueMode=%s,RoundingMode=%s,UpperValue=%s,LowerValue=%s
+                                       WHERE SettlementGroupID=%s AND InstrumentID=%s AND TradingSegmentSN=%s"""
+        sql_insert_params = []
+        sql_update_params = []
+        for etf in etf_list:
+            SGID = self.SettlementGroupID
+            if etf.SecurityID in inexist_price:
+                sql_insert_params.append((SGID, template[SGID][1], template[SGID][2], template[SGID][3],
+                                          template[SGID][4], template[SGID][5], etf.SecurityID,
+                                          template[SGID][7]))
+                continue
+            # 更新记录
+            if etf.SecurityID in exist_price:
+                sql_update_params.append((template[SGID][1], template[SGID][2], template[SGID][3],
+                                          template[SGID][4], template[SGID][5], SGID, etf.SecurityID,
+                                          template[SGID][7]))
+        mysqlDB.executemany(sql_insert_price, sql_insert_params)
+        mysqlDB.executemany(sql_update_price, sql_update_params)
 
     def __check_file(self):
         env_dist = os.environ

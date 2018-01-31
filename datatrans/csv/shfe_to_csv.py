@@ -25,7 +25,8 @@ class shfe_to_csv:
         # 初始化数据库连接
         self.mysqlDB = mysql(configs=context.get("mysql")[configs.get("mysqlId")])
         # 初始化生成柜台CSV文件路径
-        self.csv_path = context.get("csv")[configs.get("csv")]['counter'] + os.path.sep + "future_shfe"
+        self.csv_path = context.get("csv")[configs.get("csv")]['broker'] + os.path.sep + "future_shfe"
+        self.csv_path = os.path.abspath(os.path.abspath('.') + str(self.csv_path) + os.path.sep + self.settlementGroupID)
         self.__to_csv()
 
     def __to_csv(self):

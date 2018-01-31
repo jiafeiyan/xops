@@ -25,7 +25,8 @@ class szse_to_csv:
         # 初始化数据库连接
         self.mysqlDB = mysql(configs=context.get("mysql")[configs.get("mysqlId")])
         # 初始化生成柜台CSV文件路径
-        self.csv_path = context.get("csv")[configs.get("csv")]['counter'] + os.path.sep + "stock_szse"
+        self.csv_path = context.get("csv")[configs.get("csv")]['broker'] + os.path.sep + "stock_szse"
+        self.csv_path = os.path.abspath(os.path.abspath('.') + str(self.csv_path) + os.path.sep + self.settlementGroupID)
         self.__to_csv()
 
     def __to_csv(self):
@@ -34,9 +35,9 @@ class szse_to_csv:
         self.__data_to_csv("BUProxy", mysqlDB)
         self.__data_to_csv("ExchangeTradingDay", mysqlDB)
         self.__data_to_csv("Investor", mysqlDB)
-        self.__data_to_csv("SSEMarketData", mysqlDB)
+        self.__data_to_csv("SZSEMarketData", mysqlDB)
         # SecurityStatus=0，TotalEquity=''，CirculationEquity=''
-        self.__data_to_csv("SSESecurity", mysqlDB)
+        self.__data_to_csv("SZSESecurity", mysqlDB)
         self.__data_to_csv("SZSEBusinessUnitAccount", mysqlDB)
         self.__data_to_csv("SZSEPosition", mysqlDB)
         self.__data_to_csv("SZSEShareholderAccount", mysqlDB)
@@ -48,17 +49,15 @@ class szse_to_csv:
         table_sqls = dict(
             BUProxy=dict(columns=("UserID", "InvestorID", "BusinessUnitID"),
                          sql="""SELECT InvestorID AS UserID,InvestorID AS InvestorID,InvestorID AS BusinessUnitID
-                                        FROM siminfo.t_Investor"""),
+                                    FROM siminfo.t_Investor"""),
             BusinessUnit=dict(columns=("InvestorID", "BusinessUnitID", "BusinessUnitName"),
                               sql="""SELECT InvestorID,InvestorID AS BusinessUnitID,'Bu1' AS BusinessUnitName
                                         FROM siminfo.t_Investor"""),
             ExchangeTradingDay=dict(columns=("ExchangeID", "TradingDay"),
-                                    sql="""SELECT t1.ExchangeID, t.TradingDay
-                                           FROM siminfo.t_TradeSystemTradingDay t, siminfo.t_SettlementGroup t1,
-                                                t_TradeSystemSettlementGroup t2
-                                           WHERE t.TradeSystemID = t2.TradeSystemID
-                                           AND t2.SettlementGroupID = t1.SettlementGroupID
-                                           AND t1.SettlementGroupID=%s""",
+                                    sql="""SELECT '2' AS ExchangeID,t.TradingDay
+                                            FROM siminfo.t_TradeSystemTradingDay t,
+                                                 siminfo.t_TradeSystemSettlementGroup t1
+                                            WHERE t.TradeSystemID = t1.TradeSystemID AND t1.SettlementGroupID=%s""",
                                     params=(self.settlementGroupID,)),
             Investor=dict(columns=("InvestorID", "DepartmentID", "InvestorType", "InvestorName", "IdCardType",
                                    "IdCardNo", "ContractNo", "BirthDate", "Gender", "Professional", "Country",
@@ -66,13 +65,13 @@ class szse_to_csv:
                                    "RiskLevel", "Remark", "OpenDate", "CloseDate", "Status", "Contacter", "Fax",
                                    "Telephone", "Email", "Address", "ZipCode", "InnerBranchID", "Operways"),
                           sql="""SELECT InvestorID,'0001' AS DepartmentID,'0' AS InvestorType,InvestorName,
-                                '1' AS IdCardType,OpenID AS IdCardNo,'' AS ContractNo,'' AS BirthDate,'' AS Gender,
-                                '' AS Professional,'' AS Country,'' AS TaxNo,'' AS LicenseNo,'0' AS RegisteredCapital,
-                                '' AS RegisteredCurrency,'' AS Mobile,'' AS RiskLevel,'' AS Remark,'' AS OpenDate,
-                                '' AS CloseDate,'1' AS STATUS,'' AS Contacter,'' AS Fax,'' AS Telephone,'' AS Email,
-                                '' AS Address,'' AS ZipCode,'' AS InnerBranchID,'' AS Operways
-                                FROM siminfo.t_Investor"""),
-            SSEMarketData=dict(columns=("TradingDay", "SecurityID", "ExchangeID", "SecurityName", "PreClosePrice",
+                                            '1' AS IdCardType,OpenID AS IdCardNo,'' AS ContractNo,'' AS BirthDate,'' AS Gender,
+                                            '' AS Professional,'' AS Country,'' AS TaxNo,'' AS LicenseNo,'0' AS RegisteredCapital,
+                                            '' AS RegisteredCurrency,'' AS Mobile,'' AS RiskLevel,'' AS Remark,'' AS OpenDate,
+                                            '' AS CloseDate,'1' AS STATUS,'' AS Contacter,'' AS Fax,'' AS Telephone,'' AS Email,
+                                            '' AS Address,'' AS ZipCode,'' AS InnerBranchID,'' AS Operways
+                                            FROM siminfo.t_Investor"""),
+            SZSEMarketData=dict(columns=("TradingDay", "SecurityID", "ExchangeID", "SecurityName", "PreClosePrice",
                                         "OpenPrice", "Volume", "Turnover", "TradingCount", "LastPrice", "HighestPrice",
                                         "LowestPrice", "BidPrice1", "AskPrice1", "UpperLimitPrice", "LowerLimitPrice",
                                         "PERatio1", "PERatio2", "PriceUpDown1", "PriceUpDown2", "OpenInterest",
@@ -81,27 +80,25 @@ class szse_to_csv:
                                         "BidPrice4", "BidVolume4", "AskPrice4", "AskVolume4", "BidPrice5", "BidVolume5",
                                         "AskPrice5", "AskVolume5", "UpdateTime", "UpdateMillisec"),
                                sql="""SELECT t.TradingDay AS TradingDay,t.InstrumentID AS SecurityID,
-                                                        t1.ExchangeID AS ExchangeID,t2.InstrumentName AS SecurityName,
-                                                        t.PreClosePrice AS PreClosePrice,t.OpenPrice AS OpenPrice,
-                                                        t.Volume AS Volume,t.Turnover AS Turnover,"0" AS TradingCount,
-                                                        t.LastPrice AS LastPrice,t.HighestPrice AS HighestPrice,
-                                                        t.LowestPrice AS LowestPrice,'0' AS BidPrice1,'0' AS AskPrice1,
-                                                        t.UpperLimitPrice AS UpperLimitPrice,t.LowerLimitPrice AS LowerLimitPrice,
-                                                        '0' AS PERatio1,'0' AS PERatio2,'0' AS PriceUpDown1,'0' AS PriceUpDown2,
-                                                        t.OpenInterest AS OpenInterest,'0' AS BidVolume1,'0' AS AskVolume1,
-                                                        '0' AS BidPrice2,'0' AS BidVolume2,'0' AS AskPrice2,'0' AS AskVolume2,
-                                                        '0' AS BidPrice3,'0' AS BidVolume3,'0' AS AskPrice3,'0' AS AskVolume3,
-                                                        '0' AS BidPrice4,'0' AS BidVolume4,'0' AS AskPrice4,'0' AS AskVolume4,
-                                                        '0' AS BidPrice5,'0' AS BidVolume5,'0' AS AskPrice5,'0' AS AskVolume5,
-                                                        t.UpdateTime AS UpdateTime,t.UpdateMillisec AS UpdateMillisec
-                                                    FROM siminfo.t_MarketData t,siminfo.t_SettlementGroup t1,
-                                                          siminfo.t_Instrument t2
-                                                    WHERE t.SettlementGroupID = t1.SettlementGroupID
-                                                    AND t.SettlementGroupID = t2.SettlementGroupID
-                                                    AND t.InstrumentID = t2.InstrumentID
-                                                    AND t.SettlementGroupID = %s""",
+                                            '2' AS ExchangeID,t2.InstrumentName AS SecurityName,
+                                            t.PreClosePrice AS PreClosePrice,t.OpenPrice AS OpenPrice,
+                                            t.Volume AS Volume,t.Turnover AS Turnover,"0" AS TradingCount,
+                                            t.LastPrice AS LastPrice,t.HighestPrice AS HighestPrice,
+                                            t.LowestPrice AS LowestPrice,'0' AS BidPrice1,'0' AS AskPrice1,
+                                            t.UpperLimitPrice AS UpperLimitPrice,t.LowerLimitPrice AS LowerLimitPrice,
+                                            '0' AS PERatio1,'0' AS PERatio2,'0' AS PriceUpDown1,'0' AS PriceUpDown2,
+                                            t.OpenInterest AS OpenInterest,'0' AS BidVolume1,'0' AS AskVolume1,
+                                            '0' AS BidPrice2,'0' AS BidVolume2,'0' AS AskPrice2,'0' AS AskVolume2,
+                                            '0' AS BidPrice3,'0' AS BidVolume3,'0' AS AskPrice3,'0' AS AskVolume3,
+                                            '0' AS BidPrice4,'0' AS BidVolume4,'0' AS AskPrice4,'0' AS AskVolume4,
+                                            '0' AS BidPrice5,'0' AS BidVolume5,'0' AS AskPrice5,'0' AS AskVolume5,
+                                            t.UpdateTime AS UpdateTime,t.UpdateMillisec AS UpdateMillisec
+                                        FROM siminfo.t_MarketData t,siminfo.t_Instrument t2
+                                        WHERE t.SettlementGroupID = t2.SettlementGroupID
+                                        AND t.InstrumentID = t2.InstrumentID
+                                        AND t.SettlementGroupID = %s""",
                                params=(self.settlementGroupID,)),
-            SSESecurity=dict(columns=("SecurityID", "ExchangeID", "SecurityName", "UnderlyingSecurityID", "MarketID",
+            SZSESecurity=dict(columns=("SecurityID", "ExchangeID", "SecurityName", "UnderlyingSecurityID", "MarketID",
                                       "ProductID", "SecurityType", "CurrencyID", "OrderUnit", "BuyTradingUnit",
                                       "SellTradingUnit", "MaxMarketOrderBuyVolume", "MinMarketOrderBuyVolume",
                                       "MaxLimitOrderBuyVolume", "MinLimitOrderBuyVolume", "MaxMarketOrderSellVolume",
@@ -110,79 +107,74 @@ class szse_to_csv:
                                       "ParValue", "SecurityStatus", "BondInterest", "ConversionRate", "TotalEquity",
                                       "CirculationEquity", "IsSupportPur", "IsSupportRed", "IsSupportTrade",
                                       "IsCancelOrder", "IsCollateral"),
-                             sql="""SELECT t.InstrumentID AS SecurityID,t1.ExchangeID AS ExchangeID,
-                                                   t.InstrumentName AS SecurityName,t.UnderlyingInstrID AS UnderlyingSecurityID,
-                                                   t2.MarketID AS MarketID,t.ProductID AS ProductID,
-                                                   t3.SecurityType AS SecurityType,t1.Currency AS CurrencyID,'1' AS OrderUnit,
-                                                   '100' AS BuyTradingUnit,'1' AS SellTradingUnit,
-                                                   '1000000' AS MaxMarketOrderBuyVolume,'100' AS MinMarketOrderBuyVolume,
-                                                   '1000000' AS MaxLimitOrderBuyVolume,'100' AS MinLimitOrderBuyVolume,
-                                                   '1000000' AS MaxMarketOrderSellVolume,'1' AS MinMarketOrderSellVolume,
-                                                   '1000000' AS MaxLimitOrderSellVolume,'1' AS MinLimitOrderSellVolume,
-                                                   t4.PriceTick AS PriceTick,t4.OpenDate AS OpenDate,'' AS CloseDate,
-                                                   t.PositionType AS PositionType,'1' AS ParValue,'0' AS SecurityStatus,
-                                                   '0' AS BondInterest,'0' AS ConversionRate,'' AS TotalEquity,
-                                                   '' AS CirculationEquity,'0' AS IsSupportPur,'0' AS IsSupportRed,
-                                                   '1' AS IsSupportTrade,'1' AS IsCancelOrder,'1' AS IsCollateral
-                                                FROM siminfo.t_Instrument t, siminfo.t_SettlementGroup t1,
-                                                    siminfo.t_Market t2, siminfo.t_SecurityProfit t3,
-                                                    siminfo.t_InstrumentProperty t4
-                                                WHERE t.SettlementGroupID = t1.SettlementGroupID
-                                                AND t.SettlementGroupID = t2.SettlementGroupID
-                                                AND t.SettlementGroupID = t3.SettlementGroupID
-                                                AND t.InstrumentID = t3.SecurityID
-                                                AND t.InstrumentID = t4.InstrumentID
-                                                AND t.SettlementGroupID = t4.SettlementGroupID
-                                                AND t.SettlementGroupID = %s""",
+                             sql="""SELECT t.InstrumentID AS SecurityID,'2' AS ExchangeID,
+                                           t.InstrumentName AS SecurityName,t.InstrumentID AS UnderlyingSecurityID,
+                                           '2' AS MarketID,'7' AS ProductID,
+                                        CASE WHEN t.InstrumentID LIKE '002%' THEN 'C'
+                                            WHEN t.InstrumentID LIKE '3%' THEN 'Q'
+                                            ELSE 'B' END AS SecurityType,
+                                     t1.Currency AS CurrencyID,'1' AS OrderUnit,'100' AS BuyTradingUnit,
+                                     '1' AS SellTradingUnit,'1000000' AS MaxMarketOrderBuyVolume,
+                                     '100' AS MinMarketOrderBuyVolume,'1000000' AS MaxLimitOrderBuyVolume,
+                                     '100' AS MinLimitOrderBuyVolume,'1000000' AS MaxMarketOrderSellVolume,
+                                     '1' AS MinMarketOrderSellVolume,'1000000' AS MaxLimitOrderSellVolume,
+                                     '1' AS MinLimitOrderSellVolume,t4.PriceTick AS PriceTick,t4.OpenDate AS OpenDate,
+                                     '' AS CloseDate,t.PositionType AS PositionType,'1' AS ParValue,
+                                     '0' AS SecurityStatus,'0' AS BondInterest,'0' AS ConversionRate,
+                                     t.TotalEquity AS TotalEquity,t.CirculationEquity AS CirculationEquity,
+                                     '0' AS IsSupportPur,'0' AS IsSupportRed,'1' AS IsSupportTrade,
+                                     '1' AS IsCancelOrder,'1' AS IsCollateral
+                                    FROM siminfo.t_Instrument t,siminfo.t_SettlementGroup t1,
+                                        siminfo.t_SecurityProfit t3,siminfo.t_InstrumentProperty t4
+                                    WHERE t.SettlementGroupID = t1.SettlementGroupID
+                                    AND t.SettlementGroupID = t3.SettlementGroupID
+                                    AND t.InstrumentID = t3.SecurityID
+                                    AND t.InstrumentID = t4.InstrumentID
+                                    AND t.SettlementGroupID = t4.SettlementGroupID
+                                    AND t.SettlementGroupID = %s""",
                              params=(self.settlementGroupID,)),
             SZSEBusinessUnitAccount=dict(columns=("InvestorID", "BusinessUnitID", "ExchangeID", "MarketID",
                                                  "ShareholderID", "TradingCodeClass", "ProductID", "AccountID",
                                                  "CurrencyID", "UserID"),
                                         sql="""SELECT t.InvestorID AS InvestorID,t.InvestorID AS BusinessUnitID,
-                                                    t1.ExchangeID AS ExchangeID,t2.MarketID AS MarketID,
-                                                    t.ClientID AS ShareholderID,'a' AS TradingCodeClass,
-                                                    '0' AS ProductID,t.InvestorID AS AccountID,
+                                                    '2' AS ExchangeID,'2' AS MarketID,t.ClientID AS ShareholderID,
+                                                    'a' AS TradingCodeClass,'0' AS ProductID,t.InvestorID AS AccountID,
                                                     t1.Currency AS CurrencyID,t3.UserID
                                                 FROM siminfo.t_InvestorClient t,siminfo.t_SettlementGroup t1,
-                                                    siminfo.t_Market t2,siminfo.t_User t3
+                                                     siminfo.t_User t3
                                                 WHERE t.SettlementGroupID = t1.SettlementGroupID
-                                                AND t1.SettlementGroupID = t2.SettlementGroupID
                                                 AND t3.SettlementGroupID = t.SettlementGroupID
                                                 AND t1.SettlementGroupID = %s""",
                                         params=(self.settlementGroupID,)),
-            SSEPosition=dict(columns=("InvestorID", "BusinessUnitID", "MarketID", "ShareholderID", "TradingDay",
+            SZSEPosition=dict(columns=("InvestorID", "BusinessUnitID", "MarketID", "ShareholderID", "TradingDay",
                                       "ExchangeID", "SecurityID", "HistoryPos", "HistoryPosFrozen", "TodayBSPos",
                                       "TodayBSPosFrozen", "TodayPRPos", "TodayPRPosFrozen", "TodaySMPos",
                                       "TodaySMPosFrozen", "HistoryPosCost", "TotalPosCost", "MarginBuyPos",
                                       "ShortSellPos", "TodayShortSellPos", "PrePosition", "AvailablePosition",
                                       "CurrentPosition"),
                              sql="""SELECT t1.InvestorID AS InvestorID,t1.InvestorID AS BusinessUnitID,
-                                            t2.MarketID AS MarketID,t.ClientID AS ShareholderID,'' AS TradingDay,
-                                            t3.ExchangeID AS ExchangeID,t.InstrumentID AS SecurityID,'1000000' AS HistoryPos,
-                                            '0' AS HistoryPosFrozen,'0' AS TodayBSPos,'0' AS TodayBSPosFrozen,
-                                            '0' AS TodayPRPos,'0' AS TodayPRPosFrozen,'0' AS TodaySMPos,
-                                            '0' AS TodaySMPosFrozen,t.YdPositionCost AS HistoryPosCost,
-                                            t.YdPositionCost AS TotalPosCost,'0' AS MarginBuyPos,'0' AS ShortSellPos,
-                                            '0' AS TodayShortSellPos,t.YdPosition AS PrePosition,
-                                            t.YdPosition AS AvailablePosition,t.YdPosition AS CurrentPosition
-                                        FROM siminfo.t_ClientPosition t,siminfo.t_InvestorClient t1,
-                                             siminfo.t_Market t2,siminfo.t_SettlementGroup t3
-                                        WHERE t.ClientID = t1.ClientID
-                                        AND t3.SettlementGroupID = t2.SettlementGroupID
-                                        AND t2.SettlementGroupID = %s""",
+                                        '2' AS MarketID,t.ClientID AS ShareholderID,'' AS TradingDay,
+                                        '2' AS ExchangeID,t.InstrumentID AS SecurityID,'1000000' AS HistoryPos,
+                                        '0' AS HistoryPosFrozen,'0' AS TodayBSPos,'0' AS TodayBSPosFrozen,
+                                        '0' AS TodayPRPos,'0' AS TodayPRPosFrozen,'0' AS TodaySMPos,
+                                        '0' AS TodaySMPosFrozen,t.YdPositionCost AS HistoryPosCost,
+                                        t.YdPositionCost AS TotalPosCost,'0' AS MarginBuyPos,'0' AS ShortSellPos,
+                                        '0' AS TodayShortSellPos,t.YdPosition AS PrePosition,
+                                        t.YdPosition AS AvailablePosition,t.YdPosition AS CurrentPosition
+                                    FROM siminfo.t_ClientPosition t,siminfo.t_InvestorClient t1
+                                    WHERE t.ClientID = t1.ClientID
+                                    AND t.SettlementGroupID = t1.SettlementGroupID
+                                    AND t.SettlementGroupID = %s""",
                              params=(self.settlementGroupID,)),
             SZSEShareholderAccount=dict(columns=("ExchangeID", "ShareholderID", "MarketID", "InvestorID",
                                                 "TradingCodeClass", "TradingCodeEx", "PbuID",
                                                 "BranchID", "bProperControl"),
-                                       sql="""SELECT t1.ExchangeID AS ExchangeID,t.ClientID AS ShareholderID,
-                                                    t2.MarketID AS MarketID,t.InvestorID AS InvestorID,
-                                                    'a' AS TradingCodeClass,'' AS TradingCodeEx,'232600' AS PbuID,
-                                                    'D9' AS BranchID,'0' AS bProperControl
-                                                FROM siminfo.t_InvestorClient t,siminfo.t_SettlementGroup t1,
-                                                    siminfo.t_Market t2
-                                                WHERE t.SettlementGroupID = t1.SettlementGroupID
-                                                AND t.SettlementGroupID = t2.SettlementGroupID
-                                                and t.SettlementGroupID = %s""",
+                                       sql="""SELECT '2' AS ExchangeID,t.ClientID AS ShareholderID,'2' AS MarketID,
+                                                    t.InvestorID AS InvestorID,'a' AS TradingCodeClass,
+                                                    '' AS TradingCodeEx,'232600' AS PbuID,'D9' AS BranchID,
+                                                    '0' AS bProperControl
+                                                FROM siminfo.t_InvestorClient t
+                                                WHERE t.SettlementGroupID = %s""",
                                        params=(self.settlementGroupID,)),
             TradingAccount=dict(columns=("AccountID", "CurrencyID", "AccountType", "PreDeposit", "UsefulMoney",
                                          "FetchLimit", "Deposit", "Withdraw", "FrozenMargin", "FrozenCash",
@@ -202,8 +194,8 @@ class szse_to_csv:
                                 params=(self.settlementGroupID,)),
             TradingAgreement=dict(columns=("InvestorID", "TradingAgreementType", "EffectDay", "ExpireDay"),
                                   sql="""SELECT InvestorID,'0' AS TradingAgreementType,
-                                          '20170101' AS EffectDay,'20500101' AS ExpireDay
-                                         FROM siminfo.t_Investor"""),
+                                              '20170101' AS EffectDay,'20500101' AS ExpireDay
+                                             FROM siminfo.t_Investor"""),
             User=dict(columns=("UserID", "UserName", "UserType", "DepartmentID", "UserPassword", "LoginLimit",
                                "PasswordFailLimit", "Status", "Contacter", "Fax", "Telephone", "Email", "Address",
                                "ZipCode", "OpenDate", "CloseDate"),

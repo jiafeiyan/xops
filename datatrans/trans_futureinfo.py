@@ -54,6 +54,9 @@ class trans_futureinfo:
         # ===========处理futures_dbf写入t_MarginRateDetail表==============
         self.__t_MarginRateDetail(mysqlDB=mysqlDB, dbf=dbfs[0])
 
+        # ===========处理futures_dbf写入t_PriceBanding表==============
+        self.__t_PriceBanding(mysqlDB=mysqlDB, dbf=dbfs[0])
+
         # ===========处理gjshq_dbf写入t_MarketData表 ==============
         self.__t_MarketData(mysqlDB=mysqlDB, dbf=dbfs[1])
 
@@ -396,6 +399,63 @@ class trans_futureinfo:
         mysqlDB.executemany(sql_insert_detail, sql_insert_params)
         mysqlDB.executemany(sql_update_detail, sql_update_params)
 
+    # 写入t_PriceBanding
+    def __t_PriceBanding(self, mysqlDB, dbf):
+        # 判断合约是否存在
+        dbf_futures = []
+        exist_price = []
+        # 获取模板文件
+        template = self.__loadJSON(tableName='t_PriceBanding')
+        if template is None:
+            self.logger.error("t_PriceBanding template is None")
+            return
+        sql_pricebanding = "SELECT InstrumentID FROM siminfo.t_PriceBanding " \
+                           "WHERE (SettlementGroupID,InstrumentID,TradingSegmentSN) in ("
+        for future in dbf:
+            dbf_futures.append(future['ZQDM'])
+            SGID = self.self_conf[future['JYSC'].encode('UTF-8')]
+            if SGID in template:
+                sql_values = "('" + SGID + \
+                             "', '" + future['ZQDM'] + \
+                             "', '" + template[SGID][7] + \
+                             "') "
+                sql_pricebanding = sql_pricebanding + sql_values + ","
+        sql_pricebanding = sql_pricebanding[0:-1] + ") "
+
+        for future in mysqlDB.select(sql_pricebanding):
+            exist_price.append(str(future[0]))
+
+        # 获取差集
+        inexist_price = list(set(dbf_futures) ^ set(exist_price))
+        self.logger.info("%s%d%s" % ("future导入t_PriceBanding存在：", len(exist_price), "个合约"))
+        self.logger.info("%s%d%s" % ("future导入t_PriceBanding不存在：", len(inexist_price), "个合约"))
+
+        # 不存在插入记录
+        sql_insert_price = """INSERT INTO siminfo.t_PriceBanding (
+                                SettlementGroupID,PriceLimitType,ValueMode,RoundingMode,
+                                UpperValue,LowerValue,InstrumentID,TradingSegmentSN
+                            ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s) """
+        # 存在更新记录
+        sql_update_price = """UPDATE siminfo.t_PriceBanding
+                                SET PriceLimitType=%s,ValueMode=%s,RoundingMode=%s,UpperValue=%s,LowerValue=%s
+                                WHERE SettlementGroupID=%s AND InstrumentID=%s AND TradingSegmentSN=%s"""
+        sql_insert_params = []
+        sql_update_params = []
+        for future in dbf:
+            SGID = self.self_conf[future['JYSC'].encode('UTF-8')]
+            if SGID in template and future['ZQDM'] in inexist_price:
+                sql_insert_params.append((SGID, template[SGID][1], template[SGID][2], template[SGID][3],
+                                          template[SGID][4], template[SGID][5], future['ZQDM'],
+                                          template[SGID][7]))
+                continue
+            # 更新记录
+            if SGID in template and future['ZQDM'] in exist_price:
+                sql_update_params.append((template[SGID][1], template[SGID][2], template[SGID][3],
+                                          template[SGID][4], template[SGID][5], SGID, future['ZQDM'],
+                                          template[SGID][7]))
+        mysqlDB.executemany(sql_insert_price, sql_insert_params)
+        mysqlDB.executemany(sql_update_price, sql_update_params)
+
     def __check_file(self):
         env_dist = os.environ
         # 判断环境变量是否存在HOME配置
@@ -422,12 +482,12 @@ class trans_futureinfo:
 
     def __loadDBF(self, **par):
         # 加载 par_futures 数据
-        stock = DBF(filename=par['futures'], encoding='GBK')
-        stock.load()
+        future = DBF(filename=par['futures'], encoding='GBK')
+        future.load()
         # 加载 gjshq 数据
         info = DBF(filename=par['gjshq'], encoding='GBK')
         info.load()
-        return stock.records, info.records
+        return future.records, info.records
 
     # 主要读取template数据
     def __loadJSON(self, tableName):

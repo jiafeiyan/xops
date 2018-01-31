@@ -9,6 +9,8 @@ t_BrokerSystemSettlementGroup
 t_BusinessConfig              t_BusinessConfig
 t_ClearingTradingPart         t_ClearingTradingPart
 t_ClientProductRight          t_ClientProductRight
+t_Client                      t_Client ==== todo
+t_PriceBanding                 t_PriceBanding ====todo
 t_Exchange                    t_Exchange
 t_Instrument                  t_Instrument
 t_InstrumentProperty          t_CurrInstrumentProperty
@@ -74,11 +76,22 @@ class toSyncAll:
         self.__t_SettlementGroup(mysqlDB)
         self.__t_TradeSystemBrokerSystem(mysqlDB)
         self.__t_TradingAccount(mysqlDB)
-
         self.__t_CurrInstrumentProperty(mysqlDB)
         self.__t_CurrMarginRate(mysqlDB)
         self.__t_CurrMarginRateDetail(mysqlDB)
         self.__t_CurrTradingSegmentAttr(mysqlDB)
+        self.__t_InstrumentGroup(mysqlDB)
+        self.__t_MarketDataTopic(mysqlDB)
+        self.__t_MdPubStatus(mysqlDB)
+        self.__t_PartClient(mysqlDB)
+        self.__t_PartPosition(mysqlDB)
+        self.__t_PartTopicSubscribe(mysqlDB)
+        self.__t_User(mysqlDB)
+        self.__t_UserFunctionRight(mysqlDB)
+        self.__t_UserIP(mysqlDB)
+        self.__t_CurrPriceBanding(mysqlDB)
+        self.__t_Client(mysqlDB)
+        self.__t_ClientPosition(mysqlDB)
 
     def __t_Account(self, mysqlDB):
         table_name = "t_Account"
@@ -173,7 +186,7 @@ class toSyncAll:
         sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
                       t.SettlementGroupID,t.ProductID,t.ProductGroupID,t.UnderlyingInstrID,
                       t.ProductClass,t.PositionType,t.StrikePrice,t.OptionsType,t.VolumeMultiple,
-                      t.UnderlyingMultiple,t.InstrumentID,t.InstrumentName,
+                      t.UnderlyingMultiple,t.TotalEquity,t.CirculationEquity,t.InstrumentID,t.InstrumentName,
                       t.DeliveryYear,t.DeliveryMonth,t.AdvanceMonth,%s
                       FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
                       WHERE t.SettlementGroupID = t2.SettlementGroupID 
@@ -400,6 +413,182 @@ class toSyncAll:
                  dict(sql=sql, params=(self.tradeSystemID,))]
         mysqlDB.executetransaction(trans)
 
+    def __t_InstrumentGroup(self, mysqlDB):
+        table_name = "t_InstrumentGroup"
+        self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
+        delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
+        self.logger.info("同步" + table_name + " ==>> sync")
+        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
+                          t.SettlementGroupID,t.InstrumentID,t.InstrumentGroupID
+                          FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
+                          WHERE t.SettlementGroupID = t2.SettlementGroupID 
+                          AND t2.TradeSystemID=%s"""
+        trans = [dict(sql=delete, params=(self.tradeSystemID,)),
+                 dict(sql=sql, params=(self.tradeSystemID,))]
+        mysqlDB.executetransaction(trans)
+
+    def __t_MarketDataTopic(self, mysqlDB):
+        table_name = "t_MarketDataTopic"
+        self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
+        delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
+        self.logger.info("同步" + table_name + " ==>> sync")
+        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
+                             t.SettlementGroupID,t.TopicID,t.TopicName,t.MarketID,t.SnapShotFeq,
+                             t.MarketDataDepth,t.DelaySeconds,t.MarketDataMode
+                             FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
+                             WHERE t.SettlementGroupID = t2.SettlementGroupID 
+                             AND t2.TradeSystemID=%s"""
+        trans = [dict(sql=delete, params=(self.tradeSystemID,)),
+                 dict(sql=sql, params=(self.tradeSystemID,))]
+        mysqlDB.executetransaction(trans)
+
+    def __t_MdPubStatus(self, mysqlDB):
+        table_name = "t_MdPubStatus"
+        self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
+        delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
+        self.logger.info("同步" + table_name + " ==>> sync")
+        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
+                           t.SettlementGroupID,t.ProductID,t.InstrumentStatus,t.MdPubStatus
+                           FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
+                           WHERE t.SettlementGroupID = t2.SettlementGroupID 
+                           AND t2.TradeSystemID=%s"""
+        trans = [dict(sql=delete, params=(self.tradeSystemID,)),
+                 dict(sql=sql, params=(self.tradeSystemID,))]
+        mysqlDB.executetransaction(trans)
+
+    def __t_PartClient(self, mysqlDB):
+        table_name = "t_PartClient"
+        self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
+        delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
+        self.logger.info("同步" + table_name + " ==>> sync")
+        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
+                           t.SettlementGroupID,t.ClientID,t.ParticipantID
+                           FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
+                           WHERE t.SettlementGroupID = t2.SettlementGroupID 
+                           AND t2.TradeSystemID=%s"""
+        trans = [dict(sql=delete, params=(self.tradeSystemID,)),
+                 dict(sql=sql, params=(self.tradeSystemID,))]
+        mysqlDB.executetransaction(trans)
+
+    def __t_PartPosition(self, mysqlDB):
+        table_name = "t_PartPosition"
+        self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
+        delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
+        self.logger.info("同步" + table_name + " ==>> sync")
+        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
+                           t.TradingDay,t.SettlementGroupID,t.SettlementID,t.HedgeFlag,t.PosiDirection,
+                           t.YdPosition,t.Position,t.LongFrozen,t.ShortFrozen,t.YdLongFrozen,
+                           t.YdShortFrozen,t.InstrumentID,t.ParticipantID,t.TradingRole
+                           FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
+                           WHERE t.SettlementGroupID = t2.SettlementGroupID 
+                           AND t2.TradeSystemID=%s"""
+        trans = [dict(sql=delete, params=(self.tradeSystemID,)),
+                 dict(sql=sql, params=(self.tradeSystemID,))]
+        mysqlDB.executetransaction(trans)
+
+    def __t_PartTopicSubscribe(self, mysqlDB):
+        table_name = "t_PartTopicSubscribe"
+        self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
+        delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
+        self.logger.info("同步" + table_name + " ==>> sync")
+        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
+                           t.SettlementGroupID,t.ParticipantID,t.ParticipantType,t.TopicID
+                           FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
+                           WHERE t.SettlementGroupID = t2.SettlementGroupID 
+                           AND t2.TradeSystemID=%s"""
+        trans = [dict(sql=delete, params=(self.tradeSystemID,)),
+                 dict(sql=sql, params=(self.tradeSystemID,))]
+        mysqlDB.executetransaction(trans)
+
+    def __t_User(self, mysqlDB):
+        table_name = "t_User"
+        self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
+        delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
+        self.logger.info("同步" + table_name + " ==>> sync")
+        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
+                           t.SettlementGroupID,t.ParticipantID,t.UserID,t.UserType,t.Password,t.IsActive
+                           FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
+                           WHERE t.SettlementGroupID = t2.SettlementGroupID 
+                           AND t2.TradeSystemID=%s"""
+        trans = [dict(sql=delete, params=(self.tradeSystemID,)),
+                 dict(sql=sql, params=(self.tradeSystemID,))]
+        mysqlDB.executetransaction(trans)
+
+    def __t_UserFunctionRight(self, mysqlDB):
+        table_name = "t_UserFunctionRight"
+        self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
+        delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
+        self.logger.info("同步" + table_name + " ==>> sync")
+        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
+                           t.SettlementGroupID,t.UserID,t.FunctionCode
+                           FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
+                           WHERE t.SettlementGroupID = t2.SettlementGroupID 
+                           AND t2.TradeSystemID=%s"""
+        trans = [dict(sql=delete, params=(self.tradeSystemID,)),
+                 dict(sql=sql, params=(self.tradeSystemID,))]
+        mysqlDB.executetransaction(trans)
+
+    def __t_UserIP(self, mysqlDB):
+        table_name = "t_UserIP"
+        self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
+        delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
+        self.logger.info("同步" + table_name + " ==>> sync")
+        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
+                           t.SettlementGroupID,t.UserID,t.IPAddress,t.IPMask
+                           FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
+                           WHERE t.SettlementGroupID = t2.SettlementGroupID 
+                           AND t2.TradeSystemID=%s"""
+        trans = [dict(sql=delete, params=(self.tradeSystemID,)),
+                 dict(sql=sql, params=(self.tradeSystemID,))]
+        mysqlDB.executetransaction(trans)
+
+    def __t_CurrPriceBanding(self, mysqlDB):
+        table_name = "PriceBanding"
+        self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
+        delete = "DELETE FROM sync.t_Curr" + table_name + " WHERE TradeSystemID=%s"
+        self.logger.info("同步" + table_name + " ==>> sync")
+        sql = """INSERT INTO sync.t_Curr""" + table_name + """ SELECT t2.TradeSystemID,
+                           t.SettlementGroupID,t.PriceLimitType,t.ValueMode,t.RoundingMode,
+                           t.UpperValue,t.LowerValue,t.InstrumentID,t.TradingSegmentSN
+                           FROM siminfo.t_""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
+                           WHERE t.SettlementGroupID = t2.SettlementGroupID 
+                           AND t2.TradeSystemID=%s"""
+        trans = [dict(sql=delete, params=(self.tradeSystemID,)),
+                 dict(sql=sql, params=(self.tradeSystemID,))]
+        mysqlDB.executetransaction(trans)
+
+    def __t_Client(self, mysqlDB):
+        table_name = "t_Client"
+        self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
+        delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
+        self.logger.info("同步" + table_name + " ==>> sync")
+        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
+                           t.SettlementGroupID,t.ClientID,t.ClientName,t.IdentifiedCardType,t.IdentifiedCardNo,
+                           t.TradingRole,t.ClientType,t.IsActive,t.HedgeFlag
+                           FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
+                           WHERE t.SettlementGroupID = t2.SettlementGroupID 
+                           AND t2.TradeSystemID=%s"""
+        trans = [dict(sql=delete, params=(self.tradeSystemID,)),
+                 dict(sql=sql, params=(self.tradeSystemID,))]
+        mysqlDB.executetransaction(trans)
+
+    def __t_ClientPosition(self, mysqlDB):
+        table_name = "t_ClientPosition"
+        self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
+        delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
+        self.logger.info("同步" + table_name + " ==>> sync")
+        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
+                           t.TradingDay,t.SettlementGroupID,t.SettlementID,t.HedgeFlag,t.PosiDirection,t.YdPosition,
+                           t.Position,t.LongFrozen,t.ShortFrozen,t.YdLongFrozen,t.YdShortFrozen,t.BuyTradeVolume,
+                           t.SellTradeVolume,t.PositionCost,t.YdPositionCost,t.UseMargin,t.FrozenMargin,
+                           t.LongFrozenMargin,t.ShortFrozenMargin,t.FrozenPremium,t.InstrumentID,
+                           t.ParticipantID,t.ClientID
+                           FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
+                           WHERE t.SettlementGroupID = t2.SettlementGroupID 
+                           AND t2.TradeSystemID=%s"""
+        trans = [dict(sql=delete, params=(self.tradeSystemID,)),
+                 dict(sql=sql, params=(self.tradeSystemID,))]
+        mysqlDB.executetransaction(trans)
 
 if __name__ == '__main__':
     base_dir, config_names, config_files = parse_conf_args(__file__, config_names=["mysql", "log"])
