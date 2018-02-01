@@ -1,0 +1,17 @@
+{
+    "root_101" : {
+        "host" : "192.188.188.101",
+        "user" : "root",
+        "password" : "111111"
+    },
+    "trade5_194" : {
+        "host" : "192.188.188.194",
+        "user" : "trade5",
+        "password" : "111111"
+    },
+    "strade_119" : {
+        "host" : "192.188.188.101",
+        "user" : "chenyan",
+        "password" : "111111"
+    }
+}

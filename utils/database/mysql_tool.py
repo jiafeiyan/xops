@@ -17,9 +17,10 @@ class mysql:
         self.__connect(db_config=db_config, pool_size=configs["pool_size"])
 
     def __connect(self, db_config, pool_size):
-        self.pool = pooling.MySQLConnectionPool(pool_size=pool_size, **db_config)
         self.logger.info("start connect mysql database [ user=%s, host=%s, port=%s ]",
                          db_config["user"], db_config["host"], db_config["port"])
+        self.pool = pooling.MySQLConnectionPool(pool_size=pool_size, **db_config)
+        self.logger.info("connect database success")
 
     def get_cnx(self):
         return self.pool.get_connection()

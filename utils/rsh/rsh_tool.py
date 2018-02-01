@@ -64,7 +64,8 @@ class rshell:
         try:
             sftp.stat(target_dir)
         except:
-            sftp.mkdir(target_dir)
+            stdin, stdout, stderr = self.execute("mkdir -p %s" % target_dir)
+            stdout.readline()
 
         if os.path.isfile(source):
             source_file_name = source
@@ -76,10 +77,11 @@ class rshell:
 
             for file_name in files:
                 source_file_name = os.path.join(source, file_name)
-                target_file_name = target_dir + "/" + file_name
+                if not stat.S_ISDIR(os.stat(source_file_name).st_mode):
+                    target_file_name = target_dir + "/" + file_name
 
-                self.logger.info("[rsh-sftp is copying: %s] [(local)%s -> (remote)%s]" % (json.dumps(self.config), source_file_name, target_file_name))
-                sftp.put(source_file_name, target_file_name)
+                    self.logger.info("[rsh-sftp is copying: %s] [(local)%s -> (remote)%s]" % (json.dumps(self.config), source_file_name, target_file_name))
+                    sftp.put(source_file_name, target_file_name)
 
         self.logger.info("[rsh-sftp has copyed: %s] [(local)%s -> (remote)%s]" %(json.dumps(self.config), source, target_dir))
 
