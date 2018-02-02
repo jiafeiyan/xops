@@ -12,7 +12,7 @@ from utils import parse_conf_args
 from utils import path
 from utils import Configuration
 from utils import mysql
-
+from utils import csv_tool
 
 class broker_etf_csv:
     def __init__(self, context, configs):
@@ -40,6 +40,9 @@ class broker_etf_csv:
         self.__data_to_csv("SSEBusinessUnitAccount", mysqlDB)
         self.__data_to_csv("SSEMarketData", mysqlDB)
         self.__data_to_csv("SSEPosition", mysqlDB)
+        self.__data_to_csv("SSESecurity", mysqlDB)
+        self.__data_to_csv("SSEShareholderAccount", mysqlDB)
+        self.__data_to_csv("SSEShareholderTradingRight", mysqlDB)
 
     def __data_to_csv(self, csv_name, mysqlDB):
         table_sqls = dict(
@@ -69,7 +72,7 @@ class broker_etf_csv:
             SSEBusinessUnitAccount=dict(columns=("UserID", "InvestorID", "BusinessUnitID", "ExchangeID",
                                                  "MarketID", "ShareholderID", "ShareholderIDType", "ProductID",
                                                  "AccountID", "CurrencyID"),
-                                        sql="""SELECT t2.UserID,t.InvestorID AS InvestorID,
+                                        sql="""SELECT t.InvestorID AS UserID,t.InvestorID AS InvestorID,
                                                     t.InvestorID AS BusinessUnitID,'1' AS ExchangeID,'1' AS MarketID,
                                                     t.ClientID AS ShareholderID,'3' AS ShareholderIDType,
                                                     'd' AS ProductID,t.InvestorID AS AccountID,t1.Currency AS CurrencyID
@@ -132,7 +135,53 @@ class broker_etf_csv:
                                     AND t3.TradeSystemID = t2.TradeSystemID
                                     AND t.SettlementGroupID = %s""",
                              params=(self.settlementGroupID,)),
-
+            SSESecurity=dict(columns=("ExchangeID", "SecurityID", "SecurityName", "UnderlyingSecurityID",
+                                      "UnderlyingSecurityName", "UnderlyingMultiple", "StrikeMode", "OptionsType",
+                                      "MarketID", "ProductID", "SecurityType", "CurrencyID", "OrderUnit",
+                                      "BuyTradingUnit", "SellTradingUnit", "MaxMarketOrderBuyVolume",
+                                      "MinMarketOrderBuyVolume", "MaxLimitOrderBuyVolume", "MinLimitOrderBuyVolume",
+                                      "MaxMarketOrderSellVolume", "MinMarketOrderSellVolume",
+                                      "MaxLimitOrderSellVolume", "MinLimitOrderSellVolume", "VolumeMultiple",
+                                      "PriceTick", "PositionType", "SecurityStatus", "StrikePrice", "FirstDate",
+                                      "LastDate", "StrikeDate", "ExpireDate", "DelivDate", "IsUpDownLimit",
+                                      "MarginUnit", "PreSettlemetPrice", "PreClosePrice", "UnderlyingPreClosePrice"),
+                             sql="""SELECT '1' AS ExchangeID,t.InstrumentID AS SecurityID,
+                                        t.InstrumentName AS SecurityName,t.UnderlyingInstrID AS UnderlyingSecurityID,
+                                        '' AS UnderlyingSecurityName,t.UnderlyingMultiple AS UnderlyingMultiple,
+                                        '0' AS StrikeMode,t.OptionsType AS OptionsType,'1' AS MarketID,'d' AS ProductID,
+                                        '3' AS SecurityType,'1' AS CurrencyID,'3' AS OrderUnit,'1' AS BuyTradingUnit,
+                                        '1' AS SellTradingUnit,'100' AS MaxMarketOrderBuyVolume,
+                                        '1' AS MinMarketOrderBuyVolume,'100' AS MaxLimitOrderBuyVolume,
+                                        '1' AS MinLimitOrderBuyVolume,'100' AS MaxMarketOrderSellVolume,
+                                        '1' AS MinMarketOrderSellVolume,'100' AS MaxLimitOrderSellVolume,
+                                        '1' AS MinLimitOrderSellVolume,t.VolumeMultiple AS VolumeMultiple,
+                                        t2.PriceTick AS PriceTick,t.PositionType AS PositionType,'0' AS SecurityStatus,
+                                        t.StrikePrice AS StrikePrice,t2.StartDelivDate AS FirstDate,
+                                        t2.EndDelivDate AS LastDate,'' AS StrikeDate,t2.ExpireDate AS ExpireDate,
+                                        t2.EndDelivDate AS DelivDate,'1' AS IsUpDownLimit,'' AS MarginUnit,
+                                        '' AS PreSettlemetPrice,'' AS PreClosePrice,'' AS UnderlyingPreClosePrice
+                                    FROM siminfo.t_Instrument t,siminfo.t_SettlementGroup t1,
+                                         siminfo.t_InstrumentProperty t2
+                                    WHERE t.SettlementGroupID = t1.SettlementGroupID
+                                    AND t.InstrumentID = t2.InstrumentID
+                                    AND t.SettlementGroupID = t2.SettlementGroupID
+                                    AND t.SettlementGroupID = %s""",
+                             params=(self.settlementGroupID,)),
+            SSEShareholderAccount=dict(columns=("ExchangeID", "ShareholderID", "MarketID", "InvestorID",
+                                                "ShareholderIDType", "PbuID", "BranchID"),
+                                       sql="""SELECT '1' AS ExchangeID,t.ClientID AS ShareholderID,'1' AS MarketID,
+                                                t.InvestorID AS InvestorID,'3' AS ShareholderIDType,'25377' AS PbuID,
+                                                '0' AS BranchID
+                                            FROM siminfo.t_InvestorClient t WHERE t.SettlementGroupID = %s""",
+                                       params=(self.settlementGroupID,)),
+            SSEShareholderTradingRight=dict(columns=("MarketID", "ShareholderID", "SystemFlag", "ProductID",
+                                                     "SecurityType", "SecurityID", "OffsetFlag", "Direction",
+                                                     "HedgeFlag", "ExchangeID", "bForbidden"),
+                                            sql="""SELECT '1' AS ExchangeID,t.ClientID AS ShareholderID,'1' AS MarketID,
+                                                t.InvestorID AS InvestorID,'3' AS ShareholderIDType,'25377' AS PbuID,
+                                                '0' AS BranchID
+                                            FROM siminfo.t_InvestorClient t WHERE t.SettlementGroupID = %s""",
+                                            params=(self.settlementGroupID,)),
         )
         # 查询siminfo数据库数据内容
         csv_data = mysqlDB.select(table_sqls[csv_name]["sql"], table_sqls[csv_name].get("params"))
@@ -151,8 +200,8 @@ class broker_etf_csv:
                 writer = csv.writer(csvfile, quoting=csv.QUOTE_ALL)
             else:
                 writer = csv.writer(csvfile)
-            writer.writerow(columns['columns'])
-            writer.writerows(csv_data)
+            writer.writerow(csv_tool.covert_to_gbk(columns['columns']))
+            writer.writerows(csv_tool.covert_to_gbk(csv_data))
         self.logger.info("%s%s%s" % ("生成 ", csv_name, ".csv 文件完成"))
 
 

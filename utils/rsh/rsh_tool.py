@@ -91,7 +91,7 @@ class rshell:
         target_dir = os.path.abspath(path.convert(target_dir))
 
         if not os.path.exists(target_dir):
-            os.mkdir(target_dir)
+            os.makedirs(target_dir)
 
         sftp = self.ssh.open_sftp()
 

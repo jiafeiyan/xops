@@ -12,7 +12,7 @@ from utils import parse_conf_args
 from utils import path
 from utils import Configuration
 from utils import mysql
-
+from utils import csv_tool
 
 class broker_sse_csv:
     def __init__(self, context, configs):
@@ -41,14 +41,14 @@ class broker_sse_csv:
 
     def __data_to_csv(self, csv_name, mysqlDB):
         table_sqls = dict(
-            SSEMarketData=dict(columns=("TradingDay", "SecurityID", "ExchangeID", "SecurityName", "PreClosePrice",
+            SSEMarketData=dict(columns=["TradingDay", "SecurityID", "ExchangeID", "SecurityName", "PreClosePrice",
                                         "OpenPrice", "Volume", "Turnover", "TradingCount", "LastPrice", "HighestPrice",
                                         "LowestPrice", "BidPrice1", "AskPrice1", "UpperLimitPrice", "LowerLimitPrice",
                                         "PERatio1", "PERatio2", "PriceUpDown1", "PriceUpDown2", "OpenInterest",
                                         "BidVolume1", "AskVolume1", "BidPrice2", "BidVolume2", "AskPrice2",
                                         "AskVolume2", "BidPrice3", "BidVolume3", "AskPrice3", "AskVolume3",
                                         "BidPrice4", "BidVolume4", "AskPrice4", "AskVolume4", "BidPrice5", "BidVolume5",
-                                        "AskPrice5", "AskVolume5", "UpdateTime", "UpdateMillisec"),
+                                        "AskPrice5", "AskVolume5", "UpdateTime", "UpdateMillisec"],
                                sql="""SELECT t.TradingDay AS TradingDay,t.InstrumentID AS SecurityID,
                                                 '1' AS ExchangeID,t2.InstrumentName AS SecurityName,
                                                 t.PreClosePrice AS PreClosePrice,t.OpenPrice AS OpenPrice,
@@ -79,17 +79,14 @@ class broker_sse_csv:
                                       "IsCancelOrder", "IsCollateral"),
                              sql="""SELECT t.InstrumentID AS SecurityID,'1' AS ExchangeID,
                                            t.InstrumentName AS SecurityName,t.InstrumentID AS UnderlyingSecurityID,
-                                           '1' AS MarketID,'7' AS ProductID,
-                                        CASE WHEN t.InstrumentID LIKE '002%' THEN 'C'
-                                            WHEN t.InstrumentID LIKE '3%' THEN 'Q'
-                                            ELSE 'B' END AS SecurityType,
+                                           '1' AS MarketID,'1' AS ProductID,'a' AS SecurityType,
                                      t1.Currency AS CurrencyID,'1' AS OrderUnit,'100' AS BuyTradingUnit,
                                      '1' AS SellTradingUnit,'1000000' AS MaxMarketOrderBuyVolume,
-                                     '100' AS MinMarketOrderBuyVolume,'1000000' AS MaxLimitOrderBuyVolume,
-                                     '100' AS MinLimitOrderBuyVolume,'1000000' AS MaxMarketOrderSellVolume,
+                                     '1' AS MinMarketOrderBuyVolume,'1000000' AS MaxLimitOrderBuyVolume,
+                                     '1' AS MinLimitOrderBuyVolume,'1000000' AS MaxMarketOrderSellVolume,
                                      '1' AS MinMarketOrderSellVolume,'1000000' AS MaxLimitOrderSellVolume,
-                                     '1' AS MinLimitOrderSellVolume,t4.PriceTick AS PriceTick,t4.OpenDate AS OpenDate,
-                                     '' AS CloseDate,t.PositionType AS PositionType,'1' AS ParValue,
+                                     '1' AS MinLimitOrderSellVolume,'1' AS VolumeMultiple,t4.PriceTick AS PriceTick,
+                                     t4.OpenDate AS OpenDate,'' AS CloseDate,t.PositionType AS PositionType,'1' AS ParValue,
                                      '0' AS SecurityStatus,'0' AS BondInterest,'0' AS ConversionRate,
                                      t.TotalEquity AS TotalEquity,t.CirculationEquity AS CirculationEquity,
                                      '0' AS IsSupportPur,'0' AS IsSupportRed,'1' AS IsSupportTrade,
@@ -109,7 +106,7 @@ class broker_sse_csv:
                                         sql="""SELECT t.InvestorID AS InvestorID,t.InvestorID AS BusinessUnitID,
                                                     '1' AS ExchangeID,'1' AS MarketID,t.ClientID AS ShareholderID,
                                                     'a' AS TradingCodeClass,'0' AS ProductID,t.InvestorID AS AccountID,
-                                                    t1.Currency AS CurrencyID,t3.UserID
+                                                    t1.Currency AS CurrencyID,t.InvestorID AS UserID
                                                 FROM siminfo.t_InvestorClient t,siminfo.t_SettlementGroup t1,
                                                      siminfo.t_User t3
                                                 WHERE t.SettlementGroupID = t1.SettlementGroupID
@@ -164,10 +161,9 @@ class broker_sse_csv:
                 writer = csv.writer(csvfile, quoting=csv.QUOTE_ALL)
             else:
                 writer = csv.writer(csvfile)
-            writer.writerow(columns['columns'])
-            writer.writerows(csv_data)
+            writer.writerow(csv_tool.covert_to_gbk(columns['columns']))
+            writer.writerows(csv_tool.covert_to_gbk(csv_data))
         self.logger.info("%s%s%s" % ("生成 ", csv_name, ".csv 文件完成"))
-
 
 if __name__ == '__main__':
     base_dir, config_names, config_files = parse_conf_args(__file__, config_names=["mysql", "log", "csv"])

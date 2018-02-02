@@ -121,13 +121,13 @@ class trans_stockinfo:
                                           ProductID,
                                           ProductGroupID,
                                           ProductID,
-                                          "4", "2", None, "0",
+                                          "4", "1", None, "0",
                                           1, 1, stock['ZGB'], stock['LTGB'],
                                           stock['ZQDM'], stock['ZQJC'],
                                           2099, 12, "012"))
                 continue
             if stock['ZQDM'] in exist_stock:
-                sql_update_params.append(( stock['ZQJC'], stock['ZGB'], stock['LTGB'],
+                sql_update_params.append((stock['ZQJC'], stock['ZGB'], stock['LTGB'],
                                           stock['ZQDM'], self.self_conf[str(stock['SCDM'])]))
         mysqlDB.executemany(sql_insert_Instrument, sql_insert_params)
         mysqlDB.executemany(sql_update_Instrument, sql_update_params)

@@ -44,7 +44,7 @@ from utils import parse_conf_args
 from utils import path
 from utils import Configuration
 from utils import mysql
-
+from utils import csv_tool
 
 class exchange_stock_csv:
     def __init__(self, context, configs):
@@ -318,8 +318,8 @@ class exchange_stock_csv:
                 writer = csv.writer(csvfile, quoting=csv.QUOTE_ALL)
             else:
                 writer = csv.writer(csvfile)
-            writer.writerow(columns['columns'])
-            writer.writerows(csv_data)
+            writer.writerow(csv_tool.covert_to_gbk(columns['columns']))
+            writer.writerows(csv_tool.covert_to_gbk(csv_data))
         self.logger.info("%s%s%s" % ("生成 ", table_name, ".csv 文件完成"))
 
 

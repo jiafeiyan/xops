@@ -102,9 +102,9 @@ class trans_etfinfo:
                 sql_insert_params.append((self.SettlementGroupID,
                                           ProductID,
                                           ProductGroupID,
-                                          ProductID,
+                                          etf.UnderlyingSecurityID,
                                           "2", "2", etf.ExercisePrice, OptionsType,
-                                          1, 1, etf.SecurityID, etf.ContractSymbol,
+                                          1, 10000, etf.SecurityID, etf.ContractSymbol,
                                           etf.DeliveryDate[0:4], etf.DeliveryDate[4:6], "012"))
                 continue
             if etf.SecurityID in exist_etf:

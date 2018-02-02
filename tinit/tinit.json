@@ -1,0 +1,18 @@
+{
+    "Syncs": [
+      {
+        "host": "strade_119",
+        "type": "put",
+        "target" : "${HOME}/run/tinit/csv/stock",
+        "items": ["${SIM_PLATFORM_HOME}/csvfiles/broker/stock/SG01",
+                  "${SIM_PLATFORM_HOME}/csvfiles/broker/stock/SG02",
+                  "${SIM_PLATFORM_HOME}/csvfiles/broker/stock"]
+      },
+      {
+        "host": "strade_119",
+        "type": "put",
+        "target" : "${HOME}/run/tinit/csv/exchange",
+        "items": ["${SIM_PLATFORM_HOME}/csvfiles/exchange/0001"]
+      }
+    ]
+}

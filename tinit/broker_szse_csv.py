@@ -12,7 +12,7 @@ from utils import parse_conf_args
 from utils import path
 from utils import Configuration
 from utils import mysql
-
+from utils import csv_tool
 
 class broker_szse_csv:
     def __init__(self, context, configs):
@@ -88,7 +88,7 @@ class broker_szse_csv:
                                      '100' AS MinMarketOrderBuyVolume,'1000000' AS MaxLimitOrderBuyVolume,
                                      '100' AS MinLimitOrderBuyVolume,'1000000' AS MaxMarketOrderSellVolume,
                                      '1' AS MinMarketOrderSellVolume,'1000000' AS MaxLimitOrderSellVolume,
-                                     '1' AS MinLimitOrderSellVolume,t4.PriceTick AS PriceTick,t4.OpenDate AS OpenDate,
+                                     '1' AS MinLimitOrderSellVolume,'1' AS VolumeMultiple,t4.PriceTick AS PriceTick,t4.OpenDate AS OpenDate,
                                      '' AS CloseDate,t.PositionType AS PositionType,'1' AS ParValue,
                                      '0' AS SecurityStatus,'0' AS BondInterest,'0' AS ConversionRate,
                                      t.TotalEquity AS TotalEquity,t.CirculationEquity AS CirculationEquity,
@@ -109,7 +109,7 @@ class broker_szse_csv:
                                         sql="""SELECT t.InvestorID AS InvestorID,t.InvestorID AS BusinessUnitID,
                                                     '2' AS ExchangeID,'2' AS MarketID,t.ClientID AS ShareholderID,
                                                     'a' AS TradingCodeClass,'0' AS ProductID,t.InvestorID AS AccountID,
-                                                    t1.Currency AS CurrencyID,t3.UserID
+                                                    t1.Currency AS CurrencyID,t.InvestorID AS UserID
                                                 FROM siminfo.t_InvestorClient t,siminfo.t_SettlementGroup t1,
                                                      siminfo.t_User t3
                                                 WHERE t.SettlementGroupID = t1.SettlementGroupID
@@ -164,8 +164,8 @@ class broker_szse_csv:
                 writer = csv.writer(csvfile, quoting=csv.QUOTE_ALL)
             else:
                 writer = csv.writer(csvfile)
-            writer.writerow(columns['columns'])
-            writer.writerows(csv_data)
+            writer.writerow(csv_tool.covert_to_gbk(columns['columns']))
+            writer.writerows(csv_tool.covert_to_gbk(csv_data))
         self.logger.info("%s%s%s" % ("生成 ", csv_name, ".csv 文件完成"))
 
 
