@@ -110,10 +110,8 @@ class broker_szse_csv:
                                                     '2' AS ExchangeID,'2' AS MarketID,t.ClientID AS ShareholderID,
                                                     'a' AS TradingCodeClass,'0' AS ProductID,t.InvestorID AS AccountID,
                                                     t1.Currency AS CurrencyID,t.InvestorID AS UserID
-                                                FROM siminfo.t_InvestorClient t,siminfo.t_SettlementGroup t1,
-                                                     siminfo.t_User t3
+                                                FROM siminfo.t_InvestorClient t,siminfo.t_SettlementGroup t1
                                                 WHERE t.SettlementGroupID = t1.SettlementGroupID
-                                                AND t3.SettlementGroupID = t.SettlementGroupID
                                                 AND t1.SettlementGroupID = %s""",
                                         params=(self.settlementGroupID,)),
             SZSEPosition=dict(columns=("InvestorID", "BusinessUnitID", "MarketID", "ShareholderID", "TradingDay",

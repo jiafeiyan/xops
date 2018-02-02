@@ -14,6 +14,7 @@ from utils import Configuration
 from utils import mysql
 from utils import csv_tool
 
+
 class broker_etf_csv:
     def __init__(self, context, configs):
         # 初始化settlementGroupID
@@ -42,16 +43,22 @@ class broker_etf_csv:
         self.__data_to_csv("SSEPosition", mysqlDB)
         self.__data_to_csv("SSESecurity", mysqlDB)
         self.__data_to_csv("SSEShareholderAccount", mysqlDB)
-        self.__data_to_csv("SSEShareholderTradingRight", mysqlDB)
+        self.__data_to_csv("TradingAccount", mysqlDB)
+        self.__data_to_csv("User", mysqlDB)
 
     def __data_to_csv(self, csv_name, mysqlDB):
         table_sqls = dict(
             BUProxy=dict(columns=("UserID", "InvestorID", "BusinessUnitID"),
-                         sql="""SELECT InvestorID AS UserID,InvestorID AS InvestorID,InvestorID AS BusinessUnitID
-                                        FROM siminfo.t_Investor"""),
+                         sql="""SELECT t.InvestorID AS UserID,t.InvestorID AS InvestorID,t.InvestorID AS BusinessUnitID
+                                FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1
+                                WHERE t.InvestorID = t1.InvestorID AND t1.SettlementGroupID = %s""",
+                         params=(self.settlementGroupID,)),
             BusinessUnit=dict(columns=("InvestorID", "BusinessUnitID", "BusinessUnitName"),
-                              sql="""SELECT InvestorID,InvestorID AS BusinessUnitID,
-                                      CONCAT('BU', InvestorID) AS BusinessUnitName FROM siminfo.t_Investor"""),
+                              sql="""SELECT t.InvestorID,t.InvestorID AS BusinessUnitID,
+                                            CONCAT('BU', t.InvestorID) AS BusinessUnitName
+                                    FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1
+                                    WHERE t.InvestorID = t1.InvestorID AND t1.SettlementGroupID = %s""",
+                              params=(self.settlementGroupID,)),
             ExchangeTradingDay=dict(columns=("ExchangeID", "TradingDay"),
                                     sql="""SELECT '1' AS ExchangeID,t.TradingDay
                                             FROM siminfo.t_TradeSystemTradingDay t,
@@ -61,14 +68,19 @@ class broker_etf_csv:
             Investor=dict(columns=("InvestorID", "DepartmentID", "InvestorType", "InvestorName", "IdCardType",
                                    "IdCardNo", "ContractNo", "OpenDate", "CloseDate", "Status", "InnerBranchID",
                                    "InvestorLevel", "Remark"),
-                          sql="""SELECT InvestorID,'0001' AS DepartmentID,'0' AS InvestorType,InvestorName,
+                          sql="""SELECT t.InvestorID,'0001' AS DepartmentID,'0' AS InvestorType,InvestorName,
                                         '1' AS IdCardType,OpenID AS IdCardNo,'' AS ContractNo,'' AS OpenDate,
                                         '' AS CloseDate,'1' AS STATUS,'2023' AS InnerBranchID,'1' AS InvestorLevel,
-                                        '' AS Remark
-                                    FROM siminfo.t_Investor"""),
+                                        '' AS Remark 
+                                  FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1
+                                  WHERE t.InvestorID = t1.InvestorID
+                                  AND t1.SettlementGroupID = %s""",
+                          params=(self.settlementGroupID,)),
             InvestorLimitAmount=dict(columns=("InvestorID", "LongAmountLimit", "LongAmountFrozen"),
-                                     sql="""SELECT InvestorID,'10000000000' AS LongAmountLimit,'0' AS LongAmountFrozen
-                                            FROM siminfo.t_Investor"""),
+                                     sql="""SELECT t.InvestorID,'10000000000' AS LongAmountLimit,'0' AS LongAmountFrozen
+                                            FROM siminfo.t_Investor t, siminfo.t_InvestorClient t1
+                                            WHERE t.InvestorID = t1.InvestorID AND t1.SettlementGroupID = %s""",
+                                     params=(self.settlementGroupID,)),
             SSEBusinessUnitAccount=dict(columns=("UserID", "InvestorID", "BusinessUnitID", "ExchangeID",
                                                  "MarketID", "ShareholderID", "ShareholderIDType", "ProductID",
                                                  "AccountID", "CurrencyID"),
@@ -76,10 +88,8 @@ class broker_etf_csv:
                                                     t.InvestorID AS BusinessUnitID,'1' AS ExchangeID,'1' AS MarketID,
                                                     t.ClientID AS ShareholderID,'3' AS ShareholderIDType,
                                                     'd' AS ProductID,t.InvestorID AS AccountID,t1.Currency AS CurrencyID
-                                                FROM siminfo.t_InvestorClient t,siminfo.t_SettlementGroup t1,
-                                                    siminfo.t_User t2
+                                                FROM siminfo.t_InvestorClient t,siminfo.t_SettlementGroup t1
                                                 WHERE t.SettlementGroupID = t1.SettlementGroupID
-                                                AND t.SettlementGroupID = t2.SettlementGroupID
                                                 AND t1.SettlementGroupID = %s""",
                                         params=(self.settlementGroupID,)),
             SSEMarketData=dict(columns=("SecurityID", "ExchangeID", "TradingDay", "SecurityName", "PreClosePrice",
@@ -174,14 +184,30 @@ class broker_etf_csv:
                                                 '0' AS BranchID
                                             FROM siminfo.t_InvestorClient t WHERE t.SettlementGroupID = %s""",
                                        params=(self.settlementGroupID,)),
-            SSEShareholderTradingRight=dict(columns=("MarketID", "ShareholderID", "SystemFlag", "ProductID",
-                                                     "SecurityType", "SecurityID", "OffsetFlag", "Direction",
-                                                     "HedgeFlag", "ExchangeID", "bForbidden"),
-                                            sql="""SELECT '1' AS ExchangeID,t.ClientID AS ShareholderID,'1' AS MarketID,
-                                                t.InvestorID AS InvestorID,'3' AS ShareholderIDType,'25377' AS PbuID,
-                                                '0' AS BranchID
-                                            FROM siminfo.t_InvestorClient t WHERE t.SettlementGroupID = %s""",
-                                            params=(self.settlementGroupID,)),
+            TradingAccount=dict(columns=("DepartmentID", "AccountID", "CurrencyID", "AccountType", "PreDeposit",
+                                         "PreFrozenCash", "UsefulMoney", "FetchLimit", "Deposit", "Withdraw",
+                                         "FrozenMargin", "FrozenCash", "FrozenCommission", "CurrMargin", "Commission",
+                                         "RoyaltyIn", "RoyaltyOut", "AccountOwner"),
+                                sql="""SELECT '2023' AS DepartmentID,t.InvestorID AS AccountID,'1' AS CurrencyID,
+                                                '3' AS AccountType,t.Available AS PreDeposit,'0' AS PreFrozenCash,
+                                                t.Available AS UsefulMoney,t.Available AS FetchLimit,
+                                                t.Deposit AS Deposit,t.Withdraw AS Withdraw,'0' AS FrozenMargin,
+                                                '0' AS FrozenCash,'0' AS FrozenCommission,'0' AS CurrMargin,
+                                                '0' AS Commission,'0' AS RoyaltyIn,'0' AS RoyaltyOut,
+                                                t.InvestorID AS AccountOwner
+                                            FROM siminfo.t_InvestorFund t,siminfo.t_BrokerSystemSettlementGroup t1
+                                            WHERE t.BrokerSystemID = t1.BrokerSystemID AND t1.SettlementGroupID = %s""",
+                                params=(self.settlementGroupID,)),
+            User=dict(columns=("UserID", "UserName", "UserType", "DepartmentID", "UserPassword", "LoginLimit",
+                               "PasswordFailLimit", "Status", "Contacter", "Fax", "Telephone", "Email", "Address",
+                               "ZipCode", "OpenDate", "CloseDate"),
+                      sql="""SELECT t.InvestorID AS UserID,t.InvestorName AS UserName,'2' AS UserType,
+                                    '2023' AS DepartmentID,t.PASSWORD AS UserPassword,'10' AS LoginLimit,
+                                    '3' AS PasswordFailLimit,'3' AS STATUS,'' AS Contacter,'' AS Fax,'' AS Telephone,
+                                    '' AS Email,'' AS Address,'' AS ZipCode,'' AS OpenDate,'' AS CloseDate
+                                FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1
+                                WHERE t.InvestorID = t1.InvestorID AND t1.SettlementGroupID = %s""",
+                      params=(self.settlementGroupID,)),
         )
         # 查询siminfo数据库数据内容
         csv_data = mysqlDB.select(table_sqls[csv_name]["sql"], table_sqls[csv_name].get("params"))
