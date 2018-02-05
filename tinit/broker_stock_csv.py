@@ -59,18 +59,24 @@ class broker_stock_csv:
                                     AND t2.BrokerSystemID = %s""",
                               params=(self.brokerSystemID,)),
             ExchangeTradingDay=dict(columns=("ExchangeID", "TradingDay"),
-                                    sql="""SELECT CASE WHEN t2.ExchangeID LIKE 'SSE' THEN '1'
+                                    sql="""SELECT DISTINCT 0 AS ExchangeID,t.TradingDay
+                                        FROM t_TradeSystemTradingDay t,t_TradeSystemSettlementGroup t1,
+                                            t_BrokerSystemSettlementGroup t2
+                                        where t.TradeSystemID = t1.TradeSystemID
+                                            AND t1.SettlementGroupID = t2.SettlementGroupID
+                                        AND t2.BrokerSystemID = %s
+                                        UNION ALL
+                                            SELECT CASE
+                                            WHEN t2.ExchangeID LIKE 'SSE' THEN '1'
                                             WHEN t2.ExchangeID LIKE 'SZSE' THEN '2'
                                             END AS ExchangeID,t.TradingDay
-                                            FROM siminfo.t_TradeSystemTradingDay t,
-                                                siminfo.t_TradeSystemSettlementGroup t1,
-                                                siminfo.t_SettlementGroup t2,
-                                                siminfo.t_BrokerSystemSettlementGroup t3
-                                            WHERE t.TradeSystemID = t1.TradeSystemID
-                                            AND t1.SettlementGroupID = t2.SettlementGroupID
-                                            AND t2.SettlementGroupID = t3.SettlementGroupID
-                                            AND t3.BrokerSystemID = %s""",
-                                    params=(self.brokerSystemID,)),
+                                        FROM siminfo.t_TradeSystemTradingDay t,siminfo.t_TradeSystemSettlementGroup t1,
+                                            siminfo.t_SettlementGroup t2,siminfo.t_BrokerSystemSettlementGroup t3
+                                        WHERE t.TradeSystemID = t1.TradeSystemID
+                                        AND t1.SettlementGroupID = t2.SettlementGroupID
+                                        AND t2.SettlementGroupID = t3.SettlementGroupID
+                                        AND t3.BrokerSystemID = %s""",
+                                    params=(self.brokerSystemID,self.brokerSystemID)),
             Investor=dict(columns=("InvestorID", "DepartmentID", "InvestorType", "InvestorName", "IdCardType",
                                    "IdCardNo", "ContractNo", "BirthDate", "Gender", "Professional", "Country",
                                    "TaxNo", "LicenseNo", "RegisteredCapital", "RegisteredCurrency", "Mobile",

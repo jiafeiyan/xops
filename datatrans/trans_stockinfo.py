@@ -121,7 +121,7 @@ class trans_stockinfo:
                                           ProductID,
                                           ProductGroupID,
                                           ProductID,
-                                          "4", "1", None, "0",
+                                          "4", "2", None, "0",
                                           1, 1, stock['ZGB'], stock['LTGB'],
                                           stock['ZQDM'], stock['ZQJC'],
                                           2099, 12, "012"))

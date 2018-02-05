@@ -89,16 +89,13 @@ class broker_szse_csv:
                                      '100' AS MinLimitOrderBuyVolume,'1000000' AS MaxMarketOrderSellVolume,
                                      '1' AS MinMarketOrderSellVolume,'1000000' AS MaxLimitOrderSellVolume,
                                      '1' AS MinLimitOrderSellVolume,'1' AS VolumeMultiple,t4.PriceTick AS PriceTick,t4.OpenDate AS OpenDate,
-                                     '' AS CloseDate,t.PositionType AS PositionType,'1' AS ParValue,
+                                     '' AS CloseDate,'1' AS PositionType,'1' AS ParValue,
                                      '0' AS SecurityStatus,'0' AS BondInterest,'0' AS ConversionRate,
                                      t.TotalEquity AS TotalEquity,t.CirculationEquity AS CirculationEquity,
                                      '0' AS IsSupportPur,'0' AS IsSupportRed,'1' AS IsSupportTrade,
                                      '1' AS IsCancelOrder,'1' AS IsCollateral
-                                    FROM siminfo.t_Instrument t,siminfo.t_SettlementGroup t1,
-                                        siminfo.t_SecurityProfit t3,siminfo.t_InstrumentProperty t4
+                                    FROM siminfo.t_Instrument t,siminfo.t_SettlementGroup t1,siminfo.t_InstrumentProperty t4
                                     WHERE t.SettlementGroupID = t1.SettlementGroupID
-                                    AND t.SettlementGroupID = t3.SettlementGroupID
-                                    AND t.InstrumentID = t3.SecurityID
                                     AND t.InstrumentID = t4.InstrumentID
                                     AND t.SettlementGroupID = t4.SettlementGroupID
                                     AND t.SettlementGroupID = %s""",
