@@ -68,7 +68,7 @@ class broker_etf_csv:
             Investor=dict(columns=("InvestorID", "DepartmentID", "InvestorType", "InvestorName", "IdCardType",
                                    "IdCardNo", "ContractNo", "OpenDate", "CloseDate", "Status", "InnerBranchID",
                                    "InvestorLevel", "Remark"),
-                          sql="""SELECT t.InvestorID,'0001' AS DepartmentID,'0' AS InvestorType,InvestorName,
+                          sql="""SELECT t.InvestorID,'2023' AS DepartmentID,'0' AS InvestorType,InvestorName,
                                         '1' AS IdCardType,OpenID AS IdCardNo,'' AS ContractNo,'' AS OpenDate,
                                         '' AS CloseDate,'1' AS STATUS,'2023' AS InnerBranchID,'1' AS InvestorLevel,
                                         '' AS Remark 

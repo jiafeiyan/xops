@@ -1,7 +1,0 @@
-{
-  "settlementGroupID": "SG03",
-  "mysqlId": "simplatform_base",
-  "logId": "default",
-  "csv": "csv_base",
-  "csvRoute": "future/"
-}

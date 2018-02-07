@@ -2,6 +2,38 @@
 
 """
 生成CSV文件
+t_Account.csv
+t_BaseReserveAccount.csv
+t_BusinessConfig.csv
+t_ClearingTradingPart.csv
+t_ClientProductRight.csv
+t_CurrInstrumentProperty.csv
+t_CurrMarginRate.csv
+t_CurrMarginRateDetail.csv
+t_CurrTradingSegmentAttr.csv
+t_Instrument.csv
+t_Market.csv
+t_MarketProduct.csv
+t_MarketProductGroup.csv
+t_Participant.csv
+t_PartProductRight.csv
+t_PartProductRole.csv
+t_PartRoleAccount.csv
+t_SettlementGroup.csv
+t_TradingAccount.csv
+t_Client.csv
+t_ClientPosition.csv
+t_CurrPriceBanding.csv
+t_InstrumentGroup.csv
+t_MarketData.csv
+t_MarketDataTopic.csv
+t_MdPubStatus.csv
+t_PartClient.csv
+t_PartPosition.csv
+t_PartTopicSubscribe.csv
+t_User.csv
+t_UserFunctionRight.csv
+t_UserIP.csv
 """
 
 import csv
@@ -13,7 +45,6 @@ from utils import path
 from utils import Configuration
 from utils import mysql
 from utils import csv_tool
-
 
 class exchange_future_csv:
     def __init__(self, context, configs):
@@ -29,158 +60,249 @@ class exchange_future_csv:
         self.tradeSystemID = tradeSystemID
         # 初始化生成CSV文件路径
         output = path.convert(context.get("csv")[configs.get("csv")]['exchange'])
-        self.csv_path = os.path.join(output, str(configs.get("tradeSystemID")))
+        self.csv_path = os.path.join(output,  str(configs.get("tradeSystemID")))
         self.__to_csv()
 
     def __to_csv(self):
         mysqlDB = self.mysqlDB
-        # PositionDateType=1 and MaxMarginSideAlgorithm=1
+        self.__data_to_csv("t_Account", mysqlDB)
+        # siminfo.time and SettlementID = 1
+        self.__data_to_csv("t_BaseReserveAccount", mysqlDB)
+        self.__data_to_csv("t_BusinessConfig", mysqlDB)
+        self.__data_to_csv("t_ClearingTradingPart", mysqlDB)
+        self.__data_to_csv("t_ClientProductRight", mysqlDB)
+        # IsFirstTradingDay = 1
+        self.__data_to_csv("t_CurrInstrumentProperty", mysqlDB)
+        self.__data_to_csv("t_CurrMarginRate", mysqlDB)
+        self.__data_to_csv("t_CurrMarginRateDetail", mysqlDB)
+        self.__data_to_csv("t_CurrTradingSegmentAttr", mysqlDB)
         self.__data_to_csv("t_Instrument", mysqlDB)
-        self.__data_to_csv("t_DepthMarketData", mysqlDB)
-        self.__data_to_csv("t_ExchangeMarginRate", mysqlDB)
-        # PositionDateType=1 and MortgageFundUseRange=0 and MortgageFundUseRange=0
-        self.__data_to_csv("t_Product", mysqlDB)
+        self.__data_to_csv("t_Market", mysqlDB)
+        self.__data_to_csv("t_MarketProduct", mysqlDB)
+        self.__data_to_csv("t_MarketProductGroup", mysqlDB)
+        self.__data_to_csv("t_Participant", mysqlDB)
+        self.__data_to_csv("t_PartProductRight", mysqlDB)
+        self.__data_to_csv("t_PartProductRole", mysqlDB)
+        # siminfo.time and SettlementID = 1
+        self.__data_to_csv("t_PartRoleAccount", mysqlDB)
+        # self.__data_to_csv("t_SettlementGroup", mysqlDB)
+        # siminfo.time and SettlementID = 1
         self.__data_to_csv("t_TradingAccount", mysqlDB)
-        self.__data_to_csv("t_Investor", mysqlDB)
-        self.__data_to_csv("t_InvestorAccount", mysqlDB)
+        self.__data_to_csv("t_Client", mysqlDB)
+        self.__data_to_csv("t_ClientPosition", mysqlDB)
+        self.__data_to_csv("t_CurrPriceBanding", mysqlDB)
+        # siminfo.time and SettlementID = 1
+        self.__data_to_csv("t_InstrumentGroup", mysqlDB)
+        # siminfo.time and SettlementID = 1
+        self.__data_to_csv("t_MarketData", mysqlDB)
+        self.__data_to_csv("t_MarketDataTopic", mysqlDB)
+        self.__data_to_csv("t_MdPubStatus", mysqlDB)
+        self.__data_to_csv("t_PartClient", mysqlDB)
+        self.__data_to_csv("t_PartPosition", mysqlDB)
+        self.__data_to_csv("t_PartTopicSubscribe", mysqlDB)
+        self.__data_to_csv("t_User", mysqlDB)
+        self.__data_to_csv("t_UserFunctionRight", mysqlDB)
+        self.__data_to_csv("t_UserIP", mysqlDB)
 
     def __data_to_csv(self, table_name, mysqlDB):
         table_sqls = dict(
-            t_Instrument=dict(columns=("InstrumentID", "ExchangeID", "InstrumentName", "ExchangeInstID", "ProductID",
-                                       "ProductClass", "DeliveryYear", "DeliveryMonth", "MaxMarketOrderVolume",
-                                       "MinMarketOrderVolume", "MaxLimitOrderVolume", "MinLimitOrderVolume",
-                                       "VolumeMultiple", "PriceTick", "CreateDate", "OpenDate", "ExpireDate",
-                                       "StartDelivDate", "EndDelivDate", "InstLifePhase", "IsTrading", "PositionType",
-                                       "PositionDateType", "LongMarginRatio", "ShortMarginRatio",
-                                       "MaxMarginSideAlgorithm", "UnderlyingInstrID", "StrikePrice",
-                                       "OptionsType", "UnderlyingMultiple", "CombinationType"),
-                              sql="""SELECT t.InstrumentID,t3.ExchangeID AS ExchangeID,t.InstrumentName,
-                                    t.InstrumentID AS ExchangeInstID,t.ProductID,t.ProductClass,t.DeliveryYear,
-                                    t.DeliveryMonth,t1.MaxMarketOrderVolume,t1.MinMarketOrderVolume,
-                                    t1.MaxLimitOrderVolume,t1.MinLimitOrderVolume,t.VolumeMultiple,t1.PriceTick,
-                                    t1.CreateDate,t1.OpenDate,t1.ExpireDate,t1.StartDelivDate,t1.EndDelivDate,
-                                    t1.InstLifePhase,t.IsTrading,t.PositionType,'1' AS PositionDateType,
-                                    t2.LongMarginRatio,t2.ShortMarginRatio,'1' AS MaxMarginSideAlgorithm,
-                                    t.UnderlyingInstrID AS tUnderlyingInstrID,t.StrikePrice,t.OptionsType,
-                                    t.UnderlyingMultiple,'0' AS CombinationType
-                                FROM sync.t_Instrument t,siminfo.t_InstrumentProperty t1,
-                                    siminfo.t_MarginRateDetail t2,sync.t_SettlementGroup t3
-                                WHERE t.SettlementGroupID = t1.SettlementGroupID
-                                AND t.InstrumentID = t1.InstrumentID
-                                AND t.SettlementGroupID = t2.SettlementGroupID
-                                AND t.InstrumentID = t2.InstrumentID
-                                AND t.SettlementGroupID = t3.SettlementGroupID
-                                AND t.TradeSystemID = %s""",
-                              params=(self.tradeSystemID,),
-                              quoting=True),
-            t_DepthMarketData=dict(columns=("TradingDay", "InstrumentID", "ExchangeID", "ExchangeInstID", "LastPrice",
-                                            "PreSettlementPrice", "PreClosePrice", "PreOpenInterest", "OpenPrice",
-                                            "HighestPrice", "LowestPrice", "Volume", "Turnover", "OpenInterest",
-                                            "ClosePrice", "SettlementPrice", "UpperLimitPrice", "LowerLimitPrice",
-                                            "PreDelta", "CurrDelta", "UpdateTime", "UpdateMillisec", "BidPrice1",
-                                            "BidVolume1", "AskPrice1", "AskVolume1", "BidPrice2", "BidVolume2",
-                                            "AskPrice2", "AskVolume2", "BidPrice3", "BidVolume3", "AskPrice3",
-                                            "AskVolume3", "BidPrice4", "BidVolume4", "AskPrice4", "AskVolume4",
-                                            "BidPrice5", "BidVolume5", "AskPrice5", "AskVolume5", "AveragePrice",
-                                            "ActionDay"),
-                                   sql="""SELECT t1.TradingDay,t.InstrumentID,t2.ExchangeID,
-                                        t.InstrumentID AS ExchangeInstID,t1.LastPrice,t1.PreSettlementPrice,
-                                        t1.PreClosePrice,t1.PreOpenInterest,t1.OpenPrice,t1.HighestPrice,t1.LowestPrice,
-                                        t1.Volume,t1.Turnover,t1.OpenInterest,t1.ClosePrice,t1.SettlementPrice,
-                                        t1.UpperLimitPrice,t1.LowerLimitPrice,t1.PreDelta,t1.CurrDelta,t1.UpdateTime,
-                                        t1.UpdateMillisec,'0' AS BidPrice1,'0' AS BidVolume1,'0' AS AskPrice1,
-                                        '0' AS AskVolume1,'0' AS BidPrice2,'0' AS BidVolume2,'0' AS AskPrice2,
-                                        '0' AS AskVolume2,'0' AS BidPrice3,'0' AS BidVolume3,'0' AS AskPrice3,
-                                        '0' AS AskVolume3,'0' AS BidPrice4,'0' AS BidVolume4,'0' AS AskPrice4,
-                                        '0' AS AskVolume4,'0' AS BidPrice5,'0' AS BidVolume5,'0' AS AskPrice5,
-                                        '0' AS AskVolume5,'0' AS AveragePrice,'' AS ActionDay
-                                    FROM sync.t_Instrument t,siminfo.t_MarketData t1,sync.t_SettlementGroup t2
-                                    WHERE t.SettlementGroupID = t1.SettlementGroupID
-                                    AND t.InstrumentID = t1.InstrumentID
-                                    AND t.SettlementGroupID = t2.SettlementGroupID
-                                    AND t.TradeSystemID = %s""",
-                                   params=(self.tradeSystemID,),
-                                   quoting=True),
-            t_ExchangeMarginRate=dict(columns=("BrokerID", "InstrumentID", "HedgeFlag", "LongMarginRatioByMoney",
-                                               "LongMarginRatioByVolume", "ShortMarginRatioByMoney",
-                                               "ShortMarginRatioByVolume"),
-                                      sql="""SELECT '9099' AS BrokerID,t.InstrumentID AS InstrumentID,
-                                                t.HedgeFlag AS HedgeFlag,t.LongMarginRatio LongMarginRatioByMoney,
-                                                '0' AS LongMarginRatioByVolume,t.ShortMarginRatio ShortMarginRatioByMoney,
-                                                '0' AS ShortMarginRatioByVolume
-                                            FROM siminfo.t_MarginRateDetail t,sync.t_Instrument t1
-                                            WHERE t.InstrumentID = t1.InstrumentID AND t1.TradeSystemID = %s""",
-                                      params=(self.tradeSystemID,),
-                                      quoting=True),
-            t_Product=dict(columns=("ProductID", "ProductName", "ExchangeID", "ProductClass", "VolumeMultiple",
-                                    "PriceTick", "MaxMarketOrderVolume", "MinMarketOrderVolume", "MaxLimitOrderVolume",
-                                    "MinLimitOrderVolume", "PositionType", "PositionDateType", "CloseDealType",
-                                    "TradeCurrencyID", "MortgageFundUseRange", "ExchangeProductID",
-                                    "UnderlyingMultiple"),
-                           sql="""SELECT t.ProductID,t3.ProductName,t2.ExchangeID,t.ProductClass,t.VolumeMultiple,
-                                        t1.PriceTick,t1.MaxMarketOrderVolume,t1.MinMarketOrderVolume,
-                                        t1.MaxLimitOrderVolume,t1.MinLimitOrderVolume,t.PositionType,
-                                        '1' AS PositionDateType,'0' AS CloseDealType,t2.Currency AS TradeCurrencyID,
-                                        '0' AS MortgageFundUseRange,'' AS ExchangeProductID,t.UnderlyingMultiple
-                                    FROM sync.t_Instrument t,siminfo.t_InstrumentProperty t1,
-                                        sync.t_SettlementGroup t2,siminfo.t_Product t3
-                                    WHERE t.InstrumentID = t1.InstrumentID
-                                    AND t.SettlementGroupID = t1.SettlementGroupID
-                                    AND t.SettlementGroupID = t2.SettlementGroupID
-                                    AND t.SettlementGroupID = t3.SettlementGroupID
-                                    AND t.ProductID = t3.ProductID
-                                    AND t.TradeSystemID = %s""",
-                           params=(self.tradeSystemID,),
+            t_Account=dict(columns=("SettlementGroupID", "AccountID", "ParticipantID", "Currency"),
+                           sql="""SELECT 'SG01' AS SettlementGroupID,AccountID,ParticipantID,Currency
+                                  FROM sync.t_Account WHERE TradeSystemID=%s""",
                            quoting=True),
-            t_TradingAccount=dict(columns=("BrokerID", "AccountID", "PreMortgage", "PreCredit", "PreDeposit",
-                                           "PreBalance", "PreMargin", "InterestBase", "Interest", "Deposit", "Withdraw",
-                                           "FrozenMargin", "FrozenCash", "FrozenCommission", "CurrMargin", "CashIn",
-                                           "Commission", "CloseProfit", "PositionProfit", "Balance", "Available",
-                                           "WithdrawQuota", "Reserve", "TradingDay", "SettlementID", "Credit",
-                                           "Mortgage", "ExchangeMargin", "DeliveryMargin", "ExchangeDeliveryMargin",
-                                           "ReserveBalance", "CurrencyID", "PreFundMortgageIn", "PreFundMortgageOut",
-                                           "FundMortgageIn", "FundMortgageOut", "FundMortgageAvailable",
-                                           "MortgageableFund", "SpecProductMargin", "SpecProductFrozenMargin",
-                                           "SpecProductCommission", "SpecProductFrozenCommission",
-                                           "SpecProductPositionProfit", "SpecProductCloseProfit",
-                                           "SpecProductPositionProfitByAlg", "SpecProductExchangeMargin",
-                                           "FrozenSwap", "RemainSwap"),
-                                  sql="""SELECT '9099' AS BrokerID,t.AccountID,'0' AS PreMortgage,'0' AS PreCredit,
-                                            '0' AS PreDeposit,t.PreBalance,'0' AS PreMargin,'0' AS InterestBase,
-                                            '0' AS Interest,t.Deposit,t.Withdraw,t.FrozenMargin,'0' AS FrozenCash,
-                                            '0' AS FrozenCommission,t.CurrMargin,'0' AS CashIn,'0' AS Commission,
-                                            t.CloseProfit,'0' AS PositionProfit,t.Balance,t.Available,
-                                            '0' AS WithdrawQuota,'0' AS Reserve,t1.TradingDay,'1' AS SettlementID,
-                                            '0' AS Credit,'0' AS Mortgage,'0' AS ExchangeMargin,'0' AS DeliveryMargin,
-                                            '0' AS ExchangeDeliveryMargin,'0' AS ReserveBalance,'CNY' AS CurrencyID,
-                                            '0' AS PreFundMortgageIn,'0' AS PreFundMortgageOut,'0' AS FundMortgageIn,
-                                            '0' AS FundMortgageOut,'0' AS FundMortgageAvailable,'0' AS MortgageableFund,
-                                            '0' AS SpecProductMargin,'0' AS SpecProductFrozenMargin,
-                                            '0' AS SpecProductCommission,'0' AS SpecProductFrozenCommission,
-                                            '0' AS SpecProductPositionProfit,'0' AS SpecProductCloseProfit,
-                                            '0' AS SpecProductPositionProfitByAlg,'0' AS SpecProductExchangeMargin,
-                                            '0' AS FrozenSwap,'0' AS RemainSwap
-                                        FROM sync.t_TradingAccount t,siminfo.t_TradeSystemTradingDay t1
-                                        WHERE t.TradeSystemID = t1.TradeSystemID AND t.TradeSystemID = %s""",
-                                  params=(self.tradeSystemID,),
+            t_BaseReserveAccount=dict(
+                columns=("TradingDay", "SettlementGroupID", "SettlementID", "ParticipantID", "AccountID", "Reserve"),
+                sql="""SELECT t1.TradingDay,'SG01' AS SettlementGroupID,'1' AS SettlementID,ParticipantID,AccountID,Reserve
+                        FROM sync.t_BaseReserveAccount t,siminfo.t_TradeSystemTradingDay t1,
+                             siminfo.t_TradeSystemSettlementGroup t2
+                        WHERE t.SettlementGroupID = t2.SettlementGroupID
+                        AND t1.TradeSystemID = t2.TradeSystemID 
+                        AND t.TradeSystemID=%s""",
+                quoting=True),
+            t_BusinessConfig=dict(columns=("SettlementGroupID", "FunctionCode", "OperationType", "Description"),
+                                  sql="""SELECT 'SG01' AS SettlementGroupID,FunctionCode,OperationType,Description
+                                         FROM sync.t_BusinessConfig WHERE TradeSystemID=%s""",
                                   quoting=True),
-            t_Investor=dict(columns=("InvestorID", "BrokerID", "InvestorGroupID", "InvestorName", "IdentifiedCardType",
-                                     "IdentifiedCardNo", "IsActive", "Telephone", "Address", "OpenDate", "Mobile",
-                                     "CommModelID", "MarginModelID"),
-                            sql="""SELECT t.InvestorID AS InvestorID,'9099' AS BrokerID,'' AS InvestorGroupID,
-                                        t.InvestorName AS InvestorName,'' AS IdentifiedCardType,'' AS IdentifiedCardNo,
-                                        '1' AS IsActive,'' AS Telephone,'' AS Address,'' AS OpenDate,'' AS Mobile,
-                                        '' AS CommModelID,'' AS MarginModelID
-                                    FROM siminfo.t_Investor t""",
-                            quoting=True),
-            t_InvestorAccount=dict(columns=("BrokerID", "InvestorID", "AccountID", "CurrencyID"),
-                                   sql="""SELECT '9099' AS BrokerID,t.InvestorID AS InvestorID,
-                                                t.InvestorID AS AccountID,'CNY' AS CurrencyID
-                                          FROM siminfo.t_Investor t""",
+            t_ClearingTradingPart=dict(columns=("ClearingPartID", "ParticipantID"),
+                                       sql="""SELECT ClearingPartID,ParticipantID
+                                              FROM sync.t_ClearingTradingPart WHERE TradeSystemID=%s""",
+                                       quoting=True),
+            t_ClientProductRight=dict(columns=("SettlementGroupID", "ProductID", "ClientID", "TradingRight"),
+                                      sql="""SELECT 'SG01' AS SettlementGroupID,ProductID,ClientID,TradingRight
+                                             FROM sync.t_ClientProductRight WHERE TradeSystemID=%s""",
+                                      quoting=True),
+            t_CurrInstrumentProperty=dict(columns=("SettlementGroupID", "CreateDate", "OpenDate", "ExpireDate",
+                                                   "StartDelivDate", "EndDelivDate", "BasisPrice",
+                                                   "MaxMarketOrderVolume",
+                                                   "MinMarketOrderVolume", "MaxLimitOrderVolume", "MinLimitOrderVolume",
+                                                   "PriceTick", "AllowDelivPersonOpen", "InstrumentID",
+                                                   "InstLifePhase", "IsFirstTradingDay"),
+                                          sql="""SELECT 'SG01' AS SettlementGroupID,CreateDate,OpenDate,ExpireDate,StartDelivDate,
+                                              EndDelivDate,BasisPrice,MaxMarketOrderVolume,MinMarketOrderVolume,
+                                              MaxLimitOrderVolume,MinLimitOrderVolume,PriceTick,AllowDelivPersonOpen,
+                                              InstrumentID,InstLifePhase,'1' AS IsFirstTradingDay
+                                             FROM sync.t_CurrInstrumentProperty WHERE TradeSystemID = %s """),
+            t_CurrMarginRate=dict(columns=("SettlementGroupID", "MarginCalcID", "InstrumentID", "ParticipantID"),
+                                  sql="""SELECT 'SG01' AS SettlementGroupID,MarginCalcID,InstrumentID,ParticipantID
+                                         FROM sync.t_CurrMarginRate WHERE TradeSystemID=%s"""),
+            t_CurrMarginRateDetail=dict(columns=("SettlementGroupID", "TradingRole", "HedgeFlag", "ValueMode",
+                                                 "LongMarginRatio", "ShortMarginRatio", "InstrumentID",
+                                                 "ParticipantID", "ClientID"),
+                                        sql="""SELECT 'SG01' AS SettlementGroupID,TradingRole,HedgeFlag,ValueMode,LongMarginRatio,
+                                                  ShortMarginRatio,InstrumentID,ParticipantID,ClientID
+                                                FROM sync.t_CurrMarginRateDetail WHERE TradeSystemID=%s"""),
+            t_CurrTradingSegmentAttr=dict(columns=("SettlementGroupID", "TradingSegmentSN", "TradingSegmentName",
+                                                   "StartTime", "InstrumentStatus", "InstrumentID"),
+                                          sql="""SELECT 'SG01' AS SettlementGroupID,TradingSegmentSN,TradingSegmentName,
+                                                        StartTime,InstrumentStatus,InstrumentID
+                                                FROM sync.t_CurrTradingSegmentAttr WHERE TradeSystemID=%s
+                                                ORDER BY InstrumentID,TradingSegmentSN"""),
+            t_Instrument=dict(columns=("SettlementGroupID", "ProductID", "ProductGroupID", "UnderlyingInstrID",
+                                       "ProductClass", "PositionType", "StrikePrice", "OptionsType", "VolumeMultiple",
+                                       "UnderlyingMultiple", "InstrumentID", "InstrumentName", "DeliveryYear",
+                                       "DeliveryMonth", "AdvanceMonth", "IsTrading"),
+                              sql="""SELECT 'SG01' AS SettlementGroupID,ProductID,ProductGroupID,UnderlyingInstrID,ProductClass,
+                                            PositionType,StrikePrice,OptionsType,VolumeMultiple,UnderlyingMultiple,
+                                            InstrumentID,InstrumentName,DeliveryYear,DeliveryMonth,
+                                            AdvanceMonth,IsTrading
+                                      FROM sync.t_Instrument WHERE TradeSystemID=%s"""),
+            t_Market=dict(columns=("MarketID", "MarketName"),
+                          sql="""SELECT MarketID,MarketName FROM sync.t_Market WHERE TradeSystemID=%s""",
+                          quoting=True),
+            t_MarketProduct=dict(columns=("MarketID", "ProductID"),
+                                 sql="""SELECT MarketID,ProductID FROM sync.t_MarketProduct WHERE TradeSystemID=%s""",
+                                 quoting=True),
+            t_MarketProductGroup=dict(columns=("MarketID", "ProductGroupID"),
+                                      sql="""SELECT MarketID,ProductGroupID FROM sync.t_MarketProductGroup WHERE TradeSystemID=%s""",
+                                      quoting=True),
+            t_Participant=dict(
+                columns=("ParticipantID", "ParticipantName", "ParticipantAbbr", "MemberType", "IsActive"),
+                sql="""SELECT ParticipantID,ParticipantName,ParticipantAbbr,MemberType,IsActive
+                                      FROM sync.t_Participant WHERE TradeSystemID=%s""",
+                quoting=True),
+            t_PartProductRight=dict(columns=("SettlementGroupID", "ProductID", "ParticipantID", "TradingRight"),
+                                    sql="""SELECT 'SG01' AS SettlementGroupID,ProductID,ParticipantID,TradingRight
+                                              FROM sync.t_PartProductRight WHERE TradeSystemID=%s""",
+                                    quoting=True),
+            t_PartProductRole=dict(columns=("SettlementGroupID", "ParticipantID", "ProductID", "TradingRole"),
+                                   sql="""SELECT 'SG01' AS SettlementGroupID,ParticipantID,ProductID,TradingRole
+                                              FROM sync.t_PartProductRole WHERE TradeSystemID=%s""",
                                    quoting=True),
+            t_PartRoleAccount=dict(columns=("TradingDay", "SettlementGroupID", "SettlementID",
+                                            "ParticipantID", "TradingRole", "AccountID"),
+                                   sql="""SELECT t1.TradingDay,'SG01' AS SettlementGroupID,'1' AS SettlementID,
+                                                  ParticipantID,TradingRole,AccountID
+                                          FROM sync.t_PartRoleAccount t,siminfo.t_TradeSystemTradingDay t1,
+                                               siminfo.t_TradeSystemSettlementGroup t2
+                                          WHERE t.SettlementGroupID = t2.SettlementGroupID
+                                          AND t1.TradeSystemID = t2.TradeSystemID 
+                                          AND t.TradeSystemID=%s""",
+                                   quoting=True),
+            t_SettlementGroup=dict(columns=("SettlementGroupID", "SettlementGroupName", "ExchangeID", "Currency"),
+                                   sql="""SELECT 'SG01' AS SettlementGroupID,SettlementGroupName,ExchangeID,Currency
+                                          FROM sync.t_SettlementGroup WHERE TradeSystemID=%s""",
+                                   quoting=True),
+            t_TradingAccount=dict(columns=("TradingDay", "SettlementGroupID", "SettlementID", "PreBalance",
+                                           "CurrMargin", "CloseProfit", "Premium", "Deposit", "Withdraw", "Balance",
+                                           "Available", "AccountID", "FrozenMargin", "FrozenPremium"),
+                                  sql="""SELECT t1.TradingDay,'SG01' AS SettlementGroupID,'1' AS SettlementID,
+                                                PreBalance,CurrMargin,CloseProfit,Premium,Deposit,Withdraw,
+                                                Balance,Available,AccountID,FrozenMargin,FrozenPremium
+                                                FROM sync.t_TradingAccount t,siminfo.t_TradeSystemTradingDay t1,
+                                                     siminfo.t_TradeSystemSettlementGroup t2
+                                                WHERE t.SettlementGroupID = t2.SettlementGroupID
+                                                AND t1.TradeSystemID = t2.TradeSystemID 
+                                                AND t.TradeSystemID=%s""",
+                                  quoting=True),
+            t_Client=dict(columns=("ClientID", "ClientName", "IdentifiedCardType", "IdentifiedCardNo",
+                                   "TradingRole", "ClientType", "IsActive", "HedgeFlag"),
+                          sql="""SELECT ClientID,ClientName,IdentifiedCardType,IdentifiedCardNo,
+                                        TradingRole,ClientType,IsActive,HedgeFlag
+                                  FROM sync.t_Client WHERE TradeSystemID=%s""",
+                          quoting=True),
+            t_ClientPosition=dict(columns=("TradingDay", "SettlementGroupID", "SettlementID", "HedgeFlag",
+                                           "PosiDirection", "YdPosition", "Position", "LongFrozen", "ShortFrozen",
+                                           "YdLongFrozen", "YdShortFrozen", "BuyTradeVolume", "SellTradeVolume",
+                                           "PositionCost", "YdPositionCost", "UseMargin", "FrozenMargin",
+                                           "LongFrozenMargin", "ShortFrozenMargin", "FrozenPremium", "InstrumentID",
+                                           "ParticipantID", "ClientID"),
+                                  sql="""SELECT TradingDay,'SG01' AS SettlementGroupID,SettlementID,HedgeFlag,PosiDirection,
+                                            YdPosition,Position,LongFrozen,ShortFrozen,YdLongFrozen,YdShortFrozen,
+                                            BuyTradeVolume,SellTradeVolume,PositionCost,YdPositionCost,UseMargin,
+                                            FrozenMargin,LongFrozenMargin,ShortFrozenMargin,FrozenPremium,InstrumentID,
+                                            ParticipantID,ClientID
+                                          FROM sync.t_ClientPosition WHERE TradeSystemID=%s"""),
+            t_CurrPriceBanding=dict(columns=("SettlementGroupID", "PriceLimitType", "ValueMode", "RoundingMode",
+                                             "UpperValue", "LowerValue", "InstrumentID", "TradingSegmentSN"),
+                                    sql="""SELECT 'SG01' AS SettlementGroupID,PriceLimitType,ValueMode,RoundingMode,
+                                                  UpperValue,LowerValue,InstrumentID,TradingSegmentSN
+                                              FROM sync.t_CurrPriceBanding WHERE TradeSystemID=%s"""),
+            t_InstrumentGroup=dict(columns=("TradingDay", "SettlementGroupID", "SettlementID",
+                                            "InstrumentID", "InstrumentGroupID"),
+                                   sql="""SELECT t1.TradingDay,'SG01' AS SettlementGroupID,'1' AS SettlementID,
+                                                          InstrumentID,InstrumentGroupID
+                                                  FROM sync.t_InstrumentGroup t,siminfo.t_TradeSystemTradingDay t1,
+                                                       siminfo.t_TradeSystemSettlementGroup t2
+                                                  WHERE t.SettlementGroupID = t2.SettlementGroupID
+                                                  AND t1.TradeSystemID = t2.TradeSystemID 
+                                                  AND t.TradeSystemID=%s"""),
+            t_MarketData=dict(columns=("TradingDay", "SettlementGroupID", "SettlementID", "LastPrice",
+                                       "PreSettlementPrice", "PreClosePrice", "PreOpenInterest", "OpenPrice",
+                                       "HighestPrice", "LowestPrice", "Volume", "Turnover", "OpenInterest",
+                                       "ClosePrice", "SettlementPrice", "UpperLimitPrice", "LowerLimitPrice",
+                                       "PreDelta", "CurrDelta", "UpdateTime", "UpdateMillisec", "InstrumentID",
+                                       "OTCLastPrice", "OTCVolume", "OTCInterestChange",),
+                              sql="""SELECT t1.TradingDay,'SG01' AS SettlementGroupID,'1' AS SettlementID,
+                                            LastPrice,PreSettlementPrice,PreClosePrice,PreOpenInterest,OpenPrice,
+                                            HighestPrice,LowestPrice,Volume,Turnover,OpenInterest,ClosePrice,
+                                            SettlementPrice,UpperLimitPrice,LowerLimitPrice,PreDelta,CurrDelta,
+                                            UpdateTime,UpdateMillisec,InstrumentID,
+                                            '' AS OTCLastPrice,'' AS OTCVolume,'' AS OTCInterestChange
+                                      FROM sync.t_MarketData t,siminfo.t_TradeSystemTradingDay t1,
+                                           siminfo.t_TradeSystemSettlementGroup t2
+                                      WHERE t.SettlementGroupID = t2.SettlementGroupID
+                                      AND t1.TradeSystemID = t2.TradeSystemID 
+                                      AND t.TradeSystemID=%s"""),
+            t_MarketDataTopic=dict(columns=("TopicID", "TopicName", "MarketID", "SnapShotFeq", "MarketDataDepth",
+                                            "DelaySeconds", "MarketDataMode"),
+                                   sql="""SELECT TopicID,TopicName,MarketID,SnapShotFeq,
+                                                 MarketDataDepth,DelaySeconds,MarketDataMode
+                                          FROM sync.t_MarketDataTopic WHERE TradeSystemID=%s""",
+                                   quoting=True),
+            t_MdPubStatus=dict(columns=("ProductID", "InstrumentStatus", "MdPubStatus"),
+                               sql="""SELECT ProductID,InstrumentStatus,MdPubStatus
+                                          FROM sync.t_MdPubStatus WHERE TradeSystemID=%s""",
+                               quoting=True),
+            t_PartClient=dict(columns=("ClientID", "ParticipantID"),
+                              sql="""SELECT ClientID,ParticipantID FROM sync.t_PartClient WHERE TradeSystemID=%s""",
+                              quoting=True),
+            t_PartPosition=dict(columns=("TradingDay", "SettlementGroupID", "SettlementID", "HedgeFlag",
+                                         "PosiDirection", "YdPosition", "Position", "LongFrozen", "ShortFrozen",
+                                         "YdLongFrozen", "YdShortFrozen", "InstrumentID", "ParticipantID",
+                                         "TradingRole"),
+                                sql="""SELECT TradingDay,'SG01' AS SettlementGroupID,SettlementID,HedgeFlag,PosiDirection,
+                                              YdPosition,Position,LongFrozen,ShortFrozen,YdLongFrozen,YdShortFrozen,
+                                              InstrumentID,ParticipantID,TradingRole
+                                      FROM sync.t_PartPosition WHERE TradeSystemID=%s"""),
+            t_PartTopicSubscribe=dict(columns=("ParticipantID", "ParticipantType", "TopicID"),
+                                      sql="""SELECT DISTINCT ParticipantID,ParticipantType,TopicID
+                                              FROM sync.t_PartTopicSubscribe WHERE TradeSystemID=%s""",
+                                      quoting=True),
+            t_User=dict(columns=("ParticipantID", "UserID", "UserType", "Password", "IsActive"),
+                        sql="""SELECT DISTINCT ParticipantID,UserID,UserType,Password,IsActive
+                              FROM sync.t_User WHERE TradeSystemID=%s""",
+                        quoting=True),
+            t_UserFunctionRight=dict(columns=("UserID", "FunctionCode"),
+                                     sql="""SELECT DISTINCT UserID,FunctionCode
+                                            FROM sync.t_UserFunctionRight WHERE TradeSystemID=%s""",
+                                     quoting=True),
+            t_UserIP=dict(columns=("UserID", "IPAddress", "IPMask"),
+                          sql="""SELECT DISTINCT UserID,IPAddress,IPMask
+                                  FROM sync.t_UserIP WHERE TradeSystemID=%s""",
+                          quoting=True),
         )
         # 查询sync数据库数据内容
-        csv_data = mysqlDB.select(table_sqls[table_name]["sql"], table_sqls[table_name].get("params"))
+        csv_data = mysqlDB.select(table_sqls[table_name]["sql"], (self.tradeSystemID,))
         # 生成csv文件
         self.__produce_csv(table_name, table_sqls[table_name], csv_data)
 
