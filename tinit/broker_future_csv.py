@@ -50,6 +50,7 @@ class exchange_future_csv:
         self.__data_to_csv("t_ProductGroup", mysqlDB)
         self.__data_to_csv("t_IndexPrice", mysqlDB)
         self.__data_to_csv("t_InstrumentMarginRate", mysqlDB)
+        self.__data_to_csv("t_InstrumentCommissionRate", mysqlDB)
 
     def __data_to_csv(self, table_name, mysqlDB):
         table_sqls = dict(
@@ -259,6 +260,19 @@ class exchange_future_csv:
                                                 AND t.SettlementGroupID IN """ +
                                             str(tuple([str(i) for i in self.settlementGroupID])),
                                         quoting=True),
+            t_InstrumentCommissionRate=dict(columns=("InstrumentID", "InvestorRange", "BrokerID", "InvestorID",
+                                                     "OpenRatioByMoney", "OpenRatioByVolume", "CloseRatioByMoney",
+                                                     "CloseRatioByVolume", "CloseTodayRatioByMoney",
+                                                     "CloseTodayRatioByVolume"),
+                                            sql="""SELECT t.InstrumentID,'1' AS InvestorRange,'9099' AS BrokerID,
+                                                        '00000000' AS InvestorID,'0' AS OpenRatioByMoney,
+                                                        '12' AS OpenRatioByVolume,'0' AS CloseRatioByMoney,
+                                                        '12' AS CloseRatioByVolume,'0' AS CloseTodayRatioByMoney,
+                                                        '12' AS CloseTodayRatioByVolume
+                                                    FROM siminfo.t_Instrument t WHERE t.SettlementGroupID IN """ +
+                                                str(tuple([str(i) for i in self.settlementGroupID])),
+                                            quoting=True),
+
         )
         # 查询sync数据库数据内容
         csv_data = mysqlDB.select(table_sqls[table_name]["sql"], table_sqls[table_name].get("params"))

@@ -48,6 +48,9 @@ class trans_etfinfo:
         # ===========处理etf_txt写入t_PriceBanding表==============
         self.__t_PriceBanding(mysqlDB=mysqlDB, etf_list=etf_list)
 
+        # ===========处理etf_txt写入t_MarketData表==============
+        self.__t_MarketData(mysqlDB=mysqlDB, etf_list=etf_list)
+
     # 读取处理reff03文件
     def __t_Instrument(self, mysqlDB, etf_list):
         # 判断合约是否已存在
@@ -324,6 +327,66 @@ class trans_etfinfo:
                                           template[SGID][7]))
         mysqlDB.executemany(sql_insert_price, sql_insert_params)
         mysqlDB.executemany(sql_update_price, sql_update_params)
+
+    # 写入t_MarketData
+    def __t_MarketData(self, mysqlDB, etf_list):
+        # 判断行情信息是否已存在
+        all_etf = []
+        exist_etf = []
+        sql_etf = " SELECT InstrumentID " + \
+                  " FROM siminfo.t_MarketData " + \
+                  " WHERE  (InstrumentID,SettlementGroupID) in ("
+        for etf in etf_list:
+            all_etf.append(etf.SecurityID)
+            sql_values = "('" + etf.SecurityID + "', '" + self.SettlementGroupID + "') "
+            sql_etf = sql_etf + sql_values + ","
+        sql_etf = sql_etf[0:-1] + ")"
+
+        # 查询存在数据
+        for etf in mysqlDB.select(sql_etf):
+            exist_etf.append(str(etf[0]))
+
+        # 获取差集
+        inexist_etf = list(set(all_etf) ^ set(exist_etf))
+        self.logger.info("%s%d%s" % ("dbf导入etf条数：", len(all_etf), "条"))
+        self.logger.info("%s%d%s" % ("t_MarketData中etf存在：", len(exist_etf), "条"))
+        self.logger.info("%s%d%s" % ("t_MarketData中etf不存在：", len(inexist_etf), "条"))
+
+        # 不存在插入记录
+        sql_insert_market = """INSERT INTO siminfo.t_MarketData (
+                                        SettlementGroupID,LastPrice,PreSettlementPrice,
+                                        PreClosePrice,PreOpenInterest,OpenPrice,
+                                        HighestPrice,LowestPrice,Volume,Turnover,
+                                        OpenInterest,ClosePrice,SettlementPrice,
+                                        UpperLimitPrice,LowerLimitPrice,PreDelta,
+                                        CurrDelta,UpdateTime,UpdateMillisec,InstrumentID
+                                   )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
+        # 存在更新记录
+        sql_update_market = """UPDATE siminfo.t_MarketData 
+                                    SET PreSettlementPrice = %s,
+                                        PreClosePrice = %s,
+                                        HighestPrice = %s,
+                                        LowestPrice = %s,
+                                        UpperLimitPrice = %s,
+                                        LowerLimitPrice = %s
+                                    WHERE SettlementGroupID = %s AND InstrumentID = %s"""
+        sql_insert_params = []
+        sql_update_params = []
+        for etf in etf_list:
+            if etf.SecurityID in inexist_etf:
+                sql_insert_params.append((self.SettlementGroupID, None, etf.SettlePrice,
+                                         etf.SecurityClosePx, '0', None,
+                                         etf.DailyPriceUpLimit, etf.DailyPriceDownLimit, None, None,
+                                         None, None, None,
+                                         etf.LmtOrdMaxFloor, etf.LmtOrdMinFloor, None,
+                                         None, None, None, etf.SecurityID))
+                continue
+            if etf.SecurityID in exist_etf:
+                sql_update_params.append((etf.SettlePrice, etf.SecurityClosePx, etf.DailyPriceUpLimit,
+                                         etf.DailyPriceDownLimit, etf.LmtOrdMaxFloor, etf.LmtOrdMinFloor,
+                                         self.SettlementGroupID, etf.SecurityID))
+        mysqlDB.executemany(sql_insert_market, sql_insert_params)
+        mysqlDB.executemany(sql_update_market, sql_update_params)
 
     def __check_file(self):
         env_dist = os.environ

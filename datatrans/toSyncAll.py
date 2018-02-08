@@ -68,7 +68,7 @@ class toSyncAll:
         self.__t_Market(mysqlDB)
         self.__t_MarketData(mysqlDB)
         self.__t_MarketProduct(mysqlDB)
-        self.__t_MarketProductGroup(mysqlDB)
+        # self.__t_MarketProductGroup(mysqlDB)
         self.__t_PartProductRight(mysqlDB)
         self.__t_PartProductRole(mysqlDB)
         self.__t_PartRoleAccount(mysqlDB)

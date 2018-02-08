@@ -43,6 +43,7 @@ class broker_etf_csv:
         self.__data_to_csv("SSEPosition", mysqlDB)
         self.__data_to_csv("SSESecurity", mysqlDB)
         self.__data_to_csv("SSEShareholderAccount", mysqlDB)
+        self.__data_to_csv("SSEShareholderTradingRight", mysqlDB)
         self.__data_to_csv("TradingAccount", mysqlDB)
         self.__data_to_csv("User", mysqlDB)
 
@@ -60,11 +61,14 @@ class broker_etf_csv:
                                     WHERE t.InvestorID = t1.InvestorID AND t1.SettlementGroupID = %s""",
                               params=(self.settlementGroupID,)),
             ExchangeTradingDay=dict(columns=("ExchangeID", "TradingDay"),
-                                    sql="""SELECT '1' AS ExchangeID,t.TradingDay
-                                            FROM siminfo.t_TradeSystemTradingDay t,
-                                                 siminfo.t_TradeSystemSettlementGroup t1
-                                            WHERE t.TradeSystemID = t1.TradeSystemID AND t1.SettlementGroupID=%s""",
-                                    params=(self.settlementGroupID,)),
+                                    sql="""SELECT 0 AS ExchangeID,t.TradingDay
+                                            FROM siminfo.t_TradeSystemTradingDay t,siminfo.t_TradeSystemSettlementGroup t1
+                                            WHERE t.TradeSystemID = t1.TradeSystemID AND t1.SettlementGroupID = %s
+                                            UNION ALL
+                                            SELECT '1' AS ExchangeID,t.TradingDay
+                                            FROM siminfo.t_TradeSystemTradingDay t,siminfo.t_TradeSystemSettlementGroup t1
+                                            WHERE t.TradeSystemID = t1.TradeSystemID AND t1.SettlementGroupID = %s""",
+                                    params=(self.settlementGroupID, self.settlementGroupID)),
             Investor=dict(columns=("InvestorID", "DepartmentID", "InvestorType", "InvestorName", "IdCardType",
                                    "IdCardNo", "ContractNo", "OpenDate", "CloseDate", "Status", "InnerBranchID",
                                    "InvestorLevel", "Remark"),
@@ -90,8 +94,42 @@ class broker_etf_csv:
                                                     'd' AS ProductID,t.InvestorID AS AccountID,t1.Currency AS CurrencyID
                                                 FROM siminfo.t_InvestorClient t,siminfo.t_SettlementGroup t1
                                                 WHERE t.SettlementGroupID = t1.SettlementGroupID
+                                                AND t1.SettlementGroupID = %s
+                                                UNION ALL 
+                                                SELECT 'broker' AS UserID,t.InvestorID AS InvestorID,
+                                                    t.InvestorID AS BusinessUnitID,'1' AS ExchangeID,'1' AS MarketID,
+                                                    t.ClientID AS ShareholderID,'3' AS ShareholderIDType,
+                                                    'd' AS ProductID,t.InvestorID AS AccountID,t1.Currency AS CurrencyID
+                                                FROM siminfo.t_InvestorClient t,siminfo.t_SettlementGroup t1
+                                                WHERE t.SettlementGroupID = t1.SettlementGroupID
+                                                AND t1.SettlementGroupID = %s
+                                                UNION ALL 
+                                                SELECT 'broker1' AS UserID,t.InvestorID AS InvestorID,
+                                                    t.InvestorID AS BusinessUnitID,'1' AS ExchangeID,'1' AS MarketID,
+                                                    t.ClientID AS ShareholderID,'3' AS ShareholderIDType,
+                                                    'd' AS ProductID,t.InvestorID AS AccountID,t1.Currency AS CurrencyID
+                                                FROM siminfo.t_InvestorClient t,siminfo.t_SettlementGroup t1
+                                                WHERE t.SettlementGroupID = t1.SettlementGroupID
+                                                AND t1.SettlementGroupID = %s
+                                                UNION ALL 
+                                                SELECT 'admin' AS UserID,t.InvestorID AS InvestorID,
+                                                    t.InvestorID AS BusinessUnitID,'1' AS ExchangeID,'1' AS MarketID,
+                                                    t.ClientID AS ShareholderID,'3' AS ShareholderIDType,
+                                                    'd' AS ProductID,t.InvestorID AS AccountID,t1.Currency AS CurrencyID
+                                                FROM siminfo.t_InvestorClient t,siminfo.t_SettlementGroup t1
+                                                WHERE t.SettlementGroupID = t1.SettlementGroupID
+                                                AND t1.SettlementGroupID = %s
+                                                UNION ALL 
+                                                SELECT 'admin1' AS UserID,t.InvestorID AS InvestorID,
+                                                    t.InvestorID AS BusinessUnitID,'1' AS ExchangeID,'1' AS MarketID,
+                                                    t.ClientID AS ShareholderID,'3' AS ShareholderIDType,
+                                                    'd' AS ProductID,t.InvestorID AS AccountID,t1.Currency AS CurrencyID
+                                                FROM siminfo.t_InvestorClient t,siminfo.t_SettlementGroup t1
+                                                WHERE t.SettlementGroupID = t1.SettlementGroupID
                                                 AND t1.SettlementGroupID = %s""",
-                                        params=(self.settlementGroupID,)),
+                                        params=(self.settlementGroupID, self.settlementGroupID,
+                                                self.settlementGroupID, self.settlementGroupID,
+                                                self.settlementGroupID)),
             SSEMarketData=dict(columns=("SecurityID", "ExchangeID", "TradingDay", "SecurityName", "PreClosePrice",
                                         "OpenPrice", "UpperLimitPrice", "LowerLimitPrice", "Volume", "Turnover",
                                         "TradingCount", "LastPrice", "ClosePrice", "HighestPrice", "LowestPrice",
@@ -184,6 +222,47 @@ class broker_etf_csv:
                                                 '0' AS BranchID
                                             FROM siminfo.t_InvestorClient t WHERE t.SettlementGroupID = %s""",
                                        params=(self.settlementGroupID,)),
+            SSEShareholderTradingRight=dict(columns=("MarketID", "ShareholderID", "SystemFlag", "ProductID",
+                                                     "SecurityType", "SecurityID", "OffsetFlag", "Direction",
+                                                     "HedgeFlag", "ExchangeID", "bForbidden"),
+                                            sql="""SELECT '1' AS MarketID,t.ClientID AS ShareholderID,'2' AS SystemFlag,
+                                                        'd' AS ProductID,'0' AS SecurityType,'00000000' AS SecurityID,
+                                                        '0' AS OffsetFlag,'0' AS Direction,'1' AS HedgeFlag,'1' AS ExchangeID,'0' AS bForbidden
+                                                    FROM siminfo.t_Client t WHERE t.SettlementGroupID = %s
+                                                    UNION ALL
+                                                    SELECT '1' AS MarketID,t.ClientID AS ShareholderID,'2' AS SystemFlag,
+                                                        'd' AS ProductID,'0' AS SecurityType,'00000000' AS SecurityID,
+                                                        '0' AS OffsetFlag,'1' AS Direction,'1' AS HedgeFlag,'1' AS ExchangeID,'0' AS bForbidden
+                                                    FROM siminfo.t_Client t WHERE t.SettlementGroupID = %s
+                                                    UNION ALL
+                                                    SELECT '1' AS MarketID,t.ClientID AS ShareholderID,'2' AS SystemFlag,
+                                                        'd' AS ProductID,'0' AS SecurityType,'00000000' AS SecurityID,
+                                                        '1' AS OffsetFlag,'0' AS Direction,'1' AS HedgeFlag,'1' AS ExchangeID,'0' AS bForbidden
+                                                    FROM siminfo.t_Client t WHERE t.SettlementGroupID = %s
+                                                    UNION ALL
+                                                    SELECT '1' AS MarketID,t.ClientID AS ShareholderID,'2' AS SystemFlag,
+                                                        'd' AS ProductID,'0' AS SecurityType,'00000000' AS SecurityID,
+                                                        '1' AS OffsetFlag,'1' AS Direction,'1' AS HedgeFlag,'1' AS ExchangeID,'0' AS bForbidden
+                                                    FROM siminfo.t_Client t WHERE t.SettlementGroupID = %s
+                                                    UNION ALL
+                                                    SELECT '1' AS MarketID,t.ClientID AS ShareholderID,'2' AS SystemFlag,
+                                                        'd' AS ProductID,'0' AS SecurityType,'00000000' AS SecurityID,
+                                                        '0' AS OffsetFlag,'1' AS Direction,'4' AS HedgeFlag,'1' AS ExchangeID,'0' AS bForbidden
+                                                    FROM siminfo.t_Client t WHERE t.SettlementGroupID = %s
+                                                    UNION ALL
+                                                    SELECT '1' AS MarketID,t.ClientID AS ShareholderID,'2' AS SystemFlag,
+                                                        'd' AS ProductID,'0' AS SecurityType,'00000000' AS SecurityID,
+                                                        '1' AS OffsetFlag,'1' AS Direction,'4' AS HedgeFlag,'1' AS ExchangeID,'0' AS bForbidden
+                                                    FROM siminfo.t_Client t WHERE t.SettlementGroupID = %s
+                                                    UNION ALL
+                                                    SELECT '1' AS MarketID,t.ClientID AS ShareholderID,'2' AS SystemFlag,
+                                                        'd' AS ProductID,'0' AS SecurityType,'00000000' AS SecurityID,
+                                                        '7' AS OffsetFlag,'1' AS Direction,'1' AS HedgeFlag,'1' AS ExchangeID,'0' AS bForbidden
+                                                    FROM siminfo.t_Client t WHERE t.SettlementGroupID = %s""",
+                                            params=(self.settlementGroupID, self.settlementGroupID,
+                                                    self.settlementGroupID, self.settlementGroupID,
+                                                    self.settlementGroupID, self.settlementGroupID,
+                                                    self.settlementGroupID,)),
             TradingAccount=dict(columns=("DepartmentID", "AccountID", "CurrencyID", "AccountType", "PreDeposit",
                                          "PreFrozenCash", "UsefulMoney", "FetchLimit", "Deposit", "Withdraw",
                                          "FrozenMargin", "FrozenCash", "FrozenCommission", "CurrMargin", "Commission",
@@ -202,11 +281,31 @@ class broker_etf_csv:
                                "PasswordFailLimit", "Status", "Contacter", "Fax", "Telephone", "Email", "Address",
                                "ZipCode", "OpenDate", "CloseDate"),
                       sql="""SELECT t.InvestorID AS UserID,t.InvestorName AS UserName,'2' AS UserType,
-                                    '2023' AS DepartmentID,t.PASSWORD AS UserPassword,'10' AS LoginLimit,
-                                    '3' AS PasswordFailLimit,'3' AS STATUS,'' AS Contacter,'' AS Fax,'' AS Telephone,
-                                    '' AS Email,'' AS Address,'' AS ZipCode,'' AS OpenDate,'' AS CloseDate
+                                        '2023' AS DepartmentID,t.PASSWORD AS UserPassword,'10' AS LoginLimit,
+                                        '3' AS PasswordFailLimit,'3' AS STATUS,'' AS Contacter,'' AS Fax,'' AS Telephone,
+                                        '' AS Email,'' AS Address,'' AS ZipCode,'' AS OpenDate,'' AS CloseDate
                                 FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1
-                                WHERE t.InvestorID = t1.InvestorID AND t1.SettlementGroupID = %s""",
+                                WHERE t.InvestorID = t1.InvestorID AND t1.SettlementGroupID =  %s
+                                UNION ALL
+                                SELECT 'broker' AS UserID,'操作员broker' AS UserName,'0' AS UserType,
+                                        '2023' AS DepartmentID,'123456' AS UserPassword,'10' AS LoginLimit,
+                                        '3' AS PasswordFailLimit,'3' AS STATUS,'' AS Contacter,'' AS Fax,'' AS Telephone,
+                                        '' AS Email,'' AS Address,'' AS ZipCode,'' AS OpenDate,'' AS CloseDate
+                                UNION ALL
+                                SELECT 'broker1' AS UserID,'操作员broker1' AS UserName,'0' AS UserType,
+                                        '2023' AS DepartmentID,'123456' AS UserPassword,'10' AS LoginLimit,
+                                        '3' AS PasswordFailLimit,'3' AS STATUS,'' AS Contacter,'' AS Fax,'' AS Telephone,
+                                        '' AS Email,'' AS Address,'' AS ZipCode,'' AS OpenDate,'' AS CloseDate
+                                UNION ALL
+                                SELECT 'admin' AS UserID,'管理员admin' AS UserName,'1' AS UserType,
+                                        '2023' AS DepartmentID,'123456' AS UserPassword,'10' AS LoginLimit,
+                                        '3' AS PasswordFailLimit,'3' AS STATUS,'' AS Contacter,'' AS Fax,'' AS Telephone,
+                                        '' AS Email,'' AS Address,'' AS ZipCode,'' AS OpenDate,'' AS CloseDate
+                                UNION ALL
+                                SELECT 'admin1' AS UserID,'管理员admin1' AS UserName,'1' AS UserType,
+                                        '2023' AS DepartmentID,'123456' AS UserPassword,'10' AS LoginLimit,
+                                        '3' AS PasswordFailLimit,'3' AS STATUS,'' AS Contacter,'' AS Fax,'' AS Telephone,
+                                        '' AS Email,'' AS Address,'' AS ZipCode,'' AS OpenDate,'' AS CloseDate""",
                       params=(self.settlementGroupID,)),
         )
         # 查询siminfo数据库数据内容
