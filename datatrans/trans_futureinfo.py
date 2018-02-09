@@ -159,13 +159,13 @@ class trans_futureinfo:
 
         # 不存在插入记录
         sql_insert_gjshq = """INSERT INTO siminfo.t_MarketData (
-                                        SettlementGroupID,LastPrice,PreSettlementPrice,
+                                        TradingDay,SettlementGroupID,LastPrice,PreSettlementPrice,
                                         PreClosePrice,PreOpenInterest,OpenPrice,
                                         HighestPrice,LowestPrice,Volume,Turnover,
                                         OpenInterest,ClosePrice,SettlementPrice,
                                         UpperLimitPrice,LowerLimitPrice,PreDelta,
                                         CurrDelta,UpdateTime,UpdateMillisec,InstrumentID
-                                   )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
+                                   )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
         # 存在更新记录
         sql_update_gjshq = """UPDATE siminfo.t_MarketData 
                                     SET OpenPrice = %s,
@@ -357,8 +357,8 @@ class trans_futureinfo:
                              "', '" + template[SGID][1] + \
                              "', '" + template[SGID][2] + \
                              "', '" + future['ZQDM'] + \
-                             "', '" + template[SGID][7] + \
-                             "', '" + template[SGID][8] + \
+                             "', '" + template[SGID][9] + \
+                             "', '" + template[SGID][10] + \
                              "') "
                 sql_marginratedetail = sql_marginratedetail + sql_values + ","
         sql_marginratedetail = sql_marginratedetail[0:-1] + ") "
@@ -390,13 +390,13 @@ class trans_futureinfo:
             if SGID in template and future['ZQDM'] in inexist_detail:
                 sql_insert_params.append((SGID, template[SGID][1], template[SGID][2], template[SGID][3],
                                           template[SGID][4], template[SGID][5], future['ZQDM'],
-                                          template[SGID][7], template[SGID][8]))
+                                          template[SGID][9], template[SGID][10]))
                 continue
             # 更新记录
             if SGID in template and future['ZQDM'] in exist_detail:
                 sql_update_params.append((template[SGID][3], template[SGID][4], template[SGID][5],
                                           SGID, template[SGID][1], template[SGID][2],
-                                          future['ZQDM'], template[SGID][7], template[SGID][8]))
+                                          future['ZQDM'], template[SGID][9], template[SGID][10]))
         mysqlDB.executemany(sql_insert_detail, sql_insert_params)
         mysqlDB.executemany(sql_update_detail, sql_update_params)
 
@@ -466,6 +466,7 @@ class trans_futureinfo:
         # 获取文件路径
         catalog = env_dist['HOME']
         now = datetime.datetime.now().strftime("%Y%m%d")
+        self.TradingDay = now
         catalog = '%s%s%s%s%s' % (catalog, os.path.sep, 'sim_data', os.path.sep, now)
         par_futures = '%s%s%s%s%s' % (catalog, os.path.sep, self.futures_filename, now, '.dbf')
         gjshq = '%s%s%s%s%s' % (catalog, os.path.sep, self.gjshq_filename, now, '.dbf')

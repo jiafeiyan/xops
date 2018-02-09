@@ -357,8 +357,8 @@ class trans_stockinfo:
                          "', '" + template[SGID][1] + \
                          "', '" + template[SGID][2] + \
                          "', '" + stock['ZQDM'] + \
-                         "', '" + template[SGID][7] + \
-                         "', '" + template[SGID][8] + \
+                         "', '" + template[SGID][9] + \
+                         "', '" + template[SGID][10] + \
                          "') "
             sql_marginratedetail = sql_marginratedetail + sql_values + ","
         sql_marginratedetail = sql_marginratedetail[0:-1] + ") "
@@ -390,13 +390,13 @@ class trans_stockinfo:
             if stock['ZQDM'] in inexist_detail:
                 sql_insert_params.append((SGID, template[SGID][1], template[SGID][2], template[SGID][3],
                                           template[SGID][4], template[SGID][5], stock['ZQDM'],
-                                          template[SGID][7], template[SGID][8]))
+                                          template[SGID][9], template[SGID][10]))
                 continue
             # 更新记录
             if stock['ZQDM'] in exist_detail:
                 sql_update_params.append((template[SGID][3], template[SGID][4], template[SGID][5],
                                           SGID, template[SGID][1], template[SGID][2],
-                                          stock['ZQDM'], template[SGID][7], template[SGID][8]))
+                                          stock['ZQDM'], template[SGID][9], template[SGID][10]))
         mysqlDB.executemany(sql_insert_detail, sql_insert_params)
         mysqlDB.executemany(sql_update_detail, sql_update_params)
 

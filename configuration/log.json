@@ -2,6 +2,6 @@
   "default" : {
     "file_path": "",
     "file_level": "INFO",
-    "console_level": "DEBUG"
+    "console_level": "INFO"
   }
 }

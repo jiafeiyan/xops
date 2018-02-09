@@ -184,13 +184,13 @@ class toSyncAll:
         delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
         self.logger.info("同步" + table_name + " ==>> sync")
         sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
-                      t.SettlementGroupID,t.ProductID,t.ProductGroupID,t.UnderlyingInstrID,
-                      t.ProductClass,t.PositionType,t.StrikePrice,t.OptionsType,t.VolumeMultiple,
-                      t.UnderlyingMultiple,t.TotalEquity,t.CirculationEquity,t.InstrumentID,t.InstrumentName,
-                      t.DeliveryYear,t.DeliveryMonth,t.AdvanceMonth,%s
-                      FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
-                      WHERE t.SettlementGroupID = t2.SettlementGroupID 
-                      AND t2.TradeSystemID=%s"""
+                  t.SettlementGroupID,t.ProductID,t.ProductGroupID,t.UnderlyingInstrID,
+                  t.ProductClass,t.PositionType,t.UnderlyingType,t.StrikeType,t.StrikePrice,t.OptionsType,t.VolumeMultiple,
+                  t.UnderlyingMultiple,t.TotalEquity,t.CirculationEquity,t.InstrumentID,t.InstrumentName,
+                  t.DeliveryYear,t.DeliveryMonth,t.AdvanceMonth,%s
+                  FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
+                  WHERE t.SettlementGroupID = t2.SettlementGroupID 
+                  AND t2.TradeSystemID=%s"""
         trans = [dict(sql=delete, params=(self.tradeSystemID,)),
                  dict(sql=sql, params=(1, self.tradeSystemID))]
         mysqlDB.executetransaction(trans)
@@ -214,8 +214,8 @@ class toSyncAll:
         self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
         delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
         self.logger.info("同步" + table_name + " ==>> sync")
-        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID, 
-                              t.SettlementGroupID,t.LastPrice,t.PreSettlementPrice,t.PreClosePrice,t.PreOpenInterest,
+        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID, TradingDay,
+                              t.SettlementGroupID,t.LastPrice,t.PreSettlementPrice,t.PreClosePrice,t.UnderlyingClosePx,t.PreOpenInterest,
                               t.OpenPrice,t.HighestPrice,t.LowestPrice,t.Volume,t.Turnover,t.OpenInterest,t.ClosePrice,
                               t.SettlementPrice,t.UpperLimitPrice,t.LowerLimitPrice,t.PreDelta,t.CurrDelta,
                               t.UpdateTime,t.UpdateMillisec,t.InstrumentID
@@ -359,7 +359,7 @@ class toSyncAll:
         delete = "DELETE FROM sync.t_Curr" + table_name + " WHERE TradeSystemID=%s"
         self.logger.info("同步siminfo.t_InstrumentProperty ==>> sync.t_CurrInstrumentProperty")
         sql = """INSERT INTO sync.t_Curr""" + table_name + """ SELECT t2.TradeSystemID,
-                              t.SettlementGroupID,CreateDate,OpenDate,ExpireDate,StartDelivDate,EndDelivDate,
+                              t.SettlementGroupID,CreateDate,OpenDate,ExpireDate,StartDelivDate,EndDelivDate,StrikeDate,
                                 BasisPrice,MaxMarketOrderVolume,MinMarketOrderVolume,MaxLimitOrderVolume,
                                 MinLimitOrderVolume,PriceTick,AllowDelivPersonOpen,InstrumentID,InstLifePhase,%s
                               FROM siminfo.t_""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
@@ -390,7 +390,7 @@ class toSyncAll:
         self.logger.info("同步siminfo.t_MarginRateDetail ==>> sync.t_CurrMarginRateDetail")
         sql = """INSERT INTO sync.t_Curr""" + table_name + """ SELECT t2.TradeSystemID,
                              t.SettlementGroupID,TradingRole,HedgeFlag,ValueMode,LongMarginRatio,
-                             ShortMarginRatio,InstrumentID,ParticipantID,ClientID
+                             ShortMarginRatio,AdjustRatio1,AdjustRatio2,InstrumentID,ParticipantID,ClientID
                              FROM siminfo.t_""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
                              WHERE t.SettlementGroupID = t2.SettlementGroupID 
                              AND t2.TradeSystemID=%s"""

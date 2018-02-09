@@ -1,6 +1,6 @@
 {
   "settlementGroupID": "SG07",
-  "mysqlId": "simplatform_101",
+  "mysqlId": "simplatform_base",
   "logId": "default",
   "csv": "csv_base",
   "csvRoute": "etf/"

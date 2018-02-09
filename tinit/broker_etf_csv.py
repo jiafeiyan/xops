@@ -46,14 +46,34 @@ class broker_etf_csv:
         self.__data_to_csv("SSEShareholderTradingRight", mysqlDB)
         self.__data_to_csv("TradingAccount", mysqlDB)
         self.__data_to_csv("User", mysqlDB)
+        self.__data_to_csv("SSEInvestorLimitPositionParam", mysqlDB)
+        self.__data_to_csv("SSEInvestorMarginFee", mysqlDB)
+        self.__data_to_csv("SSEInvestorTradingFee", mysqlDB)
 
     def __data_to_csv(self, csv_name, mysqlDB):
         table_sqls = dict(
             BUProxy=dict(columns=("UserID", "InvestorID", "BusinessUnitID"),
                          sql="""SELECT t.InvestorID AS UserID,t.InvestorID AS InvestorID,t.InvestorID AS BusinessUnitID
                                 FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1
+                                WHERE t.InvestorID = t1.InvestorID AND t1.SettlementGroupID = %s
+                                UNION ALL
+                                SELECT 'broker' AS UserID,t.InvestorID AS InvestorID,t.InvestorID AS BusinessUnitID
+                                FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1
+                                WHERE t.InvestorID = t1.InvestorID AND t1.SettlementGroupID = %s
+                                UNION ALL
+                                SELECT 'broker1' AS UserID,t.InvestorID AS InvestorID,t.InvestorID AS BusinessUnitID
+                                FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1
+                                WHERE t.InvestorID = t1.InvestorID AND t1.SettlementGroupID = %s
+                                UNION ALL
+                                SELECT 'admin' AS UserID,t.InvestorID AS InvestorID,t.InvestorID AS BusinessUnitID
+                                FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1
+                                WHERE t.InvestorID = t1.InvestorID AND t1.SettlementGroupID = %s
+                                UNION ALL
+                                SELECT 'admin1' AS UserID,t.InvestorID AS InvestorID,t.InvestorID AS BusinessUnitID
+                                FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1
                                 WHERE t.InvestorID = t1.InvestorID AND t1.SettlementGroupID = %s""",
-                         params=(self.settlementGroupID,)),
+                         params=(self.settlementGroupID, self.settlementGroupID, self.settlementGroupID,
+                                 self.settlementGroupID, self.settlementGroupID)),
             BusinessUnit=dict(columns=("InvestorID", "BusinessUnitID", "BusinessUnitName"),
                               sql="""SELECT t.InvestorID,t.InvestorID AS BusinessUnitID,
                                             CONCAT('BU', t.InvestorID) AS BusinessUnitName
@@ -72,9 +92,9 @@ class broker_etf_csv:
             Investor=dict(columns=("InvestorID", "DepartmentID", "InvestorType", "InvestorName", "IdCardType",
                                    "IdCardNo", "ContractNo", "OpenDate", "CloseDate", "Status", "InnerBranchID",
                                    "InvestorLevel", "Remark"),
-                          sql="""SELECT t.InvestorID,'2023' AS DepartmentID,'0' AS InvestorType,InvestorName,
+                          sql="""SELECT t.InvestorID,'0001' AS DepartmentID,'0' AS InvestorType,InvestorName,
                                         '1' AS IdCardType,OpenID AS IdCardNo,'' AS ContractNo,'' AS OpenDate,
-                                        '' AS CloseDate,'1' AS STATUS,'2023' AS InnerBranchID,'1' AS InvestorLevel,
+                                        '' AS CloseDate,'1' AS STATUS,'0001' AS InnerBranchID,'1' AS InvestorLevel,
                                         '' AS Remark 
                                   FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1
                                   WHERE t.InvestorID = t1.InvestorID
@@ -89,44 +109,34 @@ class broker_etf_csv:
                                                  "MarketID", "ShareholderID", "ShareholderIDType", "ProductID",
                                                  "AccountID", "CurrencyID"),
                                         sql="""SELECT t.InvestorID AS UserID,t.InvestorID AS InvestorID,
-                                                    t.InvestorID AS BusinessUnitID,'1' AS ExchangeID,'1' AS MarketID,
-                                                    t.ClientID AS ShareholderID,'3' AS ShareholderIDType,
-                                                    'd' AS ProductID,t.InvestorID AS AccountID,t1.Currency AS CurrencyID
-                                                FROM siminfo.t_InvestorClient t,siminfo.t_SettlementGroup t1
-                                                WHERE t.SettlementGroupID = t1.SettlementGroupID
-                                                AND t1.SettlementGroupID = %s
+                                                        t.InvestorID AS BusinessUnitID,'1' AS ExchangeID,'1' AS MarketID,
+                                                        t.ClientID AS ShareholderID,'3' AS ShareholderIDType,
+                                                        'd' AS ProductID,t.InvestorID AS AccountID,'1' AS CurrencyID
+                                                FROM siminfo.t_InvestorClient t WHERE t.SettlementGroupID = %s
                                                 UNION ALL 
                                                 SELECT 'broker' AS UserID,t.InvestorID AS InvestorID,
-                                                    t.InvestorID AS BusinessUnitID,'1' AS ExchangeID,'1' AS MarketID,
-                                                    t.ClientID AS ShareholderID,'3' AS ShareholderIDType,
-                                                    'd' AS ProductID,t.InvestorID AS AccountID,t1.Currency AS CurrencyID
-                                                FROM siminfo.t_InvestorClient t,siminfo.t_SettlementGroup t1
-                                                WHERE t.SettlementGroupID = t1.SettlementGroupID
-                                                AND t1.SettlementGroupID = %s
+                                                        t.InvestorID AS BusinessUnitID,'1' AS ExchangeID,'1' AS MarketID,
+                                                        t.ClientID AS ShareholderID,'3' AS ShareholderIDType,
+                                                        'd' AS ProductID,t.InvestorID AS AccountID,'1' AS CurrencyID
+                                                FROM siminfo.t_InvestorClient t WHERE t.SettlementGroupID = %s
                                                 UNION ALL 
                                                 SELECT 'broker1' AS UserID,t.InvestorID AS InvestorID,
-                                                    t.InvestorID AS BusinessUnitID,'1' AS ExchangeID,'1' AS MarketID,
-                                                    t.ClientID AS ShareholderID,'3' AS ShareholderIDType,
-                                                    'd' AS ProductID,t.InvestorID AS AccountID,t1.Currency AS CurrencyID
-                                                FROM siminfo.t_InvestorClient t,siminfo.t_SettlementGroup t1
-                                                WHERE t.SettlementGroupID = t1.SettlementGroupID
-                                                AND t1.SettlementGroupID = %s
+                                                        t.InvestorID AS BusinessUnitID,'1' AS ExchangeID,'1' AS MarketID,
+                                                        t.ClientID AS ShareholderID,'3' AS ShareholderIDType,
+                                                        'd' AS ProductID,t.InvestorID AS AccountID,'1' AS CurrencyID
+                                                FROM siminfo.t_InvestorClient t WHERE t.SettlementGroupID = %s
                                                 UNION ALL 
                                                 SELECT 'admin' AS UserID,t.InvestorID AS InvestorID,
-                                                    t.InvestorID AS BusinessUnitID,'1' AS ExchangeID,'1' AS MarketID,
-                                                    t.ClientID AS ShareholderID,'3' AS ShareholderIDType,
-                                                    'd' AS ProductID,t.InvestorID AS AccountID,t1.Currency AS CurrencyID
-                                                FROM siminfo.t_InvestorClient t,siminfo.t_SettlementGroup t1
-                                                WHERE t.SettlementGroupID = t1.SettlementGroupID
-                                                AND t1.SettlementGroupID = %s
+                                                        t.InvestorID AS BusinessUnitID,'1' AS ExchangeID,'1' AS MarketID,
+                                                        t.ClientID AS ShareholderID,'3' AS ShareholderIDType,
+                                                        'd' AS ProductID,t.InvestorID AS AccountID,'1' AS CurrencyID
+                                                FROM siminfo.t_InvestorClient t WHERE t.SettlementGroupID = %s
                                                 UNION ALL 
                                                 SELECT 'admin1' AS UserID,t.InvestorID AS InvestorID,
-                                                    t.InvestorID AS BusinessUnitID,'1' AS ExchangeID,'1' AS MarketID,
-                                                    t.ClientID AS ShareholderID,'3' AS ShareholderIDType,
-                                                    'd' AS ProductID,t.InvestorID AS AccountID,t1.Currency AS CurrencyID
-                                                FROM siminfo.t_InvestorClient t,siminfo.t_SettlementGroup t1
-                                                WHERE t.SettlementGroupID = t1.SettlementGroupID
-                                                AND t1.SettlementGroupID = %s""",
+                                                        t.InvestorID AS BusinessUnitID,'1' AS ExchangeID,'1' AS MarketID,
+                                                        t.ClientID AS ShareholderID,'3' AS ShareholderIDType,
+                                                        'd' AS ProductID,t.InvestorID AS AccountID,'1' AS CurrencyID
+                                                FROM siminfo.t_InvestorClient t WHERE t.SettlementGroupID = %s""",
                                         params=(self.settlementGroupID, self.settlementGroupID,
                                                 self.settlementGroupID, self.settlementGroupID,
                                                 self.settlementGroupID)),
@@ -193,33 +203,65 @@ class broker_etf_csv:
                                       "PriceTick", "PositionType", "SecurityStatus", "StrikePrice", "FirstDate",
                                       "LastDate", "StrikeDate", "ExpireDate", "DelivDate", "IsUpDownLimit",
                                       "MarginUnit", "PreSettlemetPrice", "PreClosePrice", "UnderlyingPreClosePrice"),
-                             sql="""SELECT '1' AS ExchangeID,t.InstrumentID AS SecurityID,
-                                        t.InstrumentName AS SecurityName,t.UnderlyingInstrID AS UnderlyingSecurityID,
-                                        '' AS UnderlyingSecurityName,t.UnderlyingMultiple AS UnderlyingMultiple,
-                                        '0' AS StrikeMode,t.OptionsType AS OptionsType,'1' AS MarketID,'d' AS ProductID,
-                                        '3' AS SecurityType,'1' AS CurrencyID,'3' AS OrderUnit,'1' AS BuyTradingUnit,
-                                        '1' AS SellTradingUnit,'100' AS MaxMarketOrderBuyVolume,
-                                        '1' AS MinMarketOrderBuyVolume,'100' AS MaxLimitOrderBuyVolume,
-                                        '1' AS MinLimitOrderBuyVolume,'100' AS MaxMarketOrderSellVolume,
-                                        '1' AS MinMarketOrderSellVolume,'100' AS MaxLimitOrderSellVolume,
-                                        '1' AS MinLimitOrderSellVolume,t.VolumeMultiple AS VolumeMultiple,
-                                        t2.PriceTick AS PriceTick,t.PositionType AS PositionType,'0' AS SecurityStatus,
-                                        t.StrikePrice AS StrikePrice,t2.StartDelivDate AS FirstDate,
-                                        t2.EndDelivDate AS LastDate,'' AS StrikeDate,t2.ExpireDate AS ExpireDate,
-                                        t2.EndDelivDate AS DelivDate,'1' AS IsUpDownLimit,'' AS MarginUnit,
-                                        '' AS PreSettlemetPrice,'' AS PreClosePrice,'' AS UnderlyingPreClosePrice
-                                    FROM siminfo.t_Instrument t,siminfo.t_SettlementGroup t1,
-                                         siminfo.t_InstrumentProperty t2
-                                    WHERE t.SettlementGroupID = t1.SettlementGroupID
+                             sql="""SELECT '1' AS ExchangeID,
+                                        t.InstrumentID AS SecurityID,
+                                        t.InstrumentName AS SecurityName,
+                                        t.UnderlyingInstrID AS UnderlyingSecurityID,
+                                        '50ETF' AS UnderlyingSecurityName,
+                                        t.UnderlyingMultiple AS UnderlyingMultiple,
+                                        '0' AS StrikeMode,
+                                        t.OptionsType AS OptionsType,
+                                        '1' AS MarketID,
+                                        'd' AS ProductID,
+                                        CASE WHEN t.OptionsType LIKE '1' THEN '3'
+                                        WHEN t.OptionsType LIKE '2' THEN '4'
+                                        END AS SecurityType,
+                                        '1' AS CurrencyID,
+                                        '3' AS OrderUnit,
+                                        '1' AS BuyTradingUnit,
+                                        '1' AS SellTradingUnit,
+                                        t1.MaxMarketOrderVolume AS MaxMarketOrderBuyVolume,
+                                        t1.MinMarketOrderVolume AS MinMarketOrderBuyVolume,
+                                        t1.MaxLimitOrderVolume AS MaxLimitOrderBuyVolume,
+                                        t1.MinLimitOrderVolume AS MinLimitOrderBuyVolume,
+                                        t1.MaxMarketOrderVolume AS MaxMarketOrderSellVolume,
+                                        t1.MinMarketOrderVolume AS MinMarketOrderSellVolume,
+                                        t1.MaxLimitOrderVolume AS MaxLimitOrderSellVolume,
+                                        t1.MinLimitOrderVolume AS MinLimitOrderSellVolume,
+                                        t.VolumeMultiple AS VolumeMultiple,
+                                        t1.PriceTick AS PriceTick,
+                                        t.PositionType AS PositionType,
+                                        '0' AS SecurityStatus,
+                                        t.StrikePrice AS StrikePrice,
+                                        t1.OpenDate AS FirstDate,
+                                        t1.ExpireDate AS LastDate,
+                                        t1.StrikeDate AS StrikeDate,
+                                        t1.ExpireDate AS ExpireDate,
+                                        t1.StartDelivDate AS DelivDate,
+                                        '1' AS IsUpDownLimit,
+                                        t3.ShortMarginRatio AS MarginUnit,
+                                        t2.PreSettlementPrice AS PreSettlemetPrice,
+                                        t2.PreClosePrice AS PreClosePrice,
+                                        t2.UnderlyingClosePx AS UnderlyingPreClosePrice
+                                    FROM
+                                        siminfo.t_Instrument t,
+                                        siminfo.t_InstrumentProperty t1,
+                                        siminfo.t_MarketData t2,
+                                        siminfo.t_MarginRateDetail t3
+                                    WHERE
+                                        t.InstrumentID = t1.InstrumentID
                                     AND t.InstrumentID = t2.InstrumentID
+                                    AND t.InstrumentID = t3.InstrumentID
+                                    AND t.SettlementGroupID = t1.SettlementGroupID
                                     AND t.SettlementGroupID = t2.SettlementGroupID
+                                    AND t.SettlementGroupID = t3.SettlementGroupID
                                     AND t.SettlementGroupID = %s""",
                              params=(self.settlementGroupID,)),
             SSEShareholderAccount=dict(columns=("ExchangeID", "ShareholderID", "MarketID", "InvestorID",
                                                 "ShareholderIDType", "PbuID", "BranchID"),
                                        sql="""SELECT '1' AS ExchangeID,t.ClientID AS ShareholderID,'1' AS MarketID,
                                                 t.InvestorID AS InvestorID,'3' AS ShareholderIDType,'25377' AS PbuID,
-                                                '0' AS BranchID
+                                                '2340' AS BranchID
                                             FROM siminfo.t_InvestorClient t WHERE t.SettlementGroupID = %s""",
                                        params=(self.settlementGroupID,)),
             SSEShareholderTradingRight=dict(columns=("MarketID", "ShareholderID", "SystemFlag", "ProductID",
@@ -267,7 +309,7 @@ class broker_etf_csv:
                                          "PreFrozenCash", "UsefulMoney", "FetchLimit", "Deposit", "Withdraw",
                                          "FrozenMargin", "FrozenCash", "FrozenCommission", "CurrMargin", "Commission",
                                          "RoyaltyIn", "RoyaltyOut", "AccountOwner"),
-                                sql="""SELECT '2023' AS DepartmentID,t.InvestorID AS AccountID,'1' AS CurrencyID,
+                                sql="""SELECT '0001' AS DepartmentID,t.InvestorID AS AccountID,'1' AS CurrencyID,
                                                 '3' AS AccountType,t.Available AS PreDeposit,'0' AS PreFrozenCash,
                                                 t.Available AS UsefulMoney,t.Available AS FetchLimit,
                                                 t.Deposit AS Deposit,t.Withdraw AS Withdraw,'0' AS FrozenMargin,
@@ -281,32 +323,125 @@ class broker_etf_csv:
                                "PasswordFailLimit", "Status", "Contacter", "Fax", "Telephone", "Email", "Address",
                                "ZipCode", "OpenDate", "CloseDate"),
                       sql="""SELECT t.InvestorID AS UserID,t.InvestorName AS UserName,'2' AS UserType,
-                                        '2023' AS DepartmentID,t.PASSWORD AS UserPassword,'10' AS LoginLimit,
+                                        '0001' AS DepartmentID,t.PASSWORD AS UserPassword,'10' AS LoginLimit,
                                         '3' AS PasswordFailLimit,'3' AS STATUS,'' AS Contacter,'' AS Fax,'' AS Telephone,
                                         '' AS Email,'' AS Address,'' AS ZipCode,'' AS OpenDate,'' AS CloseDate
                                 FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1
                                 WHERE t.InvestorID = t1.InvestorID AND t1.SettlementGroupID =  %s
                                 UNION ALL
                                 SELECT 'broker' AS UserID,'操作员broker' AS UserName,'0' AS UserType,
-                                        '2023' AS DepartmentID,'123456' AS UserPassword,'10' AS LoginLimit,
+                                        '0001' AS DepartmentID,'123456' AS UserPassword,'10' AS LoginLimit,
                                         '3' AS PasswordFailLimit,'3' AS STATUS,'' AS Contacter,'' AS Fax,'' AS Telephone,
                                         '' AS Email,'' AS Address,'' AS ZipCode,'' AS OpenDate,'' AS CloseDate
                                 UNION ALL
                                 SELECT 'broker1' AS UserID,'操作员broker1' AS UserName,'0' AS UserType,
-                                        '2023' AS DepartmentID,'123456' AS UserPassword,'10' AS LoginLimit,
+                                        '0001' AS DepartmentID,'123456' AS UserPassword,'10' AS LoginLimit,
                                         '3' AS PasswordFailLimit,'3' AS STATUS,'' AS Contacter,'' AS Fax,'' AS Telephone,
                                         '' AS Email,'' AS Address,'' AS ZipCode,'' AS OpenDate,'' AS CloseDate
                                 UNION ALL
                                 SELECT 'admin' AS UserID,'管理员admin' AS UserName,'1' AS UserType,
-                                        '2023' AS DepartmentID,'123456' AS UserPassword,'10' AS LoginLimit,
+                                        '0001' AS DepartmentID,'123456' AS UserPassword,'10' AS LoginLimit,
                                         '3' AS PasswordFailLimit,'3' AS STATUS,'' AS Contacter,'' AS Fax,'' AS Telephone,
                                         '' AS Email,'' AS Address,'' AS ZipCode,'' AS OpenDate,'' AS CloseDate
                                 UNION ALL
                                 SELECT 'admin1' AS UserID,'管理员admin1' AS UserName,'1' AS UserType,
-                                        '2023' AS DepartmentID,'123456' AS UserPassword,'10' AS LoginLimit,
+                                        '0001' AS DepartmentID,'123456' AS UserPassword,'10' AS LoginLimit,
                                         '3' AS PasswordFailLimit,'3' AS STATUS,'' AS Contacter,'' AS Fax,'' AS Telephone,
                                         '' AS Email,'' AS Address,'' AS ZipCode,'' AS OpenDate,'' AS CloseDate""",
                       params=(self.settlementGroupID,)),
+            SSEInvestorLimitPositionParam=dict(columns=("InvestorID", "ExchangeID", "ProductID", "SecurityType",
+                                                        "SecurityID", "TotalPositionLimit", "LongPositionLimit",
+                                                        "TodayBuyOpenLimit", "TodaySellOpenLimit",
+                                                        "TodayCoveredOpenLimit", "TodayOpenLimit",
+                                                        "LongCallPositionLimit", "LongPutPositionLimit",
+                                                        "LongUnderlyingPositionLimit", "ShortUnderlyingPositionLimit"),
+                                               sql="""SELECT t.InvestorID,'1' AS ExchangeID,'d' AS ProductID,
+                                                            '0' AS SecurityType,'00000000' AS SecurityID,
+                                                            '1000000' AS TotalPositionLimit,'800000' AS LongPositionLimit,
+                                                            '200000' AS TodayBuyOpenLimit,'200000' AS TodaySellOpenLimit,
+                                                            '200000' AS TodayCoveredOpenLimit,'500000' AS TodayOpenLimit,
+                                                            '0' AS LongCallPositionLimit,'0' AS LongPutPositionLimit,
+                                                            '0' AS LongUnderlyingPositionLimit,'0' AS ShortUnderlyingPositionLimit
+                                                        FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1
+                                                        WHERE t.InvestorID = t1.InvestorID
+                                                        AND t1.SettlementGroupID = %s""",
+                                               params=(self.settlementGroupID,)),
+            SSEInvestorMarginFee=dict(columns=("DepartmentID", "InvestorID", "ExchangeID", "ProductID", "SecurityType",
+                                               "SecurityID", "BusinessClass", "FeeByVolume", "PriceAdjustRatio",
+                                               "OTMPreferRatio", "PriceAdjustGuardRatio", "UpperRatio"),
+                                      sql="""SELECT '0001' AS DepartmentID,'00000000' AS InvestorID,
+                                                    '1' AS ExchangeID,'d' AS ProductID,
+                                                CASE WHEN t.OptionsType LIKE '1' THEN '3'
+                                                WHEN t.OptionsType LIKE '2' THEN '4' END AS SecurityType,
+                                                 t.InstrumentID,'C' AS BusinessClass,'120' AS FeeByVolume,
+                                                 t1.AdjustRatio1 / 100 AS PriceAdjustRatio,'1' AS OTMPreferRatio,
+                                                 t1.AdjustRatio2 / 100 AS PriceAdjustGuardRatio,'0' AS UpperRatio
+                                                FROM t_Instrument t,t_MarginRateDetail t1
+                                                WHERE t.InstrumentID = t1.InstrumentID
+                                                AND t.SettlementGroupID = t1.SettlementGroupID
+                                                AND t.SettlementGroupID = %s""",
+                                      params=(self.settlementGroupID,)),
+            SSEInvestorTradingFee=dict(columns=("DepartmentID", "InvestorID", "ExchangeID", "ProductID", "SecurityType",
+                                                "SecurityID", "BusinessClass", "BrokerageType", "RatioByAmt",
+                                                "RatioByPar", "FeePerOrder", "FeeMin", "FeeMax", "FeeByVolume"),
+                                       sql="""SELECT "0001" AS DepartmentID,t.InvestorID,"1" AS ExchangeID,
+                                                    "d" AS ProductID,"0" AS SecurityType,"00000000" AS SecurityID,
+                                                    "A" AS BusinessClass,"1" AS BrokerageType,"0" AS RatioByAmt,
+                                                    "0" AS RatioByPar,"0" AS FeePerOrder,"5" AS FeeMin,
+                                                    "100000000" AS FeeMax,"10" AS FeeByVolume
+                                                FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1
+                                                WHERE t.InvestorID = t1.InvestorID AND t1.SettlementGroupID = %s
+                                                UNION ALL 
+                                                SELECT "0001" AS DepartmentID,t.InvestorID,"1" AS ExchangeID,
+                                                    "d" AS ProductID,"0" AS SecurityType,"00000000" AS SecurityID,
+                                                    "B" AS BusinessClass,"1" AS BrokerageType,"0" AS RatioByAmt,
+                                                    "0" AS RatioByPar,"0" AS FeePerOrder,"5" AS FeeMin,
+                                                    "100000000" AS FeeMax,"10" AS FeeByVolume
+                                                FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1
+                                                WHERE t.InvestorID = t1.InvestorID AND t1.SettlementGroupID = %s
+                                                UNION ALL 
+                                                SELECT "0001" AS DepartmentID,t.InvestorID,"1" AS ExchangeID,
+                                                    "d" AS ProductID,"0" AS SecurityType,"00000000" AS SecurityID,
+                                                    "C" AS BusinessClass,"1" AS BrokerageType,"0" AS RatioByAmt,
+                                                    "0" AS RatioByPar,"0" AS FeePerOrder,"5" AS FeeMin,
+                                                    "100000000" AS FeeMax,"10" AS FeeByVolume
+                                                FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1
+                                                WHERE t.InvestorID = t1.InvestorID AND t1.SettlementGroupID = %s
+                                                UNION ALL 
+                                                SELECT "0001" AS DepartmentID,t.InvestorID,"1" AS ExchangeID,
+                                                    "d" AS ProductID,"0" AS SecurityType,"00000000" AS SecurityID,
+                                                    "D" AS BusinessClass,"1" AS BrokerageType,"0" AS RatioByAmt,
+                                                    "0" AS RatioByPar,"0" AS FeePerOrder,"5" AS FeeMin,
+                                                    "100000000" AS FeeMax,"10" AS FeeByVolume
+                                                FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1
+                                                WHERE t.InvestorID = t1.InvestorID AND t1.SettlementGroupID = %s
+                                                UNION ALL 
+                                                SELECT "0001" AS DepartmentID,t.InvestorID,"1" AS ExchangeID,
+                                                    "d" AS ProductID,"0" AS SecurityType,"00000000" AS SecurityID,
+                                                    "E" AS BusinessClass,"1" AS BrokerageType,"0" AS RatioByAmt,
+                                                    "0" AS RatioByPar,"0" AS FeePerOrder,"5" AS FeeMin,
+                                                    "100000000" AS FeeMax,"10" AS FeeByVolume
+                                                FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1
+                                                WHERE t.InvestorID = t1.InvestorID AND t1.SettlementGroupID = %s
+                                                UNION ALL 
+                                                SELECT "0001" AS DepartmentID,t.InvestorID,"1" AS ExchangeID,
+                                                    "d" AS ProductID,"0" AS SecurityType,"00000000" AS SecurityID,
+                                                    "F" AS BusinessClass,"1" AS BrokerageType,"0" AS RatioByAmt,
+                                                    "0" AS RatioByPar,"0" AS FeePerOrder,"5" AS FeeMin,
+                                                    "100000000" AS FeeMax,"10" AS FeeByVolume
+                                                FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1
+                                                WHERE t.InvestorID = t1.InvestorID AND t1.SettlementGroupID = %s
+                                                UNION ALL 
+                                                SELECT "0001" AS DepartmentID,t.InvestorID,"1" AS ExchangeID,
+                                                    "d" AS ProductID,"0" AS SecurityType,"00000000" AS SecurityID,
+                                                    "G" AS BusinessClass,"1" AS BrokerageType,"0" AS RatioByAmt,
+                                                    "0" AS RatioByPar,"0" AS FeePerOrder,"5" AS FeeMin,
+                                                    "100000000" AS FeeMax,"10" AS FeeByVolume
+                                                FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1
+                                                WHERE t.InvestorID = t1.InvestorID AND t1.SettlementGroupID = %s""",
+                                       params=(self.settlementGroupID, self.settlementGroupID, self.settlementGroupID,
+                                               self.settlementGroupID, self.settlementGroupID, self.settlementGroupID,
+                                               self.settlementGroupID,)),
         )
         # 查询siminfo数据库数据内容
         csv_data = mysqlDB.select(table_sqls[csv_name]["sql"], table_sqls[csv_name].get("params"))
