@@ -49,7 +49,7 @@ class trans_futureinfo:
         # ===========处理futures_dbf写入t_TradingSegmentAttr表==============
         self.__t_TradingSegmentAttr(mysqlDB=mysqlDB, dbf=dbfs[0])
 
-        # ===========处理futures_dbf写入t_MarginRate表(未更新)==============
+        # ===========处理futures_dbf写入t_MarginRate表==============
         self.__t_MarginRate(mysqlDB=mysqlDB, dbf=dbfs[0])
 
         # ===========处理futures_dbf写入t_MarginRateDetail表==============
@@ -61,7 +61,7 @@ class trans_futureinfo:
         # ===========处理gjshq_dbf写入t_MarketData表 ==============
         self.__t_MarketData(mysqlDB=mysqlDB, dbf=dbfs[1])
 
-        # ===========判断并写入t_InstrumentProperty表(未更新)==============
+        # ===========判断并写入t_InstrumentProperty表==============
         self.__t_InstrumentProperty(mysqlDB=mysqlDB, dbf=dbfs[0])
 
     # 读取处理PAR_FUTURES文件
@@ -85,10 +85,6 @@ class trans_futureinfo:
 
         # 获取差集
         inexist_futures = list(set(dbf_futures) ^ set(exist_futures))
-        self.logger.info("%s%d%s" % ("dbf导入futures条数：", len(dbf_futures), "条"))
-        self.logger.info("%s%d%s" % ("t_Instrument中futures存在：", len(exist_futures), "条"))
-        self.logger.info("%s%d%s" % ("t_Instrument中futures不存在：", len(inexist_futures), "条"))
-
         # 不存在插入记录
         sql_insert_futures = """INSERT INTO siminfo.t_Instrument (
                                    SettlementGroupID,ProductID,
@@ -131,33 +127,10 @@ class trans_futureinfo:
                     (future['ZQMC'], future['JYDW'], future['ZQDM'], self.self_conf[future['JYSC'].encode('UTF-8')]))
         mysqlDB.executemany(sql_insert_futures, sql_insert_params)
         mysqlDB.executemany(sql_update_futures, sql_update_params)
+        self.logger.info("写入t_Instrument完成")
 
     # 读取处理GJSHQ文件
     def __t_MarketData(self, mysqlDB, dbf):
-        gjshq_dbf = dbf
-        # 判断贵金属行情是否已存在
-        dbf_gjshq = []
-        exist_gjshq = []
-        sql_gjshq = " SELECT InstrumentID " + \
-                    " FROM siminfo.t_MarketData " + \
-                    " WHERE  (InstrumentID,SettlementGroupID) in ("
-        for hq in gjshq_dbf:
-            dbf_gjshq.append(hq['HYDM'])
-            sql_values = "('" + hq['HYDM'] + "', '" + self.self_conf[hq['JYSC'].encode('UTF-8')] + "') "
-            sql_gjshq = sql_gjshq + sql_values + ","
-        sql_gjshq = sql_gjshq[0:-1] + ")"
-
-        # 查询存在数据
-        for hq in mysqlDB.select(sql_gjshq):
-            exist_gjshq.append(str(hq[0]))
-
-        # 获取差集
-        inexist_gjshq = list(set(dbf_gjshq) ^ set(exist_gjshq))
-        self.logger.info("%s%d%s" % ("dbf导入gjshq条数：", len(dbf_gjshq), "条"))
-        self.logger.info("%s%d%s" % ("t_MarketData存在：", len(exist_gjshq), "条"))
-        self.logger.info("%s%d%s" % ("t_MarketData不存在：", len(inexist_gjshq), "条"))
-
-        # 不存在插入记录
         sql_insert_gjshq = """INSERT INTO siminfo.t_MarketData (
                                         TradingDay,SettlementGroupID,LastPrice,PreSettlementPrice,
                                         PreClosePrice,PreOpenInterest,OpenPrice,
@@ -165,297 +138,140 @@ class trans_futureinfo:
                                         OpenInterest,ClosePrice,SettlementPrice,
                                         UpperLimitPrice,LowerLimitPrice,PreDelta,
                                         CurrDelta,UpdateTime,UpdateMillisec,InstrumentID
-                                   )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
-        # 存在更新记录
-        sql_update_gjshq = """UPDATE siminfo.t_MarketData 
-                                    SET OpenPrice = %s,
-                                        HighestPrice = %s,
-                                        LowestPrice = %s,
-                                        Volume = %s,
-                                        Turnover = %s,
-                                        ClosePrice = %s,
-                                        SettlementPrice = %s
-                                    WHERE SettlementGroupID = %s AND InstrumentID = %s"""
+                                   )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                                   ON DUPLICATE KEY UPDATE  
+                                        OpenPrice = VALUES(OpenPrice),
+                                        HighestPrice = VALUES(HighestPrice),
+                                        LowestPrice = VALUES(LowestPrice),
+                                        Volume = VALUES(Volume),
+                                        Turnover = VALUES(Turnover),
+                                        ClosePrice = VALUES(ClosePrice),
+                                        SettlementPrice = VALUES(SettlementPrice)"""
         sql_insert_params = []
-        sql_update_params = []
-        for hq in gjshq_dbf:
-            if hq['HYDM'] in inexist_gjshq:
-                sql_insert_params.append((self.TradingDay, self.self_conf[hq['JYSC'].encode('UTF-8')],
-                                          None, None, None, 0, hq['KPJ'], hq['ZGJ'], hq['ZDJ'], hq['CJL'],
-                                          hq['CJJE'], None, hq['SPJ'], hq['JQPJJ'], None, None, None, None, None, None,
-                                          hq['HYDM']))
-                continue
-            if hq['HYDM'] in exist_gjshq:
-                sql_update_params.append(
-                    (hq['KPJ'], hq['ZGJ'], hq['ZDJ'], hq['CJL'], hq['CJJE'], hq['SPJ'], hq['JQPJJ'],
-                     self.self_conf[hq['JYSC'].encode('UTF-8')], hq['HYDM']))
+        for hq in dbf:
+            sql_insert_params.append((self.TradingDay, self.self_conf[hq['JYSC'].encode('UTF-8')],
+                                      None, None, None, 0, hq['KPJ'], hq['ZGJ'], hq['ZDJ'], hq['CJL'],
+                                      hq['CJJE'], None, hq['SPJ'], hq['JQPJJ'], None, None, None, None, None, None,
+                                      hq['HYDM']))
         mysqlDB.executemany(sql_insert_gjshq, sql_insert_params)
-        mysqlDB.executemany(sql_update_gjshq, sql_update_params)
+        self.logger.info("写入t_MarketData完成")
 
     # 写入t_InstrumentProperty
     def __t_InstrumentProperty(self, mysqlDB, dbf):
-        dbf_futures = []
-        exist_futures = []
-        sql_Property = " SELECT InstrumentID " + \
-                       " FROM siminfo.t_InstrumentProperty " + \
-                       " WHERE (InstrumentID,SettlementGroupID) in ("
-        for future in dbf:
-            dbf_futures.append(future['ZQDM'])
-            sql_values = "('" + future['ZQDM'] + "', '" + self.self_conf[future['JYSC'].encode('UTF-8')] + "') "
-            sql_Property = sql_Property + sql_values + ","
-        sql_Property = sql_Property[0:-1] + ")"
-
-        # 查询存在数据
-        for future in mysqlDB.select(sql_Property):
-            exist_futures.append(str(future[0]))
-
-        # 获取差集
-        inexist_futures = list(set(dbf_futures) ^ set(exist_futures))
-        self.logger.info("%s%d%s" % ("future导入t_InstrumentProperty存在：", len(exist_futures), "条"))
-        self.logger.info("%s%d%s" % ("future导入t_InstrumentProperty不存在：", len(inexist_futures), "条"))
-
-        # 插入不存在记录
         sql_Property = """INSERT INTO siminfo.t_InstrumentProperty (
                                          SettlementGroupID,CreateDate,OpenDate,ExpireDate,StartDelivDate,
                                          EndDelivDate,BasisPrice,MaxMarketOrderVolume,MinMarketOrderVolume,
                                          MaxLimitOrderVolume,MinLimitOrderVolume,PriceTick,
                                          AllowDelivPersonOpen,InstrumentID,InstLifePhase
-                                         )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
+                                         )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                                       ON DUPLICATE KEY UPDATE 
+                                          CreateDate=VALUES(CreateDate),OpenDate=VALUES(OpenDate)"""
         sql_params = []
         for future in dbf:
-            if future['ZQDM'] in inexist_futures:
-                sql_params.append((self.self_conf[future['JYSC'].encode('UTF-8')], future['SSRQ'], future['SSRQ'],
-                                   '99991219', '99991219', '99991219', 0, 1000000, 100,
-                                   1000000, 100, 0.01, 0, future['ZQDM'], 1))
+            sql_params.append((self.self_conf[future['JYSC'].encode('UTF-8')], future['SSRQ'], future['SSRQ'],
+                               '99991219', '99991219', '99991219', 0, 1000000, 100,
+                               1000000, 100, 0.01, 0, future['ZQDM'], 1))
         mysqlDB.executemany(sql_Property, sql_params)
+        self.logger.info("写入t_InstrumentProperty完成")
 
     # 写入t_TradingSegmentAttr
     def __t_TradingSegmentAttr(self, mysqlDB, dbf):
-        # 判断合约是否已存在
-        dbf_futures = []
-        exist_segment = []
-        sql_segment = " SELECT InstrumentID " + \
-                      " FROM siminfo.t_TradingSegmentAttr " + \
-                      " WHERE (InstrumentID, SettlementGroupID) in ("
-        for future in dbf:
-            dbf_futures.append(future['ZQDM'])
-            sql_values = "('" + future['ZQDM'] + "', '" + self.self_conf[future['JYSC'].encode('UTF-8')] + "') "
-            sql_segment = sql_segment + sql_values + ","
-        sql_segment = sql_segment[0:-1] + ") GROUP BY InstrumentID"
-
-        # 查询存在数据
-        for future in mysqlDB.select(sql_segment):
-            exist_segment.append(str(future[0]))
-
-        # 获取差集
-        inexist_segment = list(set(dbf_futures) ^ set(exist_segment))
-        self.logger.info("%s%d%s" % ("future导入t_TradingSegmentAttr存在：", len(exist_segment), "个合约"))
-        self.logger.info("%s%d%s" % ("future导入t_TradingSegmentAttr不存在：", len(inexist_segment), "个合约"))
-
-        # 不存在插入记录
         sql_insert_segment = """INSERT INTO siminfo.t_TradingSegmentAttr (
                                     SettlementGroupID,TradingSegmentSN,
                                     TradingSegmentName,StartTime,
                                     InstrumentStatus,InstrumentID
-                                ) VALUES (%s,%s,%s,%s,%s,%s)"""
-        # 存在更新记录
-        sql_update_segment = """UPDATE siminfo.t_TradingSegmentAttr
-                                    SET TradingSegmentName=%s,
-                                     StartTime=%s,InstrumentStatus=%s
-                                    WHERE SettlementGroupID=%s AND InstrumentID=%s AND TradingSegmentSN=%s"""
+                                ) VALUES (%s,%s,%s,%s,%s,%s)
+                                ON DUPLICATE KEY UPDATE 
+                                  TradingSegmentName=VALUES(TradingSegmentName),StartTime=VALUES(StartTime),
+                                  InstrumentStatus=VALUES(InstrumentStatus)"""
         sql_insert_params = []
-        sql_update_params = []
         SegmentAttr = self.__loadJSON(tableName='t_TradingSegmentAttr')
         if SegmentAttr is None:
             return
         for future in dbf:
             SGID = self.self_conf[future['JYSC'].encode('UTF-8')]
-            # 插入记录
-            if future['ZQDM'] in inexist_segment and SGID in SegmentAttr:
+            if SGID in SegmentAttr:
                 for attr in SegmentAttr[SGID]:
                     sql_insert_params.append((
                         SGID, attr[1], attr[2], attr[3], attr[4], future['ZQDM']
                     ))
-                continue
-            # 更新记录
-            if future['ZQDM'] in exist_segment and SGID in SegmentAttr:
-                for attr in SegmentAttr[SGID]:
-                    sql_update_params.append((
-                        attr[2], attr[3], attr[4], SGID, future['ZQDM'], attr[1]
-                    ))
         mysqlDB.executemany(sql_insert_segment, sql_insert_params)
-        mysqlDB.executemany(sql_update_segment, sql_update_params)
+        self.logger.info("写入t_TradingSegmentAttr完成")
 
     # 写入t_MarginRate
     def __t_MarginRate(self, mysqlDB, dbf):
-        # 判断合约是否存在
-        dbf_futures = []
-        exist_rate = []
         # 获取模板文件
         template = self.__loadJSON(tableName='t_MarginRate')
         if template is None:
             self.logger.error("t_MarginRate template is None")
             return
-        sql_marginrate = " SELECT InstrumentID " + \
-                         " FROM siminfo.t_MarginRate " + \
-                         " WHERE (SettlementGroupID, MarginCalcID, InstrumentID, ParticipantID) in ("
-        for future in dbf:
-            dbf_futures.append(future['ZQDM'])
-            SGID = self.self_conf[future['JYSC'].encode('UTF-8')]
-            if SGID in template:
-                sql_values = "('" + SGID + \
-                             "', '" + template[SGID][1] + \
-                             "', '" + future['ZQDM'] + \
-                             "', '" + template[SGID][3] + \
-                             "') "
-            sql_marginrate = sql_marginrate + sql_values + ","
-        sql_marginrate = sql_marginrate[0:-1] + ") "
-
-        for future in mysqlDB.select(sql_marginrate):
-            exist_rate.append(str(future[0]))
-
-        # 获取差集
-        inexist_rate = list(set(dbf_futures) ^ set(exist_rate))
-        self.logger.info("%s%d%s" % ("future导入t_MarginRate存在：", len(exist_rate), "个合约"))
-        self.logger.info("%s%d%s" % ("future导入t_MarginRate不存在：", len(inexist_rate), "个合约"))
-
         # 不存在插入记录
         sql_insert_rate = """INSERT INTO siminfo.t_MarginRate (
                                        SettlementGroupID,
                                        MarginCalcID,
                                        InstrumentID,
                                        ParticipantID
-                                   ) VALUES (%s,%s,%s,%s)"""
+                                   ) VALUES (%s,%s,%s,%s) 
+                                  ON DUPLICATE KEY UPDATE 
+                                    MarginCalcID=VALUES(MarginCalcID),
+                                    ParticipantID=VALUES(ParticipantID)"""
         sql_insert_params = []
         for future in dbf:
-            # 插入记录
-            if future['ZQDM'] in inexist_rate:
-                SGID = self.self_conf[future['JYSC'].encode('UTF-8')]
-                if SGID in template:
-                    sql_insert_params.append((SGID, template[SGID][1], future['ZQDM'], template[SGID][3]))
+            SGID = self.self_conf[future['JYSC'].encode('UTF-8')]
+            if SGID in template:
+                sql_insert_params.append((SGID, template[SGID][1], future['ZQDM'], template[SGID][3]))
         mysqlDB.executemany(sql_insert_rate, sql_insert_params)
+        self.logger.info("写入t_MarginRate完成")
 
     # 写入t_MarginRateDetail
     def __t_MarginRateDetail(self, mysqlDB, dbf):
-        # 判断合约是否存在
-        dbf_futures = []
-        exist_detail = []
         # 获取模板文件
         template = self.__loadJSON(tableName='t_MarginRateDetail')
         if template is None:
             self.logger.error("t_MarginRateDetail template is None")
             return
-        sql_marginratedetail = " SELECT InstrumentID " + \
-                               " FROM siminfo.t_MarginRateDetail " + \
-                               " WHERE (SettlementGroupID, TradingRole, HedgeFlag, " \
-                               " InstrumentID, ParticipantID, ClientID) in ("
-        for future in dbf:
-            dbf_futures.append(future['ZQDM'])
-            SGID = self.self_conf[future['JYSC'].encode('UTF-8')]
-            if SGID in template:
-                sql_values = "('" + SGID + \
-                             "', '" + template[SGID][1] + \
-                             "', '" + template[SGID][2] + \
-                             "', '" + future['ZQDM'] + \
-                             "', '" + template[SGID][9] + \
-                             "', '" + template[SGID][10] + \
-                             "') "
-                sql_marginratedetail = sql_marginratedetail + sql_values + ","
-        sql_marginratedetail = sql_marginratedetail[0:-1] + ") "
-
-        for future in mysqlDB.select(sql_marginratedetail):
-            exist_detail.append(str(future[0]))
-
-        # 获取差集
-        inexist_detail = list(set(dbf_futures) ^ set(exist_detail))
-        self.logger.info("%s%d%s" % ("future导入t_MarginRateDetail存在：", len(exist_detail), "个合约"))
-        self.logger.info("%s%d%s" % ("future导入t_MarginRateDetail不存在：", len(inexist_detail), "个合约"))
-
-        # 不存在插入记录
         sql_insert_detail = """INSERT INTO siminfo.t_MarginRateDetail (
                                         SettlementGroupID,TradingRole,HedgeFlag,
                                         ValueMode,LongMarginRatio,ShortMarginRatio,
                                         InstrumentID,ParticipantID,ClientID
-                                    ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
-        # 存在更新记录
-        sql_update_detail = """UPDATE siminfo.t_MarginRateDetail
-                                        SET ValueMode=%s,LongMarginRatio=%s,ShortMarginRatio=%s
-                                        WHERE SettlementGroupID=%s AND TradingRole=%s AND HedgeFlag=%s
-                                        AND InstrumentID=%s AND ParticipantID=%s AND ClientID=%s"""
+                                    ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                                     ON DUPLICATE KEY UPDATE
+                                    ValueMode=VALUES(ValueMode),LongMarginRatio=VALUES(LongMarginRatio),
+                                    ShortMarginRatio=VALUES(ShortMarginRatio)"""
         sql_insert_params = []
-        sql_update_params = []
         for future in dbf:
             SGID = self.self_conf[future['JYSC'].encode('UTF-8')]
-            # 插入记录
-            if SGID in template and future['ZQDM'] in inexist_detail:
+            if SGID in template:
                 sql_insert_params.append((SGID, template[SGID][1], template[SGID][2], template[SGID][3],
                                           template[SGID][4], template[SGID][5], future['ZQDM'],
                                           template[SGID][9], template[SGID][10]))
-                continue
-            # 更新记录
-            if SGID in template and future['ZQDM'] in exist_detail:
-                sql_update_params.append((template[SGID][3], template[SGID][4], template[SGID][5],
-                                          SGID, template[SGID][1], template[SGID][2],
-                                          future['ZQDM'], template[SGID][9], template[SGID][10]))
         mysqlDB.executemany(sql_insert_detail, sql_insert_params)
-        mysqlDB.executemany(sql_update_detail, sql_update_params)
+        self.logger.info("写入t_MarginRateDetail完成")
 
     # 写入t_PriceBanding
     def __t_PriceBanding(self, mysqlDB, dbf):
-        # 判断合约是否存在
-        dbf_futures = []
-        exist_price = []
         # 获取模板文件
         template = self.__loadJSON(tableName='t_PriceBanding')
         if template is None:
             self.logger.error("t_PriceBanding template is None")
             return
-        sql_pricebanding = "SELECT InstrumentID FROM siminfo.t_PriceBanding " \
-                           "WHERE (SettlementGroupID,InstrumentID,TradingSegmentSN) in ("
-        for future in dbf:
-            dbf_futures.append(future['ZQDM'])
-            SGID = self.self_conf[future['JYSC'].encode('UTF-8')]
-            if SGID in template:
-                sql_values = "('" + SGID + \
-                             "', '" + future['ZQDM'] + \
-                             "', '" + template[SGID][7] + \
-                             "') "
-                sql_pricebanding = sql_pricebanding + sql_values + ","
-        sql_pricebanding = sql_pricebanding[0:-1] + ") "
-
-        for future in mysqlDB.select(sql_pricebanding):
-            exist_price.append(str(future[0]))
-
-        # 获取差集
-        inexist_price = list(set(dbf_futures) ^ set(exist_price))
-        self.logger.info("%s%d%s" % ("future导入t_PriceBanding存在：", len(exist_price), "个合约"))
-        self.logger.info("%s%d%s" % ("future导入t_PriceBanding不存在：", len(inexist_price), "个合约"))
-
-        # 不存在插入记录
         sql_insert_price = """INSERT INTO siminfo.t_PriceBanding (
                                 SettlementGroupID,PriceLimitType,ValueMode,RoundingMode,
                                 UpperValue,LowerValue,InstrumentID,TradingSegmentSN
-                            ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s) """
-        # 存在更新记录
-        sql_update_price = """UPDATE siminfo.t_PriceBanding
-                                SET PriceLimitType=%s,ValueMode=%s,RoundingMode=%s,UpperValue=%s,LowerValue=%s
-                                WHERE SettlementGroupID=%s AND InstrumentID=%s AND TradingSegmentSN=%s"""
+                            ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s) 
+                            ON DUPLICATE KEY UPDATE
+                            PriceLimitType=VALUES(PriceLimitType),ValueMode=VALUES(ValueMode),
+                            RoundingMode=VALUES(RoundingMode),UpperValue=VALUES(UpperValue),
+                            LowerValue=VALUES(LowerValue)"""
         sql_insert_params = []
-        sql_update_params = []
         for future in dbf:
             SGID = self.self_conf[future['JYSC'].encode('UTF-8')]
-            if SGID in template and future['ZQDM'] in inexist_price:
+            if SGID in template:
                 sql_insert_params.append((SGID, template[SGID][1], template[SGID][2], template[SGID][3],
                                           template[SGID][4], template[SGID][5], future['ZQDM'],
                                           template[SGID][7]))
-                continue
-            # 更新记录
-            if SGID in template and future['ZQDM'] in exist_price:
-                sql_update_params.append((template[SGID][1], template[SGID][2], template[SGID][3],
-                                          template[SGID][4], template[SGID][5], SGID, future['ZQDM'],
-                                          template[SGID][7]))
         mysqlDB.executemany(sql_insert_price, sql_insert_params)
-        mysqlDB.executemany(sql_update_price, sql_update_params)
+        self.logger.info("写入t_PriceBanding完成")
 
     def __check_file(self):
         env_dist = os.environ
