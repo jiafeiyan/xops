@@ -2,17 +2,5 @@
     "tradeSystemId" : "0001",
     "settlementId" : "1",
     "mysqlId" : "simplatform_base",
-    "baseDataHome" : "${SIM_PLATFORM_HOME}/settlement_data",
-    "loadDataCSV" : {
-      "Syncs": [
-        {
-          "host": "trade5_194",
-          "items": ["/home/trade5/run/tkernel1/dump/ClientPosition.csv",
-                        "/home/trade5/run/tkernel1/dump/MarketData.csv",
-                        "/home/trade5/run/tkernel1/dump/PartPosition.csv",
-                        "/home/trade5/run/tkernel1/dump/Order.csv",
-                        "/home/trade5/run/tkernel1/dump/Trade.csv"]
-        }
-      ]
-    }
+    "baseDataHome" : "${SIM_PLATFORM_HOME}/settlement_data"
 }

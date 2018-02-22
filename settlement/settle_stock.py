@@ -2,10 +2,11 @@
 
 import json
 
-from utils import Configuration, mysql, log, parse_conf_args
+from utils import Configuration, mysql, log, parse_conf_args, process_assert
 
 
 def settle_stock(context, conf):
+    result_code = 0
     logger = log.get_logger(category="SettleStock")
 
     settlement_group_id = conf.get("settlementGroupId")
@@ -42,8 +43,10 @@ def settle_stock(context, conf):
 
         if row is None:
             logger.error("[settle stock] Error: There is no data for %s-%s." % (settlement_group_id, settlement_id))
+            result_code = -1
         elif row[3] != '0':
             logger.error("[settle stock] Error: Settlement for %s-%s has done." % (settlement_group_id, settlement_id))
+            result_code = -1
         else:
             #计算结算价 股票中结算价设置为收盘价
             logger.info("[calculate settlement price]......")
@@ -233,9 +236,11 @@ def settle_stock(context, conf):
         mysql_conn.commit()
     except Exception as e:
         logger.error("[settle stock] Error: %s" % (e))
+        result_code = -1
     finally:
         mysql_conn.close()
     logger.info("[settle stock] end")
+    return result_code
 
 
 def main():
@@ -243,7 +248,7 @@ def main():
 
     context, conf = Configuration.load(base_dir=base_dir, config_names=config_names, config_files=config_files)
 
-    settle_stock(context, conf)
+    process_assert(settle_stock(context, conf))
 
 
 if __name__ == "__main__":

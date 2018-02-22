@@ -86,9 +86,9 @@ class trans_etfinfo:
                                UnderlyingType,StrikeType,
                                StrikePrice,OptionsType,
                                VolumeMultiple,UnderlyingMultiple,
-                               InstrumentID,InstrumentName,
+                               InstrumentID,ExchInstrumentID,InstrumentName,
                                DeliveryYear,DeliveryMonth,AdvanceMonth
-                          )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
+                          )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
 
         # 存在更新记录
         sql_update_etf = """UPDATE siminfo.t_Instrument
@@ -120,7 +120,7 @@ class trans_etfinfo:
                 sql_insert_params.append((self.SettlementGroupID, ProductID,
                                           ProductGroupID, etf.UnderlyingSecurityID,
                                           "2", "2", UnderlyingType, StrikeType, etf.ExercisePrice, OptionsType,
-                                          1, 10000, etf.SecurityID, etf.ContractSymbol,
+                                          1, 10000, etf.SecurityID, etf.ContractID, etf.ContractSymbol,
                                           etf.DeliveryDate[0:4], etf.DeliveryDate[4:6], "012"))
                 continue
             if etf.SecurityID in exist_etf:

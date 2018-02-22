@@ -17,9 +17,13 @@ class Configuration:
 
         if config_base_dir is not None and config_names is not None:
             for config_name in config_names:
-                config_file = os.path.join(config_base_dir, config_name + ".json")
-
-                context.update({config_name: Configuration.load_json(config_file)})
+                if config_name.find(":") == -1:
+                    config_file = os.path.join(config_base_dir, config_name + ".json")
+                    context.update({config_name : Configuration.load_json(config_file)})
+                else:
+                    config_name_items = config_name.split(":", 1)
+                    config_file = os.path.join(config_base_dir, config_name_items[1] + ".json")
+                    context.update({config_name_items[0]: Configuration.load_json(config_file)})
 
         if config_files is not None:
             for config_file in config_files:
@@ -42,3 +46,4 @@ class Configuration:
         config = json.load(f)
 
         return config
+

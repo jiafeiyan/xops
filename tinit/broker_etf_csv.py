@@ -173,7 +173,8 @@ class broker_etf_csv:
                                       "ShortFrozen", "LongFrozenAmount", "ShortFrozenAmount", "OpenVolume",
                                       "CloseVolume", "OpenAmount", "CloseAmount", "Margin", "FrozenMargin",
                                       "FrozenCash", "FrozenCommission", "CashIn", "Commission", "StrikeFrozen",
-                                      "StrikeFrozenAmount", "PrePosition", "HistoryPosPrice"),
+                                      "StrikeFrozenAmount", "PrePosition", "HistoryPosPrice", "HistoryCombPos", "TodayCombPos",
+                                      "HistoryCombPosSplitFrozen", "TodayCombPosSplitFrozen", "HistoryPosCombFrozen", "TodayPosCombFrozen"),
                              sql="""SELECT t1.InvestorID AS InvestorID,t1.InvestorID AS BusinessUnitID,'1' AS MarketID,
                                         t.ClientID AS ShareholderID,t2.TradingDay AS TradingDay,'1' AS ExchangeID,
                                         t.InstrumentID AS SecurityID,t.PosiDirection AS PosiDirection,
@@ -184,7 +185,8 @@ class broker_etf_csv:
                                         '0' AS OpenAmount,'0' AS CloseAmount,'0' AS Margin,
                                         t.FrozenMargin AS FrozenMargin,'0' AS FrozenCash,'0' AS FrozenCommission,
                                         '0' AS cashIn,'0' AS Commission,'0' AS StrikeFrozen,'0' AS StrikeFrozenAmount,
-                                        t.YdPosition AS PrePosition,'0' AS HistoryPosPrice
+                                        t.YdPosition AS PrePosition,'0' AS HistoryPosPrice,'0' AS HistoryCombPos,'0' AS TodayCombPos,
+                                        '0' AS HistoryCombPosSplitFrozen,'0' AS TodayCombPosSplitFrozen,'0' AS HistoryPosCombFrozen,'0' AS TodayPosCombFrozen
                                     FROM siminfo.t_ClientPosition t,siminfo.t_InvestorClient t1,
                                          siminfo.t_TradeSystemTradingDay t2,siminfo.t_TradeSystemSettlementGroup t3
                                     WHERE t.ClientID = t1.ClientID
@@ -193,7 +195,7 @@ class broker_etf_csv:
                                     AND t3.TradeSystemID = t2.TradeSystemID
                                     AND t.SettlementGroupID = %s""",
                              params=(self.settlementGroupID,)),
-            SSESecurity=dict(columns=("ExchangeID", "SecurityID", "SecurityName", "UnderlyingSecurityID",
+            SSESecurity=dict(columns=("ExchangeID", "SecurityID", "ExchSecurityID", "SecurityName", "UnderlyingSecurityID",
                                       "UnderlyingSecurityName", "UnderlyingMultiple", "StrikeMode", "OptionsType",
                                       "MarketID", "ProductID", "SecurityType", "CurrencyID", "OrderUnit",
                                       "BuyTradingUnit", "SellTradingUnit", "MaxMarketOrderBuyVolume",
@@ -205,6 +207,7 @@ class broker_etf_csv:
                                       "MarginUnit", "PreSettlemetPrice", "PreClosePrice", "UnderlyingPreClosePrice"),
                              sql="""SELECT '1' AS ExchangeID,
                                         t.InstrumentID AS SecurityID,
+                                        t.ExchInstrumentID AS ExchSecurityID,
                                         t.InstrumentName AS SecurityName,
                                         t.UnderlyingInstrID AS UnderlyingSecurityID,
                                         '50ETF' AS UnderlyingSecurityName,

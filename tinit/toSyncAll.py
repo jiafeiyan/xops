@@ -186,7 +186,7 @@ class toSyncAll:
         sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
                   t.SettlementGroupID,t.ProductID,t.ProductGroupID,t.UnderlyingInstrID,
                   t.ProductClass,t.PositionType,t.UnderlyingType,t.StrikeType,t.StrikePrice,t.OptionsType,t.VolumeMultiple,
-                  t.UnderlyingMultiple,t.TotalEquity,t.CirculationEquity,t.InstrumentID,t.InstrumentName,
+                  t.UnderlyingMultiple,t.TotalEquity,t.CirculationEquity,t.InstrumentID,t.ExchInstrumentID,t.InstrumentName,
                   t.DeliveryYear,t.DeliveryMonth,t.AdvanceMonth,%s
                   FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
                   WHERE t.SettlementGroupID = t2.SettlementGroupID 

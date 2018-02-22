@@ -3,11 +3,12 @@
 import os
 import json
 
-from rsync import rsync
-from utils import mysql, log, Configuration, parse_conf_args, path
+import rsync
+from utils import mysql, log, Configuration, parse_conf_args, path, process_assert
 
 
 def prepare_settle_stock(context, conf):
+    result_code = 0
     logger = log.get_logger(category="PrepareSettleStock")
 
     trade_system_id = conf.get("tradeSystemId")
@@ -15,24 +16,12 @@ def prepare_settle_stock(context, conf):
 
     base_dir = conf.get("baseDataHome")
 
-    #同步交易系统下场文件
-    load_datacsv_config = conf.get("loadDataCSV")
-
-    data_target_dir = os.path.join(base_dir, trade_system_id)
+    data_target_dir = os.path.join(base_dir, trade_system_id, settlement_id)
 
     data_target_dir = path.convert(data_target_dir)
 
-    if not os.path.exists(data_target_dir):
-        os.makedirs(data_target_dir)
-
-    load_datacsv_config.update({"type": "get"})
-    load_datacsv_config.update({"target": data_target_dir})
-    logger.info("[load data csv with %s] begin" % json.dumps(load_datacsv_config, encoding="UTF-8", ensure_ascii=False))
-    rsync.rsync_groups(context, load_datacsv_config)
-    logger.info("[load data csv with %s] end" % json.dumps(load_datacsv_config, encoding="UTF-8", ensure_ascii=False))
-
     #下场文件导入数据库
-    logger.info("[load csv to database] begin")
+    logger.info("[load csv to database with %s] begin" % json.dumps(conf, encoding="UTF-8", ensure_ascii=False))
     mysql_pool = mysql(configs=context.get("mysql").get(conf.get("mysqlId")))
     mysql_conn = mysql_pool.get_cnx()
     mysql_conn.set_charset_collation('utf8')
@@ -230,23 +219,24 @@ def prepare_settle_stock(context, conf):
                                         WHERE t1.settlementgroupid IN (SELECT settlementgroupid FROM siminfo.t_tradesystemsettlementgroup WHERE tradesystemid = %s)"""
             cursor.execute(sql, (current_trading_day, settlement_id, trade_system_id))
 
-        # 加载客户资金表数据
-        logger.info("[load ClientFund to dbclear]......")
-        sql = """DELETE FROM dbclear.t_clientfund WHERE tradingday = %s AND settlementgroupid IN (SELECT settlementgroupid FROM siminfo.t_tradesystemsettlementgroup WHERE tradesystemid = %s) AND settlementid = %s"""
-        cursor.execute(sql, (current_trading_day, trade_system_id, settlement_id))
-        sql = """INSERT INTO dbclear.t_clientfund (TradingDay, SettlementGroupID, SettlementID, ParticipantID, ClientID, AccountID, Available, TransFee, DelivFee, PositionMargin, Profit, StockValue) 
-                            SELECT %s, t1.settlementgroupid, %s, t1.participantid, t1.clientid, t1.accountid, t1.available, t1.transfee, t1.delivfee, t1.positionmargin, t1.profit, t1.stockvalue
-                            FROM siminfo.t_clientfund t1
-                            WHERE t1.settlementgroupid IN (SELECT settlementgroupid FROM siminfo.t_tradesystemsettlementgroup WHERE tradesystemid = %s)"""
-        cursor.execute(sql, (current_trading_day, settlement_id, trade_system_id))
+            # 加载客户资金表数据
+            logger.info("[load ClientFund to dbclear]......")
+            sql = """DELETE FROM dbclear.t_clientfund WHERE tradingday = %s AND settlementgroupid IN (SELECT settlementgroupid FROM siminfo.t_tradesystemsettlementgroup WHERE tradesystemid = %s) AND settlementid = %s"""
+            cursor.execute(sql, (current_trading_day, trade_system_id, settlement_id))
+            sql = """INSERT INTO dbclear.t_clientfund (TradingDay, SettlementGroupID, SettlementID, ParticipantID, ClientID, AccountID, Available, TransFee, DelivFee, PositionMargin, Profit, StockValue) 
+                                SELECT %s, t1.settlementgroupid, %s, t1.participantid, t1.clientid, t1.accountid, t1.available, t1.transfee, t1.delivfee, t1.positionmargin, t1.profit, t1.stockvalue
+                                FROM siminfo.t_clientfund t1
+                                WHERE t1.settlementgroupid IN (SELECT settlementgroupid FROM siminfo.t_tradesystemsettlementgroup WHERE tradesystemid = %s)"""
+            cursor.execute(sql, (current_trading_day, settlement_id, trade_system_id))
 
         mysql_conn.commit()
     except Exception as e:
-        logger.error("[load data to dbclear] Error: %s" % (e))
+        logger.error("[load data to dbclear with %s] Error: %s" % (json.dumps(conf, encoding="UTF-8", ensure_ascii=False), e))
+        result_code = -1
     finally:
         mysql_conn.close()
-    logger.info("[load data to dbclear] end")
-
+    logger.info("[load csv to database with %s] end" % json.dumps(conf, encoding="UTF-8", ensure_ascii=False))
+    return result_code
 
 
 def main():
@@ -254,7 +244,7 @@ def main():
 
     context, conf = Configuration.load(base_dir=base_dir, config_names=config_names, config_files=config_files)
 
-    prepare_settle_stock(context, conf)
+    process_assert(prepare_settle_stock(context, conf))
 
 
 if __name__ == "__main__":

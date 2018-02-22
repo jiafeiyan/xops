@@ -180,7 +180,7 @@ class trans_futureinfo:
         sql_update_params = []
         for hq in gjshq_dbf:
             if hq['HYDM'] in inexist_gjshq:
-                sql_insert_params.append((self.self_conf[hq['JYSC'].encode('UTF-8')],
+                sql_insert_params.append((self.TradingDay, self.self_conf[hq['JYSC'].encode('UTF-8')],
                                           None, None, None, 0, hq['KPJ'], hq['ZGJ'], hq['ZDJ'], hq['CJL'],
                                           hq['CJJE'], None, hq['SPJ'], hq['JQPJJ'], None, None, None, None, None, None,
                                           hq['HYDM']))

@@ -87,8 +87,8 @@ def gen_investors(context, conf):
                             WHERE t1.settlementgroupid = t2.settlementgroupid AND t2.investorid = t3.investorid AND t3.investorstatus = '9' '''
         cursor.execute(sql)
 
-        sql = '''INSERT INTO siminfo.t_investorfund(BrokerSystemID,InvestorID,PreBalance,CurrMargin,CloseProfit,Premium,Deposit,Withdraw,Balance,Available,PreMargin,FuturesMargin,OptionsMargin,PositionProfit,Profit,Interest,Fee,TotalCollateral,CollateralForMargin,PreAccmulateInterest,AccumulateInterest,AccumulateFee,ForzenDeposit,AccountStatus)
-                            SELECT t1.brokersystemid,t2.investorid,0,0,0,0,0,0,1000000,1000000,0,0,0,0,0,0,0,0,0,0,0,0,0,'0'
+        sql = '''INSERT INTO siminfo.t_investorfund(BrokerSystemID,InvestorID,PreBalance,CurrMargin,CloseProfit,Premium,Deposit,Withdraw,Balance,Available,PreMargin,FuturesMargin,OptionsMargin,PositionProfit,Profit,Interest,Fee,TotalCollateral,CollateralForMargin,PreAccmulateInterest,AccumulateInterest,AccumulateFee,ForzenDeposit,AccountStatus,PreStockValue,StockValue)
+                            SELECT t1.brokersystemid,t2.investorid,0,0,0,0,0,0,1000000,1000000,0,0,0,0,0,0,0,0,0,0,0,0,0,'0',0,0
                             FROM siminfo.t_brokersystem t1, siminfo.t_investor t2
                             WHERE t2.investorstatus = '9' '''
         cursor.execute(sql)
