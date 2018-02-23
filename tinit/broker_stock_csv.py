@@ -47,9 +47,33 @@ class broker_stock_csv:
                                 FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1,
                                      siminfo.t_BrokerSystemSettlementGroup t2
                                 WHERE t.InvestorID = t1.InvestorID
-                                AND t1.SettlementGroupID = t2.SettlementGroupID
-                                AND t2.BrokerSystemID = %s""",
-                         params=(self.brokerSystemID,)),
+                                AND t1.SettlementGroupID = t2.SettlementGroupID AND t2.BrokerSystemID = %s
+                                UNION ALL
+                                SELECT 'broker' AS UserID,t.InvestorID AS InvestorID,t.InvestorID AS BusinessUnitID
+                                FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1,
+                                     siminfo.t_BrokerSystemSettlementGroup t2
+                                WHERE t.InvestorID = t1.InvestorID
+                                AND t1.SettlementGroupID = t2.SettlementGroupID AND t2.BrokerSystemID = %s
+                                UNION ALL
+                                SELECT 'broker1' AS UserID,t.InvestorID AS InvestorID,t.InvestorID AS BusinessUnitID
+                                FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1,
+                                     siminfo.t_BrokerSystemSettlementGroup t2
+                                WHERE t.InvestorID = t1.InvestorID
+                                AND t1.SettlementGroupID = t2.SettlementGroupID AND t2.BrokerSystemID = %s
+                                UNION ALL
+                                SELECT 'admin' AS UserID,t.InvestorID AS InvestorID,t.InvestorID AS BusinessUnitID
+                                FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1,
+                                     siminfo.t_BrokerSystemSettlementGroup t2
+                                WHERE t.InvestorID = t1.InvestorID
+                                AND t1.SettlementGroupID = t2.SettlementGroupID AND t2.BrokerSystemID = %s
+                                UNION ALL
+                                SELECT 'admin1' AS UserID,t.InvestorID AS InvestorID,t.InvestorID AS BusinessUnitID
+                                FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1,
+                                     siminfo.t_BrokerSystemSettlementGroup t2
+                                WHERE t.InvestorID = t1.InvestorID
+                                AND t1.SettlementGroupID = t2.SettlementGroupID AND t2.BrokerSystemID = %s""",
+                         params=(self.brokerSystemID, self.brokerSystemID, self.brokerSystemID,
+                                 self.brokerSystemID, self.brokerSystemID)),
             BusinessUnit=dict(columns=("InvestorID", "BusinessUnitID", "BusinessUnitName"),
                               sql="""SELECT t.InvestorID,t.InvestorID AS BusinessUnitID,'Bu1' AS BusinessUnitName
                                     FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1,
@@ -127,7 +151,27 @@ class broker_stock_csv:
                                      siminfo.t_BrokerSystemSettlementGroup t2
                                 WHERE t.InvestorID = t1.InvestorID
                                 AND t1.SettlementGroupID = t2.SettlementGroupID
-                                AND t2.BrokerSystemID = %s""",
+                                AND t2.BrokerSystemID = %s
+                            UNION ALL
+                            SELECT 'broker' AS UserID,'操作员broker' AS UserName,'1' AS UserType,
+                                    '0000' AS DepartmentID,'123456' AS UserPassword,'3' AS LoginLimit,
+                                    '3' AS PasswordFailLimit,'1' AS STATUS,'' AS Contacter,'' AS Fax,'' AS Telephone,
+                                    '' AS Email,'' AS Address,'' AS ZipCode,'' AS OpenDate,'' AS CloseDate
+                            UNION ALL
+                            SELECT 'broker1' AS UserID,'操作员broker1' AS UserName,'1' AS UserType,
+                                    '0000' AS DepartmentID,'123456' AS UserPassword,'3' AS LoginLimit,
+                                    '3' AS PasswordFailLimit,'1' AS STATUS,'' AS Contacter,'' AS Fax,'' AS Telephone,
+                                    '' AS Email,'' AS Address,'' AS ZipCode,'' AS OpenDate,'' AS CloseDate
+                            UNION ALL
+                            SELECT 'admin' AS UserID,'管理员admin' AS UserName,'1' AS UserType,
+                                    '0000' AS DepartmentID,'123456' AS UserPassword,'3' AS LoginLimit,
+                                    '3' AS PasswordFailLimit,'1' AS STATUS,'' AS Contacter,'' AS Fax,'' AS Telephone,
+                                    '' AS Email,'' AS Address,'' AS ZipCode,'' AS OpenDate,'' AS CloseDate
+                            UNION ALL
+                            SELECT 'admin1' AS UserID,'管理员admin1' AS UserName,'1' AS UserType,
+                                    '0000' AS DepartmentID,'123456' AS UserPassword,'3' AS LoginLimit,
+                                    '3' AS PasswordFailLimit,'1' AS STATUS,'' AS Contacter,'' AS Fax,'' AS Telephone,
+                                    '' AS Email,'' AS Address,'' AS ZipCode,'' AS OpenDate,'' AS CloseDate""",
                       params=(self.brokerSystemID,)),
         )
         # 查询siminfo数据库数据内容

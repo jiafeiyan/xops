@@ -106,11 +106,34 @@ class broker_szse_csv:
                                         sql="""SELECT t.InvestorID AS InvestorID,t.InvestorID AS BusinessUnitID,
                                                     '2' AS ExchangeID,'2' AS MarketID,t.ClientID AS ShareholderID,
                                                     'a' AS TradingCodeClass,'0' AS ProductID,t.InvestorID AS AccountID,
-                                                    t1.Currency AS CurrencyID,t.InvestorID AS UserID
-                                                FROM siminfo.t_InvestorClient t,siminfo.t_SettlementGroup t1
-                                                WHERE t.SettlementGroupID = t1.SettlementGroupID
-                                                AND t1.SettlementGroupID = %s""",
-                                        params=(self.settlementGroupID,)),
+                                                    'CNY' AS CurrencyID,t.InvestorID AS UserID
+                                                FROM siminfo.t_InvestorClient t WHERE t.SettlementGroupID = %s
+                                                UNION ALL 
+                                                SELECT t.InvestorID AS InvestorID,t.InvestorID AS BusinessUnitID,
+                                                    '2' AS ExchangeID,'2' AS MarketID,t.ClientID AS ShareholderID,
+                                                    'a' AS TradingCodeClass,'0' AS ProductID,t.InvestorID AS AccountID,
+                                                    'CNY' AS CurrencyID,'broker' AS UserID
+                                                FROM siminfo.t_InvestorClient t WHERE t.SettlementGroupID = %s
+                                                UNION ALL 
+                                                SELECT t.InvestorID AS InvestorID,t.InvestorID AS BusinessUnitID,
+                                                    '2' AS ExchangeID,'2' AS MarketID,t.ClientID AS ShareholderID,
+                                                    'a' AS TradingCodeClass,'0' AS ProductID,t.InvestorID AS AccountID,
+                                                    'CNY' AS CurrencyID,'broker1' AS UserID
+                                                FROM siminfo.t_InvestorClient t WHERE t.SettlementGroupID = %s
+                                                UNION ALL 
+                                                SELECT t.InvestorID AS InvestorID,t.InvestorID AS BusinessUnitID,
+                                                    '2' AS ExchangeID,'2' AS MarketID,t.ClientID AS ShareholderID,
+                                                    'a' AS TradingCodeClass,'0' AS ProductID,t.InvestorID AS AccountID,
+                                                    'CNY' AS CurrencyID,'admin' AS UserID
+                                                FROM siminfo.t_InvestorClient t WHERE t.SettlementGroupID = %s
+                                                UNION ALL 
+                                                SELECT t.InvestorID AS InvestorID,t.InvestorID AS BusinessUnitID,
+                                                    '2' AS ExchangeID,'2' AS MarketID,t.ClientID AS ShareholderID,
+                                                    'a' AS TradingCodeClass,'0' AS ProductID,t.InvestorID AS AccountID,
+                                                    'CNY' AS CurrencyID,'admin1' AS UserID
+                                                FROM siminfo.t_InvestorClient t WHERE t.SettlementGroupID = %s""",
+                                         params=(self.settlementGroupID, self.settlementGroupID, self.settlementGroupID,
+                                                 self.settlementGroupID, self.settlementGroupID)),
             SZSEPosition=dict(columns=("InvestorID", "BusinessUnitID", "MarketID", "ShareholderID", "TradingDay",
                                       "ExchangeID", "SecurityID", "HistoryPos", "HistoryPosFrozen", "TodayBSPos",
                                       "TodayBSPosFrozen", "TodayPRPos", "TodayPRPosFrozen", "TodaySMPos",
