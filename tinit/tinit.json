@@ -1,18 +1,24 @@
 {
     "Syncs": [
       {
-        "host": "strade_119",
+        "host": "stock_broker_1_119",
         "type": "put",
-        "target" : "${HOME}/run/tinit/csv/stock",
+        "target" : "${HOME}/run/tinit/csv",
         "items": ["${SIM_PLATFORM_HOME}/csvfiles/broker/stock/SG01",
                   "${SIM_PLATFORM_HOME}/csvfiles/broker/stock/SG02",
                   "${SIM_PLATFORM_HOME}/csvfiles/broker/stock"]
       },
       {
-        "host": "strade_119",
+        "host": "stock_exchange_1_232",
         "type": "put",
-        "target" : "${HOME}/run/tinit/csv/exchange",
+        "target" : "${HOME}/run/tinit/dump",
         "items": ["${SIM_PLATFORM_HOME}/csvfiles/exchange/0001"]
+      },
+      {
+        "host": "etf_broker_1_119",
+        "type": "put",
+        "target" : "${HOME}/run/sptinit/csv",
+        "items": ["${SIM_PLATFORM_HOME}/csvfiles/broker/etf/SG07"]
       }
     ]
 }
