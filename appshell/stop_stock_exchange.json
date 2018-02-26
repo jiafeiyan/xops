@@ -1,0 +1,4 @@
+{
+  "host" : "stock_exchange_1_232",
+  "command" : "${HOME}/run/stop.sh"
+}
