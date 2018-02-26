@@ -38,6 +38,7 @@ class broker_szse_csv:
         self.__data_to_csv("SZSEBusinessUnitAccount", mysqlDB)
         self.__data_to_csv("SZSEPosition", mysqlDB)
         self.__data_to_csv("SZSEShareholderAccount", mysqlDB)
+        self.__data_to_csv("SZSEInvestorTradingFee", mysqlDB)
 
     def __data_to_csv(self, csv_name, mysqlDB):
         table_sqls = dict(
@@ -163,6 +164,17 @@ class broker_szse_csv:
                                                     '0' AS bProperControl
                                                 FROM siminfo.t_InvestorClient t
                                                 WHERE t.SettlementGroupID = %s""",
+                                       params=(self.settlementGroupID,)),
+            SZSEInvestorTradingFee=dict(columns=("InvestorID", "ExchangeID", "ProductID", "SecurityType", "SecurityID",
+                                                "BizClass", "BrokerageType", "RatioByAmt", "RatioByPar", "FeePerOrder",
+                                                "FeeMin", "FeeMax", "FeeByVolume", "DepartmentID"),
+                                       sql="""SELECT '00000000' AS InvestorID,'2' AS ExchangeID,'0' AS ProductID,
+                                                '0' AS SecurityType,'00000000' AS SecurityID,'0' AS BizClass,
+                                                '0' AS BrokerageType,t.OpenFeeRatio AS RatioByAmt,'0' AS RatioByPar,
+                                                '0' AS FeePerOrder,t.MinOpenFee AS FeeMin,t.MaxOpenFee AS FeeMax,
+                                                '0' AS FeeByVolume,'00000000' AS DepartmentID
+                                            FROM siminfo.t_TransFeeRateDetail t
+                                            WHERE t.SettlementGroupID = %s""",
                                        params=(self.settlementGroupID,)),
         )
         # 查询siminfo数据库数据内容

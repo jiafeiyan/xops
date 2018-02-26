@@ -14,6 +14,7 @@ from utils import Configuration
 from utils import mysql
 from utils import csv_tool
 
+
 class broker_sse_csv:
     def __init__(self, context, configs):
         # 初始化settlementGroupID
@@ -38,6 +39,7 @@ class broker_sse_csv:
         self.__data_to_csv("SSEBusinessUnitAccount", mysqlDB)
         self.__data_to_csv("SSEPosition", mysqlDB)
         self.__data_to_csv("SSEShareholderAccount", mysqlDB)
+        self.__data_to_csv("SSEInvestorTradingFee", mysqlDB)
 
     def __data_to_csv(self, csv_name, mysqlDB):
         table_sqls = dict(
@@ -161,6 +163,17 @@ class broker_sse_csv:
                                                 FROM siminfo.t_InvestorClient t
                                                 WHERE t.SettlementGroupID = %s""",
                                        params=(self.settlementGroupID,)),
+            SSEInvestorTradingFee=dict(columns=("InvestorID", "ExchangeID", "ProductID", "SecurityType", "SecurityID",
+                                                "BizClass", "BrokerageType", "RatioByAmt", "RatioByPar", "FeePerOrder",
+                                                "FeeMin", "FeeMax", "FeeByVolume", "DepartmentID"),
+                                       sql="""SELECT '00000000' AS InvestorID,'1' AS ExchangeID,'0' AS ProductID,
+                                                '0' AS SecurityType,'00000000' AS SecurityID,'0' AS BizClass,
+                                                '0' AS BrokerageType,t.OpenFeeRatio AS RatioByAmt,'0' AS RatioByPar,
+                                                '0' AS FeePerOrder,t.MinOpenFee AS FeeMin,t.MaxOpenFee AS FeeMax,
+                                                '0' AS FeeByVolume,'00000000' AS DepartmentID
+                                            FROM siminfo.t_TransFeeRateDetail t
+                                            WHERE t.SettlementGroupID = %s""",
+                                       params=(self.settlementGroupID,)),
         )
         # 查询siminfo数据库数据内容
         csv_data = mysqlDB.select(table_sqls[csv_name]["sql"], table_sqls[csv_name].get("params"))
@@ -182,6 +195,7 @@ class broker_sse_csv:
             writer.writerow(csv_tool.covert_to_gbk(columns['columns']))
             writer.writerows(csv_tool.covert_to_gbk(csv_data))
         self.logger.info("%s%s%s" % ("生成 ", csv_name, ".csv 文件完成"))
+
 
 if __name__ == '__main__':
     base_dir, config_names, config_files = parse_conf_args(__file__, config_names=["mysql", "log", "csv"])

@@ -251,21 +251,18 @@ class trans_stockinfo:
                                                 UpperLimitPrice,LowerLimitPrice,PreDelta,
                                                 CurrDelta,UpdateTime,UpdateMillisec,InstrumentID
                                            )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
-                              ON DUPLICATE KEY UPDATE LastPrice = VALUES(LastPrice),
+                              ON DUPLICATE KEY UPDATE PreSettlementPrice = VALUES(PreSettlementPrice),
                                                 PreClosePrice = VALUES(PreClosePrice),
-                                                OpenPrice=VALUES(OpenPrice),
-                                                HighestPrice = VALUES(HighestPrice),
-                                                LowestPrice = VALUES(LowestPrice),
-                                                Volume = VALUES(Volume),
-                                                Turnover = VALUES(Turnover)"""
+                                                UpdateTime = VALUES(UpdateTime),
+                                                UpdateMillisec = VALUES(UpdateMillisec)"""
         sql_insert_params = []
         for stock in islice(market, 1, None):
-            sql_insert_params.append((self.TradingDay, stock[8], stock[1], None,
-                                      stock[5], None, '0', stock[2],
-                                      stock[3], stock[4], stock[6], stock[7],
+            sql_insert_params.append((self.TradingDay, stock[8], None, stock[5],
+                                      stock[5], None, '0', None,
+                                      None, None, None, None,
                                       None, None, None,
                                       None, None, None,
-                                      None, None, None, stock[0]))
+                                      None, "08:30:00", "-1", stock[0]))
         mysqlDB.executemany(sql_insert_market, sql_insert_params)
         self.logger.info("写入t_MarketData完成")
 
