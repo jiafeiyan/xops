@@ -4,6 +4,10 @@
   "settlementGroups" : [{
     "settlementGroupId" : "SG02",
     "settlementId" : "1"
+    },
+    {
+    "settlementGroupId" : "SG01",
+    "settlementId" : "1"
     }
   ]
 }

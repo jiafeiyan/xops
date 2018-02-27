@@ -1,32 +1,32 @@
 {
-    "stock_broker_119" : {
+    "localhost" : {
         "host" : "127.0.0.1",
-        "user" : "strade",
+        "user" : "xapp",
         "password" : "111111"
     },
-    "stock_exchange_232" : {
-        "host" : "192.188.188.232",
-        "user" : "strade",
-        "password" : "111111"
-    },
-    "etf_broker_119" : {
-        "host" : "192.188.188.119",
-        "user" : "otrade",
-        "password" : "111111"
-    },
-     "stock_broker_1_119" : {
-        "host" : "127.0.0.1",
-        "user" : "strade1",
-        "password" : "111111"
-    },
-    "stock_exchange_1_232" : {
-        "host" : "192.188.188.232",
-        "user" : "strade1",
-        "password" : "111111"
-    },
-    "etf_broker_1_119" : {
+    "etf_broker" : {
         "host" : "192.188.188.119",
         "user" : "otrade1",
+        "password" : "111111"
+    },
+    "stock_broker" : {
+        "host" : "127.0.0.1",
+        "user" : "strade1",
+        "password" : "111111"
+    },
+    "future_broker" : {
+        "host" : "127.0.0.1",
+        "user" : "strade1",
+        "password" : "111111"
+    },
+    "stock_exchange" : {
+        "host" : "192.188.188.232",
+        "user" : "strade1",
+        "password" : "111111"
+    },
+    "future_exchange" : {
+        "host" : "192.188.188.232",
+        "user" : "strade1",
         "password" : "111111"
     }
 }
