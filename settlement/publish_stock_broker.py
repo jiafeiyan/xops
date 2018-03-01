@@ -83,7 +83,7 @@ def publish_stock(context, conf):
                 sql = """DELETE FROM siminfo.t_clientposition WHERE settlementgroupid = %s"""
                 cursor.execute(sql, (settlement_group_id,))
                 sql = """INSERT INTO siminfo.t_clientposition(TradingDay,SettlementGroupID,SettlementID,HedgeFlag,PosiDirection,YdPosition,Position,LongFrozen,ShortFrozen,YdLongFrozen,YdShortFrozen,BuyTradeVolume,SellTradeVolume,PositionCost,YdPositionCost,UseMargin,FrozenMargin,LongFrozenMargin,ShortFrozenMargin,FrozenPremium,InstrumentID,ParticipantID,ClientID)
-                                    SELECT %s,SettlementGroupID,SettlementID,HedgeFlag,PosiDirection,Position,0,0,0,LongFrozen,ShortFrozen,0,0,0,PositionCost,UseMargin,FrozenMargin,LongFrozenMargin,ShortFrozenMargin,FrozenPremium,InstrumentID,ParticipantID,ClientID
+                                    SELECT %s,SettlementGroupID,SettlementID,HedgeFlag,PosiDirection,Position,0,0,0,LongFrozen,ShortFrozen,0,0,0,PositionCost,UseMargin,0,0,0,FrozenPremium,InstrumentID,ParticipantID,ClientID
                                     FROM dbclear.t_clientposition t WHERE t .tradingday = %s AND t.settlementgroupid = %s AND t.settlementid = %s"""
                 cursor.execute(sql, (next_trading_day, current_trading_day, settlement_group_id, settlement_id))
 
@@ -96,12 +96,21 @@ def publish_stock(context, conf):
                                     FROM dbclear.t_partposition t WHERE t .tradingday = %s AND t.settlementgroupid = %s AND t.settlementid = %s"""
                 cursor.execute(sql, (next_trading_day, current_trading_day, settlement_group_id, settlement_id))
 
+                # 更新客户分红持仓表数据
+                logger.info("[update ClientPositionForSecurityProfit]......")
+                sql = """DELETE FROM siminfo.t_ClientPositionForSecurityProfit WHERE settlementgroupid = %s"""
+                cursor.execute(sql, (settlement_group_id,))
+                sql = """INSERT INTO siminfo.t_ClientPositionForSecurityProfit(DJDate,SettlementGroupID,HedgeFlag,PosiDirection,YdPosition,Position,LongFrozen,ShortFrozen,YdLongFrozen,YdShortFrozen,BuyTradeVolume,SellTradeVolume,PositionCost,YdPositionCost,UseMargin,FrozenMargin,LongFrozenMargin,ShortFrozenMargin,FrozenPremium,InstrumentID,ParticipantID,ClientID)
+                                    SELECT DJDate,SettlementGroupID,HedgeFlag,PosiDirection,YdPosition,Position,LongFrozen,ShortFrozen,YdLongFrozen,YdShortFrozen,BuyTradeVolume,SellTradeVolume,PositionCost,YdPositionCost,UseMargin,FrozenMargin,LongFrozenMargin,ShortFrozenMargin,FrozenPremium,InstrumentID,ParticipantID,ClientID
+                                    FROM dbclear.t_ClientPositionForSecurityProfit t WHERE t.djdate = %s AND t.settlementgroupid = %s AND t.settlementid = %s"""
+                cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id))
+
                 # 更新行情数据
                 logger.info("[update marketdata]......")
                 sql = """DELETE FROM siminfo.t_marketdata WHERE settlementgroupid = %s"""
                 cursor.execute(sql, (settlement_group_id,))
                 sql = """INSERT INTO siminfo.t_marketdata(TradingDay,SettlementGroupID,LastPrice,PreSettlementPrice,PreClosePrice,PreOpenInterest,OpenPrice,HighestPrice,LowestPrice,Volume,Turnover,OpenInterest,ClosePrice,SettlementPrice,UpperLimitPrice,LowerLimitPrice,PreDelta,CurrDelta,UpdateTime,UpdateMillisec,InstrumentID)
-                                    SELECT %s,SettlementGroupID,NULL,PreSettlementPrice,PreClosePrice,PreOpenInterest,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,UpdateTime,UpdateMillisec,InstrumentID
+                                    SELECT %s,SettlementGroupID,NULL,SettlementPrice,ClosePrice,OpenInterest,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,UpdateTime,UpdateMillisec,InstrumentID
                                     FROM dbclear.t_marketdata t WHERE t .tradingday = %s AND t.settlementgroupid = %s AND t.settlementid = %s"""
                 cursor.execute(sql, (next_trading_day, current_trading_day, settlement_group_id, settlement_id))
 
@@ -118,11 +127,11 @@ def publish_stock(context, conf):
                 # 更新投资者资金
                 logger.info("[update investor fund]......")
                 sql = """UPDATE siminfo.t_investorfund t1,(
-                                    SELECT t3.brokersystemid, t1.investorid, t2.available, t2.transfee, t2.stockvalue FROM siminfo.t_investorclient t1, dbclear.t_clientfund t2, siminfo.t_brokersystemsettlementgroup t3
+                                    SELECT t3.brokersystemid, t1.investorid, t2.available, t2.transfee, t2.positionmargin, t2.profit, t2.stockvalue FROM siminfo.t_investorclient t1, siminfo.t_clientfund t2, siminfo.t_brokersystemsettlementgroup t3
                                     WHERE t1.settlementgroupid = t2.settlementgroupid AND t1.settlementgroupid = t3.settlementgroupid AND t1.clientid = t2.clientid AND t2.tradingday = %s AND t1.settlementgroupid = %s AND t2.settlementid = %s) t2
-                                    SET t1.balance = t1.available + t2.available - t2.transfee, t1.available = t1.available + t2.available - t2.transfee, t1.fee = t2.transfee, t1.stockvalue = t1.stockvalue + t2.stockvalue
+                                    SET t1.balance = t1.available + t2.available - t2.transfee + t2.profit - t2.positionmargin, t1.available = t1.available + t2.available - t2.transfee + t2.profit - t2.positionmargin, t1.fee = t2.transfee, t1.stockvalue = t1.stockvalue + t2.stockvalue
                                     WHERE t1.brokersystemid = t2.brokersystemid and t1.investorid = t2.investorid"""
-                cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id))
+                cursor.execute(sql, (next_trading_day, settlement_group_id, settlement_id))
 
                 # 更新结算状态
                 logger.info("[update settlement status]......")

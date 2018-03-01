@@ -4,12 +4,11 @@ import os
 import json
 
 import rsync
-from utils import mysql, log, Configuration, parse_conf_args, path, process_assert
+from utils import mysql, log, Configuration, parse_conf_args, path
 
 
-def prepare_settle_stock(context, conf):
-    result_code = 0
-    logger = log.get_logger(category="PrepareSettleStock")
+def prepare_settle_futures(context, conf):
+    logger = log.get_logger(category="PrepareSettleFutures")
 
     trade_system_id = conf.get("tradeSystemId")
     settlement_id = conf.get("settlementId")
@@ -72,8 +71,6 @@ def prepare_settle_stock(context, conf):
                              IGNORE 1 LINES
                              SET SettlementGroupID = 'TS-%s', SettlementID = '%s'""" % (csv_path, trade_system_id, settlement_id)
             cursor.execute(sql)
-            sql = """DELETE FROM dbclear.t_ClientPosition WHERE SettlementGroupID = 'TS-%s' AND SettlementID = '%s' AND Position = 0""" % (trade_system_id, settlement_id)
-            cursor.execute(sql)
             sql = """UPDATE 
                               dbclear.t_ClientPosition t1,
                               (SELECT 
@@ -100,8 +97,6 @@ def prepare_settle_stock(context, conf):
                                      IGNORE 1 LINES
                                      SET SettlementGroupID = 'TS-%s', SettlementID = '%s'""" % (csv_path, trade_system_id, settlement_id)
             cursor.execute(sql)
-            sql = """DELETE FROM dbclear.t_PartPosition WHERE SettlementGroupID = 'TS-%s' AND SettlementID = '%s' AND Position = 0""" % (trade_system_id, settlement_id)
-            cursor.execute(sql)
             sql = """UPDATE 
                               dbclear.t_PartPosition t1,
                               (SELECT 
@@ -126,7 +121,6 @@ def prepare_settle_stock(context, conf):
                                      CHARACTER SET utf8
                                      fields terminated by ','
                                      IGNORE 1 LINES
-                                     (TradingDay,SettlementGroupID,SettlementID,LastPrice,PreSettlementPrice,PreClosePrice,PreOpenInterest,OpenPrice,HighestPrice,LowestPrice,Volume,Turnover,OpenInterest,ClosePrice,SettlementPrice,UpperLimitPrice,LowerLimitPrice,PreDelta,CurrDelta,UpdateTime,UpdateMillisec,InstrumentID)
                                      SET SettlementGroupID = 'TS-%s', SettlementID = '%s'""" % (csv_path, trade_system_id, settlement_id)
             cursor.execute(sql)
             sql = """UPDATE 
@@ -224,39 +218,22 @@ def prepare_settle_stock(context, conf):
                                         WHERE t1.settlementgroupid IN (SELECT settlementgroupid FROM siminfo.t_tradesystemsettlementgroup WHERE tradesystemid = %s)"""
             cursor.execute(sql, (current_trading_day, settlement_id, trade_system_id))
 
-            # 加载客户资金表数据
-            logger.info("[load ClientFund to dbclear]......")
-            sql = """DELETE FROM dbclear.t_clientfund WHERE tradingday = %s AND settlementgroupid IN (SELECT settlementgroupid FROM siminfo.t_tradesystemsettlementgroup WHERE tradesystemid = %s) AND settlementid = %s"""
-            cursor.execute(sql, (current_trading_day, trade_system_id, settlement_id))
-            sql = """INSERT INTO dbclear.t_clientfund (TradingDay, SettlementGroupID, SettlementID, ParticipantID, ClientID, AccountID, Available, TransFee, DelivFee, PositionMargin, Profit, StockValue) 
-                                SELECT %s, t1.settlementgroupid, %s, t1.participantid, t1.clientid, t1.accountid, 0, 0, 0, 0, 0, 0
-                                FROM siminfo.t_clientfund t1
-                                WHERE t1.settlementgroupid IN (SELECT settlementgroupid FROM siminfo.t_tradesystemsettlementgroup WHERE tradesystemid = %s)"""
-            cursor.execute(sql, (current_trading_day, settlement_id, trade_system_id))
-
-            # 加载客户分红持仓表数据
-            logger.info("[load ClientPositionForSecurityProfit to dbclear]......")
-            sql = """DELETE FROM dbclear.t_ClientPositionForSecurityProfit WHERE settlementgroupid IN (SELECT settlementgroupid FROM siminfo.t_tradesystemsettlementgroup WHERE tradesystemid = %s) AND settlementid = %s"""
-            cursor.execute(sql, (trade_system_id, settlement_id))
-            sql = """INSERT INTO dbclear.t_ClientPositionForSecurityProfit(DJDate,SettlementGroupID,SettlementID,HedgeFlag,PosiDirection,YdPosition,Position,LongFrozen,ShortFrozen,YdLongFrozen,YdShortFrozen,BuyTradeVolume,SellTradeVolume,PositionCost,YdPositionCost,UseMargin,FrozenMargin,LongFrozenMargin,ShortFrozenMargin,FrozenPremium,InstrumentID,ParticipantID,ClientID) 
-                                            SELECT t1.DJDate,t1.SettlementGroupID,%s,t1.HedgeFlag,t1.PosiDirection,t1.YdPosition,t1.Position,t1.LongFrozen,t1.ShortFrozen,t1.YdLongFrozen,t1.YdShortFrozen,t1.BuyTradeVolume,t1.SellTradeVolume,t1.PositionCost,t1.YdPositionCost,t1.UseMargin,t1.FrozenMargin,t1.LongFrozenMargin,t1.ShortFrozenMargin,t1.FrozenPremium,t1.InstrumentID,t1.ParticipantID,t1.ClientID
-                                            FROM siminfo.t_ClientPositionForSecurityProfit t1
-                                            WHERE t1.settlementgroupid IN (SELECT settlementgroupid FROM siminfo.t_tradesystemsettlementgroup WHERE tradesystemid = %s)"""
-            cursor.execute(sql, (settlement_id, trade_system_id))
-            sql = """INSERT INTO dbclear.t_ClientPositionForSecurityProfit(DJDate,SettlementGroupID,SettlementID,HedgeFlag,PosiDirection,YdPosition,Position,LongFrozen,ShortFrozen,YdLongFrozen,YdShortFrozen,BuyTradeVolume,SellTradeVolume,PositionCost,YdPositionCost,UseMargin,FrozenMargin,LongFrozenMargin,ShortFrozenMargin,FrozenPremium,InstrumentID,ParticipantID,ClientID) 
-                                            SELECT t2.djdate,t1.SettlementGroupID,%s,t1.HedgeFlag,t1.PosiDirection,t1.YdPosition,t1.Position,t1.LongFrozen,t1.ShortFrozen,t1.YdLongFrozen,t1.YdShortFrozen,t1.BuyTradeVolume,t1.SellTradeVolume,t1.PositionCost,t1.YdPositionCost,t1.UseMargin,t1.FrozenMargin,t1.LongFrozenMargin,t1.ShortFrozenMargin,t1.FrozenPremium,t1.InstrumentID,t1.ParticipantID,t1.ClientID
-                                            FROM dbclear.t_ClientPosition t1, (SELECT settlementgroupid, securityid, djdate FROM siminfo.t_securityprofit WHERE djdate = %s AND profittype != 'X' AND securitytype = 'GP') t2
-                                            WHERE t1.settlementgroupid = t2.settlementgroupid AND t1.instrumentid = t2.securityid AND t1.settlementgroupid IN (SELECT settlementgroupid FROM siminfo.t_tradesystemsettlementgroup WHERE tradesystemid = %s)"""
-            cursor.execute(sql, (settlement_id, current_trading_day, trade_system_id))
+        # 加载客户资金表数据
+        logger.info("[load ClientFund to dbclear]......")
+        sql = """DELETE FROM dbclear.t_clientfund WHERE tradingday = %s AND settlementgroupid IN (SELECT settlementgroupid FROM siminfo.t_tradesystemsettlementgroup WHERE tradesystemid = %s) AND settlementid = %s"""
+        cursor.execute(sql, (current_trading_day, trade_system_id, settlement_id))
+        sql = """INSERT INTO dbclear.t_clientfund (TradingDay, SettlementGroupID, SettlementID, ParticipantID, ClientID, AccountID, Available, TransFee, DelivFee, PositionMargin, Profit, StockValue) 
+                            SELECT %s, t1.settlementgroupid, %s, t1.participantid, t1.clientid, t1.accountid, t1.available, t1.transfee, t1.delivfee, t1.positionmargin, t1.profit, t1.stockvalue
+                            FROM siminfo.t_clientfund t1
+                            WHERE t1.settlementgroupid IN (SELECT settlementgroupid FROM siminfo.t_tradesystemsettlementgroup WHERE tradesystemid = %s)"""
+        cursor.execute(sql, (current_trading_day, settlement_id, trade_system_id))
 
         mysql_conn.commit()
     except Exception as e:
         logger.error("[load data to dbclear with %s] Error: %s" % (json.dumps(conf, encoding="UTF-8", ensure_ascii=False), e))
-        result_code = -1
     finally:
         mysql_conn.close()
     logger.info("[load csv to database with %s] end" % json.dumps(conf, encoding="UTF-8", ensure_ascii=False))
-    return result_code
 
 
 def main():
@@ -264,7 +241,7 @@ def main():
 
     context, conf = Configuration.load(base_dir=base_dir, config_names=config_names, config_files=config_files)
 
-    process_assert(prepare_settle_stock(context, conf))
+    prepare_settle_futures(context, conf)
 
 
 if __name__ == "__main__":

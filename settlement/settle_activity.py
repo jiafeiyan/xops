@@ -2,10 +2,11 @@
 
 import json
 
-from utils import Configuration, mysql, log, parse_conf_args
+from utils import Configuration, mysql, log, parse_conf_args, process_assert
 
 
 def settle_activity(context, conf):
+    result_code = 0
     logger = log.get_logger(category="SettleActivity")
 
     logger.info("[settle activity %s] begin" % (json.dumps(conf, encoding="UTF-8", ensure_ascii=False)))
@@ -42,9 +43,11 @@ def settle_activity(context, conf):
         mysql_conn.commit()
     except Exception as e:
         logger.error("[settle activity] Error: %s" % (e))
+        result_code = -1
     finally:
         mysql_conn.close()
     logger.info("[settle activity] end")
+    return result_code
 
 
 def main():
@@ -52,7 +55,7 @@ def main():
 
     context, conf = Configuration.load(base_dir=base_dir, config_names=config_names, config_files=config_files)
 
-    settle_activity(context, conf)
+    process_assert(settle_activity(context, conf))
 
 
 if __name__ == "__main__":

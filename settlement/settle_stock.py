@@ -29,6 +29,14 @@ def settle_stock(context, conf):
         current_trading_day = str(row[0])
         logger.info("[get current trading day] current_trading_day = %s" % (current_trading_day))
 
+        logger.info("[get next trading day]......")
+        sql = """SELECT DAY FROM siminfo.t_TradingCalendar t WHERE t.day > %s AND t.tra = '1' ORDER BY DAY LIMIT 1"""
+        cursor.execute(sql, (current_trading_day,))
+        row = cursor.fetchone()
+
+        next_trading_day = str(row[0])
+        logger.info("[get next trading day] next_trading_day = %s" % (next_trading_day))
+
         # 检查结算状态
         logger.info("[check settlement status]......")
         sql = """SELECT 
@@ -48,10 +56,21 @@ def settle_stock(context, conf):
             logger.error("[settle stock] Error: Settlement for %s-%s has done." % (settlement_group_id, settlement_id))
             result_code = -1
         else:
-            #计算结算价 股票中结算价设置为收盘价
+            #计算结算价 股票中结算价设置为收盘价，如有除权除息，设置为除权价
             logger.info("[calculate settlement price]......")
-            sql = """UPDATE dbclear.t_marketdata t SET t.settlementprice = t.closeprice WHERE t .tradingday = %s AND t.settlementgroupid = %s AND t.settlementid = %s"""
-            cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id))
+            sql = """UPDATE dbclear.t_marketdata t, (SELECT t.tradingday, t.settlementgroupid, t.settlementid, t.instrumentid,
+                                                                                ROUND((t.closeprice - IFNULL(t1.beforerate, 0) + IFNULL(t3.beforerate, 0) * IFNULL(t3.price, 0))/(1 + IFNULL(t2.beforerate, 0) + IFNULL(t3.beforerate, 0)), 2) AS settlementprice 
+                                                                                FROM dbclear.t_marketdata t
+                                                                                LEFT JOIN (SELECT settlementgroupid, securityid, beforerate, afterrate, price FROM siminfo.t_securityprofit WHERE securitytype = 'GP' AND profittype = 'HL' AND cqdate = %s) t1
+                                                                                ON (t.settlementgroupid = t1.settlementgroupid AND t.instrumentid = t1.securityid)
+                                                                                LEFT JOIN (SELECT settlementgroupid, securityid, beforerate, afterrate, price FROM siminfo.t_securityprofit WHERE securitytype = 'GP' AND profittype = 'S' AND cqdate = %s) t2
+                                                                                ON (t.settlementgroupid = t2.settlementgroupid AND t.instrumentid = t2.securityid)
+                                                                                LEFT JOIN (SELECT settlementgroupid, securityid, beforerate, afterrate, price FROM siminfo.t_securityprofit WHERE securitytype = 'GP' AND profittype = 'P' AND cqdate = %s) t3
+                                                                                ON (t.settlementgroupid = t3.settlementgroupid AND t.instrumentid = t3.securityid)
+                                                                                WHERE t.tradingday = %s AND t.settlementgroupid = %s AND t.settlementid = %s) t1
+                            SET t.settlementprice = t1.settlementprice WHERE t .tradingday = %s AND t.settlementgroupid = %s AND t.settlementid = %s and t.tradingday = t1.tradingday
+                                  AND t.settlementgroupid = t1.settlementgroupid AND t.settlementid = t1.settlementid AND t.instrumentid = t1.instrumentid"""
+            cursor.execute(sql, (next_trading_day, next_trading_day, next_trading_day, current_trading_day, settlement_group_id, settlement_id, current_trading_day, settlement_group_id, settlement_id))
 
             #计算交易手续费
             logger.info("[calculate trade trans fee]......")
@@ -216,6 +235,75 @@ def settle_stock(context, conf):
                                     ON DUPLICATE KEY UPDATE dbclear.t_clientfund.available = VALUES(available)"""
             cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id))
 
+            # 更新客户股票盈利
+            logger.info("[calculate client stock profit]......")
+            sql = """INSERT INTO dbclear.t_clientfund(tradingday, settlementgroupid, settlementid, participantid, clientid, accountid, available, transfee, delivfee, positionmargin, profit, stockvalue)
+                                            SELECT %s, t1.settlementgroupid, t1.settlementid, t1.participantid, t1.clientid, t3.accountid, 0, 0, 0, 0, SUM(t1.position * t2.afterrate) AS profit, 0
+                                            FROM dbclear.t_ClientPositionForSecurityProfit t1, (SELECT settlementgroupid, securityid, djdate, afterrate FROM siminfo.t_securityprofit WHERE securitytype = 'GP' AND profittype = 'HL' AND dzdate = %s) t2, siminfo.t_account t3
+                                            WHERE t1.djdate = t2.djdate AND t1.settlementgroupid = t2.settlementgroupid 
+                                                AND t1.instrumentid = t2.securityid AND t1.settlementgroupid = t3.settlementgroupid AND t1.participantid = t3.participantid
+                                                AND t1.settlementgroupid = %s AND t1.settlementid = %s
+                                            GROUP BY t1.djdate, t1.settlementgroupid, t1.settlementid, t1.participantid, t1.clientid, t3.accountid
+                                                ON DUPLICATE KEY UPDATE dbclear.t_clientfund.profit = VALUES(profit)"""
+            cursor.execute(sql, (current_trading_day, next_trading_day, settlement_group_id, settlement_id))
+
+            # 更新客户股票配股占用资金
+            logger.info("[calculate client stock profit]......")
+            sql = """INSERT INTO dbclear.t_clientfund(tradingday, settlementgroupid, settlementid, participantid, clientid, accountid, available, transfee, delivfee, positionmargin, profit, stockvalue)
+                                            SELECT %s, t1.settlementgroupid, t1.settlementid, t1.participantid, t1.clientid, t3.accountid, 0, 0, 0, SUM(t1.position * t2.beforerate * t2.price) AS positionmargin, 0, 0
+                                            FROM dbclear.t_ClientPositionForSecurityProfit t1, (SELECT settlementgroupid, securityid, djdate, beforerate, price FROM siminfo.t_securityprofit WHERE securitytype = 'GP' AND profittype = 'P' AND enddate = %s) t2, siminfo.t_account t3
+                                            WHERE t1.djdate = t2.djdate AND t1.settlementgroupid = t2.settlementgroupid 
+                                                AND t1.instrumentid = t2.securityid AND t1.settlementgroupid = t3.settlementgroupid AND t1.participantid = t3.participantid
+                                                AND t1.settlementgroupid = %s AND t1.settlementid = %s
+                                            GROUP BY t1.djdate, t1.settlementgroupid, t1.settlementid, t1.participantid, t1.clientid, t3.accountid
+                                                ON DUPLICATE KEY UPDATE dbclear.t_clientfund.positionmargin = VALUES(positionmargin)"""
+            cursor.execute(sql, (current_trading_day, current_trading_day, settlement_group_id, settlement_id))
+
+            # 更新客户持仓
+            logger.info("[update client position]......")
+            sql = """UPDATE dbclear.t_clientposition t,(SELECT t.tradingday, t.settlementgroupid, t.settlementid, t.participantid, t.clientid, t.instrumentid, 
+                                          SUM(CASE WHEN t.calctransfee < t.minfee THEN t.minfee WHEN t.calctransfee > t.maxfee THEN t.minfee ELSE t.calctransfee END) AS transfee
+                                    FROM(SELECT tt.tradingday, tt.settlementgroupid, tt.settlementid, tt.participantid, tt.clientid, tt.instrumentid, tt.ordersysid, tt.minfee, tt.maxfee,
+                                          SUM(tt.transfee) AS calctransfee
+                                        FROM dbclear.t_clienttransfee tt 
+                                        WHERE tt.tradingday = %s AND tt.settlementgroupid = %s AND tt.settlementid = %s
+                                        GROUP BY tt.tradingday, tt.settlementgroupid,tt.settlementid, tt.participantid, tt.clientid, tt.instrumentid, tt.ordersysid, tt.minfee, tt.maxfee ) t 
+                                    GROUP BY t.tradingday, t.settlementgroupid, t.settlementid, t.participantid, t.clientid, t.instrumentid) t1
+                            SET t.usemargin = t.usemargin + t1.transfee
+                            WHERE t.tradingday = %s AND t.settlementgroupid = %s AND t.settlementid = %s 
+                            AND t.tradingday = t1.tradingday AND t.settlementgroupid = t1.settlementgroupid AND t.settlementid = t1.settlementid 
+                            AND t.participantid = t1.participantid AND t.clientid = t1.clientid AND t.instrumentid = t1.instrumentid"""
+            cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id, current_trading_day, settlement_group_id, settlement_id))
+            sql = """UPDATE dbclear.t_clientposition t,(
+                                        SELECT t.settlementgroupid, t.securityid, SUM(t.addposrate) AS addposrate, SUM(t.profit) AS profit, SUM(t.peirate) AS peirate, SUM(t.peiprice) AS peiprice, SUM(t.songrate) AS songrate
+                                        FROM(
+                                        SELECT settlementgroupid, securityid, SUM(IFNULL(beforerate, 0)) AS addposrate, 0 AS profit, 0 AS peirate, 0 AS peiprice, 0 AS songrate
+                                        FROM siminfo.t_securityprofit 
+                                        WHERE securitytype = 'GP' AND (profittype = 'S' OR profittype = 'P') AND cqdate = %s
+                                        GROUP BY settlementgroupid, securityid
+                                        UNION
+                                        SELECT settlementgroupid, securityid, 0 AS addposrate, afterrate AS profit, 0 AS peirate, 0 AS peiprice, 0 AS songrate
+                                        FROM siminfo.t_securityprofit 
+                                        WHERE securitytype = 'GP' AND profittype = 'HL' AND dzdate = %s
+                                        UNION
+                                        SELECT settlementgroupid, securityid, 0 AS addposrate, 0 AS profit, beforerate AS peirate, price AS peiprice, 0 AS songrate
+                                        FROM siminfo.t_securityprofit 
+                                        WHERE securitytype = 'GP' AND profittype = 'P' AND cqdate = %s
+                                        UNION
+                                        SELECT settlementgroupid, securityid, 0 AS addposrate, 0 AS profit, 0 AS peirate, 0 AS peiprice, beforerate AS songrate
+                                        FROM siminfo.t_securityprofit 
+                                        WHERE securitytype = 'GP' AND profittype = 'S' AND cqdate = %s) t
+                                        GROUP BY t.settlementgroupid, t.securityid) t1
+                            SET t.position = t.position * (1 + t1.addposrate), t.usemargin = t.usemargin + t.position * t1.peirate * t1.peiprice - t.position * t1.profit
+                            WHERE t.tradingday = %s AND t.settlementgroupid = %s AND t.settlementid = %s AND t.settlementgroupid = t1.settlementgroupid AND t.instrumentid = t1.securityid"""
+            cursor.execute(sql, (next_trading_day, next_trading_day, next_trading_day, next_trading_day, current_trading_day, settlement_group_id, settlement_id))
+            sql = """UPDATE dbclear.t_clientposition t
+                            SET t.positioncost = t.usemargin
+                            WHERE t.tradingday = %s AND t.settlementgroupid = %s AND t.settlementid = %s"""
+            cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id))
+            # 更新会员持仓
+
+
             # 更新客户股票市值
             logger.info("[calculate client stock value]......")
             sql = """INSERT INTO dbclear.t_clientfund(tradingday, settlementgroupid, settlementid, participantid, clientid, accountid, available, transfee, delivfee, positionmargin, profit, stockvalue)
@@ -227,6 +315,42 @@ def settle_stock(context, conf):
                                             GROUP BY t1.tradingday, t1.settlementgroupid, t1.settlementid, t1.participantid, t1.clientid, t3.accountid
                                                 ON DUPLICATE KEY UPDATE dbclear.t_clientfund.stockvalue = VALUES(stockvalue)"""
             cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id))
+
+            # 更新客户分红持仓表数据
+            logger.info("[update ClientPositionForSecurityProfit]......")
+            sql = """DELETE FROM dbclear.t_clientpositionforsecurityprofit 
+                                                WHERE NOT EXISTS 
+                                                  (SELECT 
+                                                    settlementgroupid,
+                                                    securityid,
+                                                    djdate 
+                                                  FROM
+                                                    (SELECT 
+                                                      settlementgroupid,
+                                                      securityid,
+                                                      djdate 
+                                                    FROM
+                                                      siminfo.t_securityprofit 
+                                                    WHERE cqdate > %s
+                                                      AND securitytype = 'GP' 
+                                                      AND (profittype = 'S' 
+                                                        OR profittype = 'P') 
+                                                    UNION
+                                                    SELECT 
+                                                      settlementgroupid,
+                                                      securityid,
+                                                      djdate 
+                                                    FROM
+                                                      siminfo.t_securityprofit 
+                                                    WHERE dzdate > %s
+                                                      AND securitytype = 'GP' 
+                                                      AND profittype = 'HL') t 
+                                                  WHERE dbclear.t_clientpositionforsecurityprofit.settlementgroupid = %s 
+                                                    AND dbclear.t_clientpositionforsecurityprofit.settlementid = %s
+                                                    AND dbclear.t_clientpositionforsecurityprofit.settlementgroupid = t.settlementgroupid 
+                                                    AND dbclear.t_clientpositionforsecurityprofit.instrumentid = t.securityid 
+                                                    AND dbclear.t_clientpositionforsecurityprofit.djdate = t.djdate)"""
+            cursor.execute(sql, (next_trading_day, next_trading_day, settlement_group_id, settlement_id))
 
             # 更新结算状态
             logger.info("[update settlement status]......")
