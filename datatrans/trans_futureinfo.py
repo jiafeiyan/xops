@@ -43,26 +43,29 @@ class trans_futureinfo:
             return
 
         mysqlDB = self.mysqlDB
-        # ===========处理futures_dbf写入t_Instrument表==============
-        self.__t_Instrument(mysqlDB=mysqlDB, dbf=dbfs[0])
 
-        # ===========处理futures_dbf写入t_TradingSegmentAttr表==============
-        self.__t_TradingSegmentAttr(mysqlDB=mysqlDB, dbf=dbfs[0])
+        if dbfs[0] is not None:
+            # ===========处理futures_dbf写入t_Instrument表==============
+            self.__t_Instrument(mysqlDB=mysqlDB, dbf=dbfs[0])
 
-        # ===========处理futures_dbf写入t_MarginRate表==============
-        self.__t_MarginRate(mysqlDB=mysqlDB, dbf=dbfs[0])
+            # ===========处理futures_dbf写入t_TradingSegmentAttr表==============
+            self.__t_TradingSegmentAttr(mysqlDB=mysqlDB, dbf=dbfs[0])
 
-        # ===========处理futures_dbf写入t_MarginRateDetail表==============
-        self.__t_MarginRateDetail(mysqlDB=mysqlDB, dbf=dbfs[0])
+            # ===========处理futures_dbf写入t_MarginRate表==============
+            self.__t_MarginRate(mysqlDB=mysqlDB, dbf=dbfs[0])
 
-        # ===========处理futures_dbf写入t_PriceBanding表==============
-        self.__t_PriceBanding(mysqlDB=mysqlDB, dbf=dbfs[0])
+            # ===========处理futures_dbf写入t_MarginRateDetail表==============
+            self.__t_MarginRateDetail(mysqlDB=mysqlDB, dbf=dbfs[0])
 
-        # ===========处理gjshq_dbf写入t_MarketData表 ==============
-        self.__t_MarketData(mysqlDB=mysqlDB, dbf=dbfs[1])
+            # ===========处理futures_dbf写入t_PriceBanding表==============
+            self.__t_PriceBanding(mysqlDB=mysqlDB, dbf=dbfs[0])
 
-        # ===========判断并写入t_InstrumentProperty表==============
-        self.__t_InstrumentProperty(mysqlDB=mysqlDB, dbf=dbfs[0])
+            # ===========判断并写入t_InstrumentProperty表==============
+            self.__t_InstrumentProperty(mysqlDB=mysqlDB, dbf=dbfs[0])
+
+        if dbfs[1] is not None:
+            # ===========处理gjshq_dbf写入t_MarketData表 ==============
+            self.__t_MarketData(mysqlDB=mysqlDB, dbf=dbfs[1])
 
     # 读取处理PAR_FUTURES文件
     def __t_Instrument(self, mysqlDB, dbf):
@@ -104,7 +107,8 @@ class trans_futureinfo:
         sql_update_futures = """UPDATE siminfo.t_Instrument
                                         SET InstrumentName=%s,VolumeMultiple=%s
                                         WHERE InstrumentID = %s
-                                        AND SettlementGroupID = %s"""
+                                        AND SettlementGroupID =
+                                         %s"""
         sql_insert_params = []
         sql_update_params = []
         for future in futures_dbf:
@@ -287,25 +291,31 @@ class trans_futureinfo:
         par_futures = '%s%s%s%s%s' % (catalog, os.path.sep, self.futures_filename, now, '.dbf')
         gjshq = '%s%s%s%s%s' % (catalog, os.path.sep, self.gjshq_filename, now, '.dbf')
 
-        # 判断par_futuresYYYYMMDD.dbf文件是否存在
+        # 判断par_futuresYYYYMMDD.dbf文件是否存在，不存在设置为空
         if not os.path.exists(par_futures):
             self.logger.error("%s%s" % (par_futures, " is not exists"))
-            return None
-        # 判断gjshqYYYYMMDD.dbf文件是否存在
+            par_futures = None
+        # 判断gjshqYYYYMMDD.dbf文件是否存在，不存在设置为空
         if not os.path.exists(gjshq):
             self.logger.error("%s%s" % (gjshq, " is not exists"))
-            return None
+            gjshq = None
         # 读取DBF文件
         return self.__loadDBF(futures=par_futures, gjshq=gjshq)
 
     def __loadDBF(self, **par):
+        dbf_1 = None
+        dbf_2 = None
         # 加载 par_futures 数据
-        future = DBF(filename=par['futures'], encoding='GBK')
-        future.load()
+        if par['futures'] is not None:
+            future = DBF(filename=par['futures'], encoding='GBK')
+            future.load()
+            dbf_1 = future.records
         # 加载 gjshq 数据
-        info = DBF(filename=par['gjshq'], encoding='GBK')
-        info.load()
-        return future.records, info.records
+        if par['gjshq'] is not None:
+            info = DBF(filename=par['gjshq'], encoding='GBK')
+            info.load()
+            dbf_2 = info.records
+        return dbf_1, dbf_2
 
     # 主要读取template数据
     def __loadJSON(self, tableName):

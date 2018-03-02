@@ -1,6 +1,6 @@
 {
   "settlementGroupID": ["SG03","SG04","SG05","SG06"],
-  "mysqlId": "simplatform_101",
+  "mysqlId": "simplatform_base",
   "logId": "default",
   "csv": "csv_base",
   "csvRoute": "future/"

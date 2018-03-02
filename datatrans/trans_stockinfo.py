@@ -44,29 +44,33 @@ class trans_stockinfo:
         if dbfs is None:
             return
         mysqlDB = self.mysqlDB
-        # ===========处理stock_dbf写入t_Instrument表==============
-        self.__t_Instrument(mysqlDB=mysqlDB, dbf=dbfs[0])
 
-        # ===========处理stock_dbf写入t_TradingSegmentAttr表==============
-        self.__t_TradingSegmentAttr(mysqlDB=mysqlDB, dbf=dbfs[0])
+        if dbfs[0] is not None:
+            # ===========处理stock_dbf写入t_Instrument表==============
+            self.__t_Instrument(mysqlDB=mysqlDB, dbf=dbfs[0])
 
-        # ===========处理stock_dbf写入t_MarginRate表==============
-        self.__t_MarginRate(mysqlDB=mysqlDB, dbf=dbfs[0])
+            # ===========处理stock_dbf写入t_TradingSegmentAttr表==============
+            self.__t_TradingSegmentAttr(mysqlDB=mysqlDB, dbf=dbfs[0])
 
-        # ===========处理stock_dbf写入t_MarginRateDetail表==============
-        self.__t_MarginRateDetail(mysqlDB=mysqlDB, dbf=dbfs[0])
+            # ===========处理stock_dbf写入t_MarginRate表==============
+            self.__t_MarginRate(mysqlDB=mysqlDB, dbf=dbfs[0])
 
-        # ===========处理stock_dbf写入t_PriceBanding表==============
-        self.__t_PriceBanding(mysqlDB=mysqlDB, dbf=dbfs[0])
+            # ===========处理stock_dbf写入t_MarginRateDetail表==============
+            self.__t_MarginRateDetail(mysqlDB=mysqlDB, dbf=dbfs[0])
 
-        # ===========处理info_dbf写入t_SecurityProfit表===========
-        self.__t_SecurityProfit(mysqlDB=mysqlDB, dbf=dbfs[1])
+            # ===========处理stock_dbf写入t_PriceBanding表==============
+            self.__t_PriceBanding(mysqlDB=mysqlDB, dbf=dbfs[0])
 
-        # ===========判断并写入t_InstrumentProperty表==============
-        self.__t_InstrumentProperty(mysqlDB=mysqlDB, dbf=dbfs[0])
+            # ===========判断并写入t_InstrumentProperty表==============
+            self.__t_InstrumentProperty(mysqlDB=mysqlDB, dbf=dbfs[0])
 
-        # ===========处理stock_exp写入t_MarketData表 ==============
-        self.__t_MarketData(mysqlDB=mysqlDB, market=dbfs[2])
+        if dbfs[1] is not None:
+            # ===========处理info_dbf写入t_SecurityProfit表===========
+            self.__t_SecurityProfit(mysqlDB=mysqlDB, dbf=dbfs[1])
+
+        if dbfs[2] is not None:
+            # ===========处理stock_exp写入t_MarketData表 ==============
+            self.__t_MarketData(mysqlDB=mysqlDB, market=dbfs[2])
 
     # 读取处理PAR_STOCK文件
     def __t_Instrument(self, mysqlDB, dbf):
@@ -281,18 +285,18 @@ class trans_stockinfo:
         par_qy_info = '%s%s%s%s%s' % (catalog, os.path.sep, self.qy_info_filename, now, '.dbf')
         par_stock_market = '%s%s%s%s%s' % (catalog, os.path.sep, self.stock_market, now, '.csv')
 
-        # 判断PAR_STOCKYYYYMMDD.dbf文件是否存在
+        # 判断PAR_STOCKYYYYMMDD.dbf文件是否存在，不存在设置为空
         if not os.path.exists(par_stock):
             self.logger.error("%s%s" % (par_stock, " is not exists"))
-            return None
-        # 判断PAR_QY_INFOYYYYMMDD.dbf文件是否存在
+            par_stock = None
+        # 判断PAR_QY_INFOYYYYMMDD.dbf文件是否存在，不存在设置为空
         if not os.path.exists(par_qy_info):
             self.logger.error("%s%s" % (par_qy_info, " is not exists"))
-            return None
-        # 判断stock_exp.csv文件是否存在
+            par_qy_info = None
+        # 判断stock_exp.csv文件是否存在，不存在设置为空
         if not os.path.exists(par_stock_market):
             self.logger.error("%s%s" % (par_stock_market, " is not exists"))
-            return None
+            par_stock_market = None
         # 读取DBF文件和CSV文件
         _dbf = self.__loadDBF(stock=par_stock, info=par_qy_info)
         _csv = self.__loadCSV(market=par_stock_market)
@@ -300,17 +304,26 @@ class trans_stockinfo:
 
     def __loadCSV(self, market):
         # 加载 par_stock_market 数据
-        csv_file = csv.reader(open(market))
-        return csv_file
+        if market is not None:
+            csv_file = csv.reader(open(market))
+            return csv_file
+        else:
+            return None
 
     def __loadDBF(self, **par):
+        dbf_1 = None
+        dbf_2 = None
         # 加载 PAR_STOCK 数据
-        stock = DBF(filename=par['stock'], encoding='GBK')
-        stock.load()
+        if par['stock'] is not None:
+            stock = DBF(filename=par['stock'], encoding='GBK')
+            stock.load()
+            dbf1 = stock.records
         # 加载 PAR_QY_INFO 数据
-        info = DBF(filename=par['info'], encoding='GBK')
-        info.load()
-        return stock.records, info.records
+        if par['info'] is not None:
+            info = DBF(filename=par['info'], encoding='GBK')
+            info.load()
+            dbf_2 = info.records
+        return dbf_1, dbf_2
 
     # 主要读取template数据
     def __loadJSON(self, tableName):

@@ -57,12 +57,140 @@ def settle_future(context, conf):
             result_code = -1
         else:
             # 计算结算价
-            logger.info("[calculate settlement price]......")
-            sql = """UPDATE dbclear.t_marketdata t SET t.settlementprice = t.ClosePrice 
-                        WHERE t.tradingday = %s
-                            AND t.settlementgroupid = %s 
-                            AND t.settlementid = %s """
+            logger.info("[calculate settlement price] is processing......")
+            sql = """UPDATE dbclear.t_marketdata tm,
+                        (
+                            SELECT
+                                t.tradingday,
+                                t.settlementgroupid,
+                                t.settlementid,
+                                t.instrumentid,
+                            CASE
+                                WHEN t.Volume = 0 THEN
+                                    t.ClosePrice ELSE round( t.Turnover / t.Volume, 2 ) 
+                                END AS settlementprice 
+                            FROM
+                                dbclear.t_marketdata t 
+                            WHERE
+                                t.tradingday = %s 
+                                AND t.settlementgroupid = %s 
+                                AND t.settlementid = %s
+                            ) tt 
+                            SET tm.settlementprice = tt.settlementprice 
+                        WHERE
+                            tm.settlementgroupid = tt.settlementgroupid 
+                            AND tm.settlementid = tt.settlementid 
+                            AND tm.instrumentid = tt.instrumentid 
+                            AND tm.tradingday = tt.tradingday"""
             cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id))
+            # 结算价为零赋值为昨结算
+            sql = """UPDATE dbclear.t_marketdata t 
+                        SET t.SettlementPrice = t.PreSettlementPrice 
+                        WHERE
+                            t.TradingDay = %s
+                            AND t.SettlementID = %s
+                            AND t.SettlementGroupID = %s 
+                            AND t.SettlementPrice = %s"""
+            cursor.execute(sql, (current_trading_day, settlement_id, settlement_group_id, 0))
+
+            # 计算盈亏
+            logger.info("[Calculate ClientProfit] is processing......")
+            sql = """insert into dbclear.t_ClientProfit(TradingDay, SettlementGroupID, SettlementID, ParticipantID, ClientID, AccountID, InstrumentID, TradeID, Direction, OffsetFlag, TradePrice, Volume, Profit)
+                       select t1.tradingday,
+                       t1.settlementgroupid,
+                       t1.settlementid,
+                       t1.participantid,
+                       t1.clientid,
+                       t3.accountid,
+                       t1.instrumentid,
+                       t1.tradeid,
+                       t1.direction,
+                       t1.offsetflag,
+                       t1.price as tradeprice,
+                       t1.volume,
+                       case
+                         when t1.offsetflag = '0' or t1.offsetflag = '1' or
+                              t1.offsetflag = '2' or t1.offsetflag = '3' then
+                          round(t4.volumemultiple * if(t1.direction='0',
+                                       (t2.settlementprice - t1.price) * t1.volume,
+                                       (t1.price - t2.settlementprice) * t1.volume),
+                                2)
+                         when t1.offsetflag = '4' then
+                          round(t4.volumemultiple * if(t1.direction='0',
+                                       (t2.presettlementprice - t1.price) *
+                                       t1.volume,
+                                       (t1.price - t2.presettlementprice) *
+                                       t1.volume),
+                                2)
+                       end as profit
+                  from dbclear.t_trade t1, dbclear.t_marketdata t2, (select t3.settlementgroupid,
+                              t2.participantid,
+                              t1.clientid,
+                              t1.tradingrole,
+                              t3.accountid
+                            from siminfo.t_client t1, siminfo.t_partclient t2, siminfo.t_partroleaccount t3
+                            where t1.clientid = t2.clientid
+                            and t2.participantid = t3.participantid
+                            and t1.tradingrole = t3.tradingrole
+                            and t3.settlementgroupid = %s) t3, siminfo.t_instrument t4
+                  where t1.tradingday = t2.tradingday
+                    and t1.settlementgroupid = t2.settlementgroupid
+                    and t1.settlementid = t2.settlementid
+                    and t1.instrumentid = t2.instrumentid
+                    and t1.settlementgroupid = t3.settlementgroupid
+                    and t1.clientid = t3.clientid
+                    and t1.settlementgroupid = t4.settlementgroupid
+                    and t1.instrumentid = t4.instrumentid
+                    and t1.tradingday = %s
+                    and t1.settlementgroupid = %s
+                    and t1.settlementid = %s
+                  union all
+                  select t1.tradingday,
+                    t1.settlementgroupid,
+                    t1.settlementid,
+                    t1.participantid,
+                    t1.clientid,
+                    t3.accountid,
+                    t1.instrumentid,
+                    '--' as tradeid,
+                    if(t1.posidirection='2', '0', '1') as direction,
+                    '5'as offsetflag,
+                    t2.settlementprice as tradeprice,
+                    t1.ydposition as volume,
+                    round(t4.volumemultiple * if(t1.posidirection='2',
+                        (t2.settlementprice - t2.presettlementprice) * t1.ydposition,
+                        (t2.presettlementprice - t2.settlementprice) * t1.ydposition), 2) as profit
+                  from dbclear.t_clientposition t1, dbclear.t_marketdata t2, (select t3.settlementgroupid,
+                              t2.participantid,
+                              t1.clientid,
+                              t1.tradingrole,
+                              t3.accountid
+                            from siminfo.t_client t1, siminfo.t_partclient t2, siminfo.t_partroleaccount t3
+                            where t1.clientid = t2.clientid
+                            and t2.participantid = t3.participantid
+                            and t1.tradingrole = t3.tradingrole
+                            and t3.settlementgroupid = %s) t3, siminfo.t_instrument t4
+                  where t1.tradingday = t2.tradingday
+                    and t1.settlementgroupid = t2.settlementgroupid
+                    and t1.settlementid = t2.settlementid
+                    and t1.instrumentid = t2.instrumentid
+                    and t1.settlementgroupid = t3.settlementgroupid
+                    and t1.clientid = t3.clientid
+                    and t1.settlementgroupid = t4.settlementgroupid
+                    and t1.instrumentid = t4.instrumentid
+                    and t1.tradingday = %s
+                    and t1.settlementgroupid = %s
+                    and t1.settlementid = %s"""
+            cursor.execute(sql, (settlement_group_id, current_trading_day, settlement_group_id, settlement_id,
+                                 settlement_group_id, current_trading_day, settlement_group_id, settlement_id))
+            # 交收持仓处理
+            # 交割手续费
+            # 交易手续费
+            # 持仓保证金
+            # 持仓盈亏
+            # 客户资金
+            # 会员资金
+            # 更新sim表
 
             # 计算交易手续费
             logger.info("[calculate trade trans fee]......")
@@ -171,16 +299,7 @@ def settle_future(context, conf):
                           AND t1.settlementid = %s"""
             cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id))
 
-            # 合并客户手续费
-            logger.info("[calculate client trans fee]......")
-            sql = """"""
-            # 更新客户可用资金变化
-            # 更新客户股票盈利
-            # 更新客户股票配股占用资金
-            # 更新客户持仓
-            # 更新客户股票市值
-            # 更新客户分红持仓表数据
-            # 更新结算状态
+
 
         mysql_conn.commit()
     except Exception as e:
