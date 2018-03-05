@@ -107,8 +107,7 @@ class trans_futureinfo:
         sql_update_futures = """UPDATE siminfo.t_Instrument
                                         SET InstrumentName=%s,VolumeMultiple=%s
                                         WHERE InstrumentID = %s
-                                        AND SettlementGroupID =
-                                         %s"""
+                                        AND SettlementGroupID = %s"""
         sql_insert_params = []
         sql_update_params = []
         for future in futures_dbf:
