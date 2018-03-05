@@ -1,2 +1,2 @@
-# my_python_util
-python工具类
+# xops
+股票，期货，etf期权自动化下场处理了结算并且生成上场数据
