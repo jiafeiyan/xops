@@ -172,8 +172,16 @@ class broker_sse_csv:
                                                 '0' AS FeePerOrder,t.MinOpenFee AS FeeMin,t.MaxOpenFee AS FeeMax,
                                                 '0' AS FeeByVolume,'00000000' AS DepartmentID
                                             FROM siminfo.t_TransFeeRateDetail t
+                                            WHERE t.SettlementGroupID = %s
+                                            UNION ALL 
+                                            SELECT '00000000' AS InvestorID,'1' AS ExchangeID,'0' AS ProductID,
+                                                '0' AS SecurityType,'00000000' AS SecurityID,'1' AS BizClass,
+                                                '0' AS BrokerageType,t.OpenFeeRatio AS RatioByAmt,'0' AS RatioByPar,
+                                                '0' AS FeePerOrder,t.MinOpenFee AS FeeMin,t.MaxOpenFee AS FeeMax,
+                                                '0' AS FeeByVolume,'00000000' AS DepartmentID
+                                            FROM siminfo.t_TransFeeRateDetail t
                                             WHERE t.SettlementGroupID = %s""",
-                                       params=(self.settlementGroupID,)),
+                                       params=(self.settlementGroupID, self.settlementGroupID,)),
         )
         # 查询siminfo数据库数据内容
         csv_data = mysqlDB.select(table_sqls[csv_name]["sql"], table_sqls[csv_name].get("params"))

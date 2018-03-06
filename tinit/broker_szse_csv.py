@@ -14,6 +14,7 @@ from utils import Configuration
 from utils import mysql
 from utils import csv_tool
 
+
 class broker_szse_csv:
     def __init__(self, context, configs):
         # 初始化settlementGroupID
@@ -43,14 +44,15 @@ class broker_szse_csv:
     def __data_to_csv(self, csv_name, mysqlDB):
         table_sqls = dict(
             SZSEMarketData=dict(columns=("TradingDay", "SecurityID", "ExchangeID", "SecurityName", "PreClosePrice",
-                                        "OpenPrice", "Volume", "Turnover", "TradingCount", "LastPrice", "HighestPrice",
-                                        "LowestPrice", "BidPrice1", "AskPrice1", "UpperLimitPrice", "LowerLimitPrice",
-                                        "PERatio1", "PERatio2", "PriceUpDown1", "PriceUpDown2", "OpenInterest",
-                                        "BidVolume1", "AskVolume1", "BidPrice2", "BidVolume2", "AskPrice2",
-                                        "AskVolume2", "BidPrice3", "BidVolume3", "AskPrice3", "AskVolume3",
-                                        "BidPrice4", "BidVolume4", "AskPrice4", "AskVolume4", "BidPrice5", "BidVolume5",
-                                        "AskPrice5", "AskVolume5", "UpdateTime", "UpdateMillisec"),
-                               sql="""SELECT t.TradingDay AS TradingDay,t.InstrumentID AS SecurityID,
+                                         "OpenPrice", "Volume", "Turnover", "TradingCount", "LastPrice", "HighestPrice",
+                                         "LowestPrice", "BidPrice1", "AskPrice1", "UpperLimitPrice", "LowerLimitPrice",
+                                         "PERatio1", "PERatio2", "PriceUpDown1", "PriceUpDown2", "OpenInterest",
+                                         "BidVolume1", "AskVolume1", "BidPrice2", "BidVolume2", "AskPrice2",
+                                         "AskVolume2", "BidPrice3", "BidVolume3", "AskPrice3", "AskVolume3",
+                                         "BidPrice4", "BidVolume4", "AskPrice4", "AskVolume4", "BidPrice5",
+                                         "BidVolume5",
+                                         "AskPrice5", "AskVolume5", "UpdateTime", "UpdateMillisec"),
+                                sql="""SELECT t.TradingDay AS TradingDay,t.InstrumentID AS SecurityID,
                                             '2' AS ExchangeID,t2.InstrumentName AS SecurityName,
                                             t.PreClosePrice AS PreClosePrice,t.OpenPrice AS OpenPrice,
                                             t.Volume AS Volume,t.Turnover AS Turnover,"0" AS TradingCount,
@@ -68,17 +70,17 @@ class broker_szse_csv:
                                         WHERE t.SettlementGroupID = t2.SettlementGroupID
                                         AND t.InstrumentID = t2.InstrumentID
                                         AND t.SettlementGroupID = %s""",
-                               params=(self.settlementGroupID,)),
+                                params=(self.settlementGroupID,)),
             SZSESecurity=dict(columns=("SecurityID", "ExchangeID", "SecurityName", "UnderlyingSecurityID", "MarketID",
-                                      "ProductID", "SecurityType", "CurrencyID", "OrderUnit", "BuyTradingUnit",
-                                      "SellTradingUnit", "MaxMarketOrderBuyVolume", "MinMarketOrderBuyVolume",
-                                      "MaxLimitOrderBuyVolume", "MinLimitOrderBuyVolume", "MaxMarketOrderSellVolume",
-                                      "MinMarketOrderSellVolume", "MaxLimitOrderSellVolume", "MinLimitOrderSellVolume",
-                                      "VolumeMultiple", "PriceTick", "OpenDate", "CloseDate", "PositionType",
-                                      "ParValue", "SecurityStatus", "BondInterest", "ConversionRate", "TotalEquity",
-                                      "CirculationEquity", "IsSupportPur", "IsSupportRed", "IsSupportTrade",
-                                      "IsCancelOrder", "IsCollateral"),
-                             sql="""SELECT t.InstrumentID AS SecurityID,'2' AS ExchangeID,
+                                       "ProductID", "SecurityType", "CurrencyID", "OrderUnit", "BuyTradingUnit",
+                                       "SellTradingUnit", "MaxMarketOrderBuyVolume", "MinMarketOrderBuyVolume",
+                                       "MaxLimitOrderBuyVolume", "MinLimitOrderBuyVolume", "MaxMarketOrderSellVolume",
+                                       "MinMarketOrderSellVolume", "MaxLimitOrderSellVolume", "MinLimitOrderSellVolume",
+                                       "VolumeMultiple", "PriceTick", "OpenDate", "CloseDate", "PositionType",
+                                       "ParValue", "SecurityStatus", "BondInterest", "ConversionRate", "TotalEquity",
+                                       "CirculationEquity", "IsSupportPur", "IsSupportRed", "IsSupportTrade",
+                                       "IsCancelOrder", "IsCollateral"),
+                              sql="""SELECT t.InstrumentID AS SecurityID,'2' AS ExchangeID,
                                            t.InstrumentName AS SecurityName,t.InstrumentID AS UnderlyingSecurityID,
                                            '2' AS MarketID,'7' AS ProductID,
                                         CASE WHEN t.InstrumentID LIKE '002%' THEN 'C'
@@ -100,11 +102,11 @@ class broker_szse_csv:
                                     AND t.InstrumentID = t4.InstrumentID
                                     AND t.SettlementGroupID = t4.SettlementGroupID
                                     AND t.SettlementGroupID = %s""",
-                             params=(self.settlementGroupID,)),
+                              params=(self.settlementGroupID,)),
             SZSEBusinessUnitAccount=dict(columns=("InvestorID", "BusinessUnitID", "ExchangeID", "MarketID",
-                                                 "ShareholderID", "TradingCodeClass", "ProductID", "AccountID",
-                                                 "CurrencyID", "UserID"),
-                                        sql="""SELECT t.InvestorID AS InvestorID,t.InvestorID AS BusinessUnitID,
+                                                  "ShareholderID", "TradingCodeClass", "ProductID", "AccountID",
+                                                  "CurrencyID", "UserID"),
+                                         sql="""SELECT t.InvestorID AS InvestorID,t.InvestorID AS BusinessUnitID,
                                                     '2' AS ExchangeID,'2' AS MarketID,t.ClientID AS ShareholderID,
                                                     'a' AS TradingCodeClass,'0' AS ProductID,t.InvestorID AS AccountID,
                                                     'CNY' AS CurrencyID,t.InvestorID AS UserID
@@ -136,12 +138,12 @@ class broker_szse_csv:
                                          params=(self.settlementGroupID, self.settlementGroupID, self.settlementGroupID,
                                                  self.settlementGroupID, self.settlementGroupID)),
             SZSEPosition=dict(columns=("InvestorID", "BusinessUnitID", "MarketID", "ShareholderID", "TradingDay",
-                                      "ExchangeID", "SecurityID", "HistoryPos", "HistoryPosFrozen", "TodayBSPos",
-                                      "TodayBSPosFrozen", "TodayPRPos", "TodayPRPosFrozen", "TodaySMPos",
-                                      "TodaySMPosFrozen", "HistoryPosCost", "TotalPosCost", "MarginBuyPos",
-                                      "ShortSellPos", "TodayShortSellPos", "PrePosition", "AvailablePosition",
-                                      "CurrentPosition"),
-                             sql="""SELECT t1.InvestorID AS InvestorID,t1.InvestorID AS BusinessUnitID,
+                                       "ExchangeID", "SecurityID", "HistoryPos", "HistoryPosFrozen", "TodayBSPos",
+                                       "TodayBSPosFrozen", "TodayPRPos", "TodayPRPosFrozen", "TodaySMPos",
+                                       "TodaySMPosFrozen", "HistoryPosCost", "TotalPosCost", "MarginBuyPos",
+                                       "ShortSellPos", "TodayShortSellPos", "PrePosition", "AvailablePosition",
+                                       "CurrentPosition"),
+                              sql="""SELECT t1.InvestorID AS InvestorID,t1.InvestorID AS BusinessUnitID,
                                         '2' AS MarketID,t.ClientID AS ShareholderID,'' AS TradingDay,
                                         '2' AS ExchangeID,t.InstrumentID AS SecurityID,t.YdPosition AS HistoryPos,
                                         '0' AS HistoryPosFrozen,'0' AS TodayBSPos,'0' AS TodayBSPosFrozen,
@@ -154,28 +156,36 @@ class broker_szse_csv:
                                     WHERE t.ClientID = t1.ClientID
                                     AND t.SettlementGroupID = t1.SettlementGroupID
                                     AND t.SettlementGroupID = %s""",
-                             params=(self.settlementGroupID,)),
+                              params=(self.settlementGroupID,)),
             SZSEShareholderAccount=dict(columns=("ExchangeID", "ShareholderID", "MarketID", "InvestorID",
-                                                "TradingCodeClass", "TradingCodeEx", "PbuID",
-                                                "BranchID", "bProperControl"),
-                                       sql="""SELECT '2' AS ExchangeID,t.ClientID AS ShareholderID,'2' AS MarketID,
+                                                 "TradingCodeClass", "TradingCodeEx", "PbuID",
+                                                 "BranchID", "bProperControl"),
+                                        sql="""SELECT '2' AS ExchangeID,t.ClientID AS ShareholderID,'2' AS MarketID,
                                                     t.InvestorID AS InvestorID,'a' AS TradingCodeClass,
                                                     '' AS TradingCodeEx,'232600' AS PbuID,'D9' AS BranchID,
                                                     '0' AS bProperControl
                                                 FROM siminfo.t_InvestorClient t
                                                 WHERE t.SettlementGroupID = %s""",
-                                       params=(self.settlementGroupID,)),
+                                        params=(self.settlementGroupID,)),
             SZSEInvestorTradingFee=dict(columns=("InvestorID", "ExchangeID", "ProductID", "SecurityType", "SecurityID",
-                                                "BizClass", "BrokerageType", "RatioByAmt", "RatioByPar", "FeePerOrder",
-                                                "FeeMin", "FeeMax", "FeeByVolume", "DepartmentID"),
-                                       sql="""SELECT '00000000' AS InvestorID,'2' AS ExchangeID,'0' AS ProductID,
+                                                 "BizClass", "BrokerageType", "RatioByAmt", "RatioByPar", "FeePerOrder",
+                                                 "FeeMin", "FeeMax", "FeeByVolume", "DepartmentID"),
+                                        sql="""SELECT '00000000' AS InvestorID,'2' AS ExchangeID,'0' AS ProductID,
                                                 '0' AS SecurityType,'00000000' AS SecurityID,'0' AS BizClass,
                                                 '0' AS BrokerageType,t.OpenFeeRatio AS RatioByAmt,'0' AS RatioByPar,
                                                 '0' AS FeePerOrder,t.MinOpenFee AS FeeMin,t.MaxOpenFee AS FeeMax,
                                                 '0' AS FeeByVolume,'00000000' AS DepartmentID
                                             FROM siminfo.t_TransFeeRateDetail t
+                                            WHERE t.SettlementGroupID = %s
+                                            UNION ALL 
+                                            SELECT '00000000' AS InvestorID,'2' AS ExchangeID,'0' AS ProductID,
+                                                '0' AS SecurityType,'00000000' AS SecurityID,'1' AS BizClass,
+                                                '0' AS BrokerageType,t.OpenFeeRatio AS RatioByAmt,'0' AS RatioByPar,
+                                                '0' AS FeePerOrder,t.MinOpenFee AS FeeMin,t.MaxOpenFee AS FeeMax,
+                                                '0' AS FeeByVolume,'00000000' AS DepartmentID
+                                            FROM siminfo.t_TransFeeRateDetail t
                                             WHERE t.SettlementGroupID = %s""",
-                                       params=(self.settlementGroupID,)),
+                                        params=(self.settlementGroupID, self.settlementGroupID,)),
         )
         # 查询siminfo数据库数据内容
         csv_data = mysqlDB.select(table_sqls[csv_name]["sql"], table_sqls[csv_name].get("params"))
