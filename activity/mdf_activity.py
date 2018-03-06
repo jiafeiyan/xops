@@ -23,11 +23,13 @@ def mdf_activity(context, conf):
         for activity in conf["activities"]:
             code = activity["code"]
             name = activity["name"]
+            atype = activity["type"]
             begin = activity["begin"]
             end = activity["end"]
+            status = activity["status"]
             settlement_groups = activity["settlement_groups"]
 
-            logger.error("[mdf activity with {code=%s, name=%s, begin=%s, end=%s, settlementgroups=%s}]......" % (code, name, begin, end, settlement_groups))
+            logger.info("[mdf activity with {code=%s, name=%s, type=%s, begin=%s, end=%s, status=%s, settlementgroups=%s}]......" % (code, name, atype, begin, end, status, settlement_groups))
 
             sql = '''SELECT activityid FROM siminfo.t_activity WHERE activityid = %s for update'''
             cursor.execute(sql, (code,))
@@ -35,11 +37,11 @@ def mdf_activity(context, conf):
 
             if row is None:
                 sys.stderr.write("Error: Activity %s is not existed.\n" % (code,))
-                logger.error("[gen activity with {code=%s, name=%s, begin=%s, end=%s, settlementgroups=%s}] Error: Activity %s is not existed." % (code, name, begin, end, settlement_groups, code))
+                logger.error("[gen activity with {code=%s, name=%s, type=%s, begin=%s, end=%s, status=%s, settlementgroups=%s}] Error: Activity %s is not existed." % (code, name, atype, begin, end, status, settlement_groups, code))
             else:
-                sql = '''UPDATE siminfo.t_activity set activityname = %s, begindate = %s, enddate = %s, updatedate = DATE_FORMAT(NOW(), '%Y%m%d'), updatetime = DATE_FORMAT(NOW(), '%H:%i:%S')
+                sql = '''UPDATE siminfo.t_activity set activityname = %s, activitytype = %s, begindate = %s, enddate = %s, activitystatus = %s, updatedate = DATE_FORMAT(NOW(), '%Y%m%d'), updatetime = DATE_FORMAT(NOW(), '%H:%i:%S')
                                     WHERE activityid = %s'''
-                cursor.execute(sql, (name, begin, end, code,))
+                cursor.execute(sql, (name, atype, begin, end, status, code,))
 
                 sql = '''DELETE FROM siminfo.t_activitysettlementgroup WHERE activityid = %s'''
                 cursor.execute(sql, (code,))

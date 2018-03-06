@@ -83,7 +83,7 @@ def publish_stock(context, conf):
                 sql = """DELETE FROM siminfo.t_clientposition WHERE settlementgroupid = %s"""
                 cursor.execute(sql, (settlement_group_id,))
                 sql = """INSERT INTO siminfo.t_clientposition(TradingDay,SettlementGroupID,SettlementID,HedgeFlag,PosiDirection,YdPosition,Position,LongFrozen,ShortFrozen,YdLongFrozen,YdShortFrozen,BuyTradeVolume,SellTradeVolume,PositionCost,YdPositionCost,UseMargin,FrozenMargin,LongFrozenMargin,ShortFrozenMargin,FrozenPremium,InstrumentID,ParticipantID,ClientID)
-                                    SELECT %s,SettlementGroupID,SettlementID,HedgeFlag,PosiDirection,Position,0,0,0,LongFrozen,ShortFrozen,0,0,0,PositionCost,UseMargin,0,0,0,FrozenPremium,InstrumentID,ParticipantID,ClientID
+                                    SELECT %s,SettlementGroupID,SettlementID,HedgeFlag,'3',Position,0,0,0,LongFrozen,ShortFrozen,0,0,0,PositionCost,UseMargin,0,0,0,FrozenPremium,InstrumentID,ParticipantID,ClientID
                                     FROM dbclear.t_clientposition t WHERE t .tradingday = %s AND t.settlementgroupid = %s AND t.settlementid = %s"""
                 cursor.execute(sql, (next_trading_day, current_trading_day, settlement_group_id, settlement_id))
 

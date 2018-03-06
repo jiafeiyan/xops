@@ -3,6 +3,7 @@
   "activities" : [{
     "code": "0002",
     "name": "华鑫股票大赛",
+    "type" : "ZQ",
     "begin":"20180316",
     "end":"20180616",
     "settlement_groups" : ["SG01"]

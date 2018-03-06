@@ -44,7 +44,6 @@ class trans_stockinfo:
         if dbfs is None:
             return
         mysqlDB = self.mysqlDB
-        print dbfs
         if dbfs[0] is not None:
             # ===========处理stock_dbf写入t_Instrument表==============
             self.__t_Instrument(mysqlDB=mysqlDB, dbf=dbfs[0])

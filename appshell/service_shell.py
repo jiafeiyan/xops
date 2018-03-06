@@ -24,7 +24,7 @@ def execute_command(context, conf):
         print("\033[1;32m %s \033[0m" % line)
 
     for line in stderr.readlines():
-        print os.sys.stderr(line)
+        os.sys.stderr(line)
 
     rsh.disconnect()
 

@@ -23,11 +23,12 @@ def gen_activity(context, conf):
         for activity in conf["activities"]:
             code = activity["code"]
             name = activity["name"]
+            atype = activity["type"]
             begin = activity["begin"]
             end = activity["end"]
             settlement_groups = activity["settlement_groups"]
 
-            logger.error("[gen activity with {code=%s, name=%s, begin=%s, end=%s, settlementgroups=%s}]......" % (code, name, begin, end, settlement_groups))
+            logger.info("[gen activity with {code=%s, name=%s, type= %s, begin=%s, end=%s, settlementgroups=%s}]......" % (code, name, atype, begin, end, settlement_groups))
 
             sql = '''SELECT activityid FROM siminfo.t_activity WHERE activityid = %s'''
             cursor.execute(sql, (code,))
@@ -35,11 +36,11 @@ def gen_activity(context, conf):
 
             if row is not None:
                 sys.stderr.write("Error: Activity %s is existed.\n" % (code,))
-                logger.error("[gen activity with {code=%s, name=%s, begin=%s, end=%s, settlementgroups=%s}] Error: Activity %s is existed." % (code, name, begin, end, settlement_groups, code))
+                logger.error("[gen activity with {code=%s, name=%s, type= %s, begin=%s, end=%s, settlementgroups=%s}] Error: Activity %s is existed." % (code, name, atype, begin, end, settlement_groups, code))
             else:
-                sql = '''INSERT INTO siminfo.t_activity(activityid, activityname, activitystatus, createdate, createtime, begindate, enddate, updatedate, updatetime)
-                                    VALUES (%s, %s, '0', DATE_FORMAT(NOW(), '%Y%m%d'), DATE_FORMAT(NOW(), '%H:%i:%S'), %s, %s, DATE_FORMAT(NOW(), '%Y%m%d'), DATE_FORMAT(NOW(), '%H:%i:%S'))'''
-                cursor.execute(sql, (code, name, begin, end,))
+                sql = '''INSERT INTO siminfo.t_activity(activityid, activityname, activitytype, activitystatus, createdate, createtime, begindate, enddate, updatedate, updatetime)
+                                    VALUES (%s, %s, %s, '0', DATE_FORMAT(NOW(), '%Y%m%d'), DATE_FORMAT(NOW(), '%H:%i:%S'), %s, %s, DATE_FORMAT(NOW(), '%Y%m%d'), DATE_FORMAT(NOW(), '%H:%i:%S'))'''
+                cursor.execute(sql, (code, name, atype, begin, end,))
 
                 relations = []
                 for settlement_group_id in settlement_groups:

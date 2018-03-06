@@ -143,7 +143,7 @@ class broker_szse_csv:
                                       "CurrentPosition"),
                              sql="""SELECT t1.InvestorID AS InvestorID,t1.InvestorID AS BusinessUnitID,
                                         '2' AS MarketID,t.ClientID AS ShareholderID,'' AS TradingDay,
-                                        '2' AS ExchangeID,t.InstrumentID AS SecurityID,'1000000' AS HistoryPos,
+                                        '2' AS ExchangeID,t.InstrumentID AS SecurityID,t.YdPosition AS HistoryPos,
                                         '0' AS HistoryPosFrozen,'0' AS TodayBSPos,'0' AS TodayBSPosFrozen,
                                         '0' AS TodayPRPos,'0' AS TodayPRPosFrozen,'0' AS TodaySMPos,
                                         '0' AS TodaySMPosFrozen,t.YdPositionCost AS HistoryPosCost,
