@@ -44,7 +44,7 @@ class trans_stockinfo:
         if dbfs is None:
             return
         mysqlDB = self.mysqlDB
-
+        print dbfs
         if dbfs[0] is not None:
             # ===========处理stock_dbf写入t_Instrument表==============
             self.__t_Instrument(mysqlDB=mysqlDB, dbf=dbfs[0])
@@ -317,7 +317,7 @@ class trans_stockinfo:
         if par['stock'] is not None:
             stock = DBF(filename=par['stock'], encoding='GBK')
             stock.load()
-            dbf1 = stock.records
+            dbf_1 = stock.records
         # 加载 PAR_QY_INFO 数据
         if par['info'] is not None:
             info = DBF(filename=par['info'], encoding='GBK')

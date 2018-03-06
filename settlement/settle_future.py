@@ -1,5 +1,16 @@
 # -*- coding: UTF-8 -*-
-
+"""
+缺少
+t_clientdelivfee
+t_ClientPositionProfit
+t_delivinstrument
+t_ClientProfit
+t_clientPositionProfit
+t_partfund
+t_clientprofit
+t_partdelivposition
+t_clientdelivposition
+"""
 import json
 
 from utils import Configuration, mysql, log, parse_conf_args, process_assert
@@ -48,7 +59,6 @@ def settle_future(context, conf):
                       AND t1.settlementid = %s for update"""
         cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id))
         row = cursor.fetchone()
-
         if row is None:
             logger.error("[settle future] Error: There is no data for %s-%s." % (settlement_group_id, settlement_id))
             result_code = -1
@@ -658,8 +668,6 @@ def settle_future(context, conf):
                     select t.tradingday,t.settlementgroupid,t.settlementid,t.participantid,t.accountid,sum(transfee) as transfee,sum(delivfee) as delivfee,sum(positionmargin) as positionmargin,sum(profit) as profit
                     from dbclear.t_clientfund t where t.tradingday = %s and t.settlementgroupid = %s and t.settlementid = %s
                     group by t.tradingday,t.settlementgroupid,t.settlementid,t.participantid,t.accountid"""
-            # 更新sim表
-
             # 更新结算状态
             logger.info("[update settlement status]......")
             sql = """UPDATE dbclear.t_settlement SET settlementstatus = '1' 
