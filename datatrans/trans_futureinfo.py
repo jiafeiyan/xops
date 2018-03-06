@@ -69,26 +69,6 @@ class trans_futureinfo:
 
     # 读取处理PAR_FUTURES文件
     def __t_Instrument(self, mysqlDB, dbf):
-        futures_dbf = dbf
-        # 判断合约是否已存在
-        dbf_futures = []
-        exist_futures = []
-        sql_futures = " SELECT InstrumentID " + \
-                      " FROM siminfo.t_Instrument " + \
-                      " WHERE (InstrumentID, SettlementGroupID) in ("
-        for future in futures_dbf:
-            dbf_futures.append(future['ZQDM'])
-            sql_values = "('" + future['ZQDM'] + "', '" + self.self_conf[future['JYSC'].encode('UTF-8')] + "') "
-            sql_futures = sql_futures + sql_values + ","
-        sql_futures = sql_futures[0:-1] + ")"
-
-        # 查询存在数据
-        for future in mysqlDB.select(sql_futures):
-            exist_futures.append(str(future[0]))
-
-        # 获取差集
-        inexist_futures = list(set(dbf_futures) ^ set(exist_futures))
-        # 不存在插入记录
         sql_insert_futures = """INSERT INTO siminfo.t_Instrument (
                                    SettlementGroupID,ProductID,
                                    ProductGroupID,UnderlyingInstrID,
@@ -97,39 +77,50 @@ class trans_futureinfo:
                                    VolumeMultiple,UnderlyingMultiple,
                                    InstrumentID,InstrumentName,
                                    DeliveryYear,DeliveryMonth,AdvanceMonth
-                               )SELECT %s,t1.ProductID,t1.ProductGroupID,t1.ProductID,t1.ProductClass,
-                                        %s,%s,%s,%s,%s,%s,%s,%s,%s,%s
-                                   FROM siminfo.t_Product t1, siminfo.t_ProductGroup t2
-                                   WHERE t1.SettlementGroupID = t2.SettlementGroupID
-                                   AND t1.ProductGroupID = t2.ProductGroupID
-                                   AND t2.CommodityID = %s AND t1.ProductClass = %s"""
-        # 存在更新记录
-        sql_update_futures = """UPDATE siminfo.t_Instrument
-                                        SET InstrumentName=%s,VolumeMultiple=%s
-                                        WHERE InstrumentID = %s
-                                        AND SettlementGroupID = %s"""
+                               )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                                ON DUPLICATE KEY UPDATE
+                                ProductID = VALUES (ProductID),
+                                ProductGroupID = VALUES (ProductGroupID),
+                                UnderlyingInstrID = VALUES (UnderlyingInstrID),
+                                ProductClass = VALUES (ProductClass),
+                                PositionType = VALUES (PositionType),
+                                StrikePrice = VALUES (StrikePrice),
+                                VolumeMultiple = VALUES (VolumeMultiple),
+                                UnderlyingMultiple = VALUES (UnderlyingMultiple),
+                                InstrumentName = VALUES (InstrumentName)"""
         sql_insert_params = []
-        sql_update_params = []
-        for future in futures_dbf:
-            if future['ZQDM'] in inexist_futures:
-                # 判断行业类型是否为CP,如果是为期权，其余为期货
-                ProductClass = '1'
-                OptionsType = '0'
-                if str(future['HYLX']) == 'C' or str(future['HYLX']) == 'P':
-                    ProductClass = '2'
+        for future in dbf:
+            # 判断行业类型是否为CP,如果是为期权，其余为期货
+            ProductClass = '1'
+            OptionsType = '0'
+            ProductID = future['JYPZ']
+            ProductGroupID = future['JYPZ']
+            # 获取结算组ID
+            settlement = self.self_conf[future['JYSC'].encode('UTF-8')]
+            if str(future['HYLX']) == 'C' or str(future['HYLX']) == 'P':
+                ProductClass = '2'
+                if str(future['HYLX']) == 'C':
+                    OptionsType = '1'
+                elif str(future['HYLX']) == 'P':
+                    OptionsType = '2'
+
+                if settlement == 'SG03':
+                    ProductID = str(future['JYPZ']) + '_O'
+                if settlement == 'SG04':
+                    ProductID = str(future['JYPZ']) + '_O'
+                if settlement == 'SG05':
                     if str(future['HYLX']) == 'C':
-                        OptionsType = '1'
+                        ProductID = str(future['JYPZ']) + '_C'
                     elif str(future['HYLX']) == 'P':
-                        OptionsType = '2'
-                sql_insert_params.append((self.self_conf[future['JYSC'].encode('UTF-8')], "2", None, OptionsType,
-                                          future['JYDW'], 1, future['ZQDM'], future['ZQMC'],
-                                          2099, 12, "012", future['JYPZ'], ProductClass))
-                continue
-            if future['ZQDM'] in exist_futures:
-                sql_update_params.append(
-                    (future['ZQMC'], future['JYDW'], future['ZQDM'], self.self_conf[future['JYSC'].encode('UTF-8')]))
+                        ProductID = str(future['JYPZ']) + '_P'
+                if settlement == 'SG06':
+                    ProductID = str(future['JYPZ']) + 'O'
+
+            sql_insert_params.append((settlement, ProductID, ProductGroupID, ProductID, ProductClass,
+                                      "2", None, OptionsType,
+                                      future['JYDW'], 1, future['ZQDM'], future['ZQMC'],
+                                      2099, 12, "12"))
         mysqlDB.executemany(sql_insert_futures, sql_insert_params)
-        mysqlDB.executemany(sql_update_futures, sql_update_params)
         self.logger.info("写入t_Instrument完成")
 
     # 读取处理GJSHQ文件
