@@ -1,0 +1,18 @@
+{
+  "mysqlId" : "simplatform_base",
+  "brokerSystemId" : "0002",
+  "settlementGroups" : [{
+    "settlementGroupId" : "SG03",
+    "settlementId" : "1"
+    },{
+    "settlementGroupId" : "SG04",
+    "settlementId" : "1"
+    },{
+    "settlementGroupId" : "SG05",
+    "settlementId" : "1"
+    },{
+    "settlementGroupId" : "SG06",
+    "settlementId" : "1"
+    }
+  ]
+}

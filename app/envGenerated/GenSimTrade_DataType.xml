@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="gb2312"?>
+<!DOCTYPE UFDataTypes SYSTEM "../../commonenv/UFDataType.dtd">
+<UFDataTypes>
+	<Int typename="Priority" length="10" label="优先权"/>
+	<Int typename="SettlementID" length="3" label="结算编号"/>
+	<Int typename="MonthCount" length="3" label="月份数量"/>
+	<Int typename="TradingSegmentSN" length="2" label="交易阶段编号"/>
+	<Int typename="Volume" length="10" label="数量"/>
+	<Int typename="TimeSortID" length="10" label="按时间排队的序号"/>
+	<Int typename="Seconds" length="8" label="秒钟数量"/>
+	<Int typename="MarketDataDepth" length="2" label="市场行情深度"/>
+	<Int typename="Millisec" length="3" label="时间（毫秒）"/>
+	<Int typename="TopicID" length="4" label="主题代码"/>
+	<Int typename="VolumeMultiple" length="5" label="合约数量乘数"/>
+	<Int typename="SettlePriceSeconds" length="8" label="结算取样时间"/>
+	<Int typename="AutoIncrementID" length="10" label="自增ID"/>
+	<Int typename="DayOffset" length="4" label="日期偏移量"/>
+	<VString typename="ParticipantID" length="10" label="会员代码"/>
+	<VString typename="ParticipantName" length="50" label="会员名称"/>
+	<VString typename="ParticipantAbbr" length="8" label="会员简称"/>
+	<VString typename="UserID" length="15" label="交易用户代码"/>
+	<VString typename="Password" length="40" label="密码"/>
+	<VString typename="OpenID" length="20" label="投资者认证代码"/>
+	<VString typename="InvestorID" length="10" label="投资者代码"/>
+	<VString typename="InvestorName" length="20" label="投资者名称"/>
+	<VString typename="ClientID" length="10" label="客户代码"/>
+	<VString typename="InstrumentID" length="30" label="合约代码"/>
+	<VString typename="ProductID" length="8" label="产品代码"/>
+	<VString typename="ProductName" length="20" label="产品名称"/>
+	<VString typename="ExchangeID" length="8" label="交易所代码"/>
+	<VString typename="ExchangeName" length="30" label="交易所名称"/>
+	<VString typename="Date" length="8" label="日期"/>
+	<VString typename="Time" length="8" label="时间"/>
+	<VString typename="InstrumentName" length="20" label="合约名称"/>
+	<VString typename="ProductGroupID" length="8" label="产品组代码"/>
+	<VString typename="Currency" length="3" label="币种"/>
+	<VString typename="ProductGroupName" length="20" label="产品组名称"/>
+	<VString typename="MarketID" length="8" label="市场代码"/>
+	<VString typename="MarketName" length="20" label="市场名称"/>
+	<VString typename="TradeSystemID" length="8" label="交易系统代码"/>
+	<VString typename="TradeSystemName" length="20" label="交易系统名称"/>
+	<VString typename="BrokerSystemID" length="8" label="柜台系统代码"/>
+	<VString typename="BrokerSystemName" length="20" label="柜台系统名称"/>
+	<VString typename="SettlementGroupID" length="8" label="结算组代码"/>
+	<VString typename="SettlementGroupName" length="20" label="结算组名称"/>
+	<VString typename="ActivityID" length="8" label="赛事活动代码"/>
+	<VString typename="ActivityName" length="20" label="赛事活动名称"/>
+	<VString typename="ActivityType" length="4" label="赛事活动类型"/>
+	<VString typename="TradingSegmentName" length="20" label="交易阶段名称"/>
+	<VString typename="MarginCalcID" length="4" label="保证金算法代码"/>
+	<VString typename="OrderSysID" length="12" label="报单编号"/>
+	<VString typename="TradeID" length="12" label="成交编号"/>
+	<VString typename="OrderLocalID" length="12" label="本地报单编号"/>
+	<VString typename="AccountID" length="12" label="资金帐号"/>
+	<VString typename="AdvanceMonth" length="3" label="提前月份"/>
+	<VString typename="TopicName" length="60" label="主题名称"/>
+	<VString typename="OperationType" length="24" label="操作类型"/>
+	<VString typename="CommodityID" length="8" label="商品代码"/>
+	<VString typename="IPAddress" label="IP地址" length="15"/>
+	<VString typename="BusinessUnit" length="20" label="业务单元"/>
+	<VString typename="SecurityType" length="4" label="证券类型代码"/>
+	<VString typename="ProfitType" length="4" label="权益类型代码"/>
+	<EnumChar typename="AccountStatus" label="帐户状态" prefix="ACCS">
+		<enum name="Enable" value="0" label="激活状态"/>
+		<enum name="Disable" value="1" label="停止状态"/>
+	</EnumChar>
+	<EnumChar typename="Direction" label="买卖方向" prefix="D">
+		<enum name="Buy" value="0" label="买"/>
+		<enum name="Sell" value="1" label="卖"/>
+	</EnumChar>
+	<EnumChar typename="PosiDirection" label="持仓多空方向" prefix="PD">
+		<enum name="Net" value="1" label="净"/>
+		<enum name="Long" value="2" label="多头"/>
+		<enum name="Short" value="3" label="空头"/>
+	</EnumChar>
+	<EnumChar typename="ClientType" label="客户类型" prefix="CT">
+		<enum name="Person" value="0" label="自然人"/>
+		<enum name="Company" value="1" label="法人"/>
+		<enum name="Fund" value="2" label="投资基金"/>
+	</EnumChar>
+	<EnumChar typename="OrderPriceType" label="报单价格条件" prefix="OPT">
+		<enum name="AnyPrice" value="1" label="任意价"/>
+		<enum name="LimitPrice" value="2" label="限价"/>
+		<enum name="BestPrice" value="3" label="最优价"/>
+		<enum name="FiveLevelPrice" value="4" label="5档价"/>
+	</EnumChar>
+	<EnumChar typename="OffsetFlag" label="开平标志" prefix="OF">
+		<enum name="Open" value="0" label="开仓"/>
+		<enum name="Close" value="1" label="平仓"/>
+		<enum name="ForceClose" value="2" label="强平"/>
+		<enum name="CloseToday" value="3" label="平今"/>
+		<enum name="CloseYesterday" value="4" label="平昨"/>
+	</EnumChar>
+	<EnumChar typename="ForceCloseReason" label="强平原因" prefix="FCC">
+		<enum name="NotForceClose" value="0" label="非强平"/>
+		<enum name="LackDeposit" value="1" label="资金不足"/>
+		<enum name="ClientOverPositionLimit" value="2" label="客户超仓"/>
+		<enum name="MemberOverPositionLimit" value="3" label="会员超仓"/>
+		<enum name="NotMultiple" value="4" label="持仓非整数倍"/>
+		<enum name="Violation" value="5" label="违规"/>
+		<enum name="Other" value="6" label="其它"/>
+		<enum name="PersonDeliv" value="7" label="自然人临近交割"/>
+	</EnumChar>
+	<EnumChar typename="OrderStatus" label="报单状态" prefix="OST">
+		<enum name="NoSend" value="0" label="未发送状态"/>
+		<enum name="NoRespond" value="1" label="已发送未回报状态"/>
+		<enum name="OnError" value="2" label="发送后出错"/>
+		<enum name="Respond" value="3" label="已回报"/>
+		<enum name="Deleted" value="4" label="已删除"/>
+	</EnumChar>
+	<EnumChar typename="OrderType" label="报单类型" prefix="ORDT">
+		<enum name="Normal" value="0" label="正常"/>
+		<enum name="DeriveFromQuote" value="1" label="报价衍生"/>
+		<enum name="DeriveFromCombination" value="2" label="组合衍生"/>
+	</EnumChar>
+	<EnumChar typename="TimeCondition" label="有效期类型" prefix="TC">
+		<enum name="IOC" value="1" label="立即完成，否则撤销"/>
+		<enum name="GFS" value="2" label="本节有效"/>
+		<enum name="GFD" value="3" label="当日有效"/>
+		<enum name="GTD" value="4" label="指定日期前有效"/>
+		<enum name="GTC" value="5" label="撤销前有效"/>
+		<enum name="GFA" value="6" label="集合竞价有效"/>
+	</EnumChar>
+	<EnumChar typename="VolumeCondition" label="成交量类型" prefix="VC">
+		<enum name="AV" value="1" label="任何数量"/>
+		<enum name="MV" value="2" label="最小数量"/>
+		<enum name="CV" value="3" label="全部数量"/>
+	</EnumChar>
+	<EnumChar typename="ContingentCondition" label="触发条件" prefix="CC">
+		<enum name="Immediately" value="1" label="立即"/>
+		<enum name="Touch" value="2" label="止损"/>
+	</EnumChar>
+	<EnumChar typename="OrderSource" label="报单来源" prefix="OSRC">
+		<enum name="Participant" value="0" label="来自参与者"/>
+		<enum name="Administrator" value="1" label="来自管理员"/>
+	</EnumChar>
+	<EnumChar typename="TradeType" label="成交类型" prefix="TRDT">
+		<enum name="Common" value="0" label="普通成交"/>
+		<enum name="OptionsExecution" value="1" label="期权执行"/>
+		<enum name="OTC" value="2" label="OTC成交"/>
+		<enum name="EFPDerived" value="3" label="期转现衍生成交"/>
+		<enum name="CombinationDerived" value="4" label="组合衍生成交"/>
+	</EnumChar>
+	<EnumChar typename="PriceSource" label="成交价来源" prefix="PSRC">
+		<enum name="LastPrice" value="0" label="前成交价"/>
+		<enum name="Buy" value="1" label="买委托价"/>
+		<enum name="Sell" value="2" label="卖委托价"/>
+	</EnumChar>
+	<EnumChar typename="MdPubStatus" label="行情发布状态" prefix="MPS">
+		<enum name="NotPublish" value="0" label="不发送行情"/>
+		<enum name="Publish" value="1" label="发送行情"/>
+	</EnumChar>
+	<EnumChar typename="MarketDataMode" label="行情模式" prefix="MDM">
+		<enum name="Double" value="0" label="双边行情"/>
+		<enum name="Single" value="1" label="单边行情"/>
+	</EnumChar>
+	<EnumChar typename="TradingRole" label="交易角色" prefix="ER">
+		<enum name="Broker" value="1" label="代理"/>
+		<enum name="Host" value="2" label="自营"/>
+		<enum name="MarketMaker" value="3" label="做市商"/>
+	</EnumChar>
+	<EnumChar typename="UserType" label="交易用户类型" prefix="UT">
+		<enum name="Trader" value="1" label="交易员"/>
+		<enum name="TradeManager" value="2" label="交易控制员"/>
+		<enum name="MDUser" value="3" label="行情商用户"/>
+		<enum name="SingleTrader" value="4" label="无授权交易员"/>
+	</EnumChar>
+	<EnumChar typename="ProductClass" label="产品类型" prefix="PC">
+		<enum name="Futures" value="1" label="期货"/>
+		<enum name="Options" value="2" label="期权"/>
+		<enum name="Combination" value="3" label="组合"/>
+		<enum name="Spot" value="4" label="即期"/>
+		<enum name="EFP" value="5" label="期转现"/>
+	</EnumChar>
+	<EnumChar typename="OptionsType" label="期权类型" prefix="OT">
+		<enum name="NotOptions" value="0" label="非期权"/>
+		<enum name="CallOptions" value="1" label="看涨"/>
+		<enum name="PutOptions" value="2" label="看跌"/>
+	</EnumChar>
+	<EnumChar typename="InstLifePhase" label="合约生命周期状态" prefix="IP">
+		<enum name="NotStart" value="0" label="未上市"/>
+		<enum name="Started" value="1" label="上市"/>
+		<enum name="Pause" value="2" label="停牌"/>
+		<enum name="Expired" value="3" label="到期"/>
+	</EnumChar>
+	<EnumChar typename="InstrumentStatus" label="合约交易状态" prefix="IS">
+		<enum name="BeforeTrading" value="0" label="开盘前"/>
+		<enum name="NoTrading" value="1" label="非交易"/>
+		<enum name="Continous" value="2" label="连续交易"/>
+		<enum name="AuctionOrdering" value="3" label="集合竞价报单"/>
+		<enum name="AuctionBalance" value="4" label="集合竞价价格平衡"/>
+		<enum name="AuctionMatch" value="5" label="集合竞价撮合"/>
+		<enum name="Closed" value="6" label="收盘"/>
+	</EnumChar>
+	<EnumChar typename="PositionType" label="持仓类型" prefix="PT">
+		<enum name="Net" value="1" label="净持仓"/>
+		<enum name="Gross" value="2" label="综合持仓"/>
+	</EnumChar>
+	<EnumChar typename="PriceLimitType" label="限价类型" prefix="PL">
+		<enum name="Dynamic" value="1" label="动态"/>
+		<enum name="Static" value="2" label="静态"/>
+	</EnumChar>
+	<EnumChar typename="ValueMode" label="取值方式" prefix="VM">
+		<enum name="None" value="0" label="无"/>
+		<enum name="Percentage" value="1" label="百分比"/>
+		<enum name="Absolute" value="2" label="绝对值"/>
+	</EnumChar>
+	<EnumChar typename="RoundingMode" label="舍入方式" prefix="RM">
+		<enum name="Out" value="1" label="舍出"/>
+		<enum name="Round" value="2" label="四舍五入"/>
+		<enum name="In" value="3" label="舍入"/>
+		<enum name="Trunc" value="4" label="截断"/>
+	</EnumChar>
+	<EnumChar typename="HedgeFlag" label="投机套保标志" prefix="HF">
+		<enum name="Speculation" value="1" label="投机"/>
+		<enum name="Arbitrage" value="2" label="套利"/>
+		<enum name="Hedge" value="3" label="套保"/>
+		<enum name="MarketMaker" value="4" label="做市商"/>
+	</EnumChar>
+	<EnumChar typename="ProductLifePhase" label="产品生命周期状态" prefix="PP">
+		<enum name="Active" value="1" label="活跃"/>
+		<enum name="NonActive" value="2" label="不活跃"/>
+		<enum name="Canceled" value="3" label="注销"/>
+	</EnumChar>
+	<EnumChar typename="TradingRight" label="交易权限" prefix="TR">
+		<enum name="Allow" value="0" label="可以交易"/>
+		<enum name="CloseOnly" value="1" label="只能平仓"/>
+		<enum name="Forbidden" value="2" label="不能交易"/>
+	</EnumChar>
+	<EnumChar typename="TradingModel" label="交易模式" prefix="TM">
+		<enum name="PriceTime" value="0" label="价格优先时间优先"/>
+		<enum name="Prorata" value="1" label="价格优先按比例分配"/>
+	</EnumChar>
+	<EnumChar typename="MemberType" label="会员类型" prefix="MT">
+		<enum name="Trading" value="0" label="交易会员"/>
+		<enum name="Settlement" value="1" label="结算会员"/>
+		<enum name="Compositive" value="2" label="综合会员"/>
+	</EnumChar>
+	<EnumChar typename="ParticipantType" label="参与者类型" prefix="PARTT">
+		<enum name="Member" value="0" label="会员"/>
+		<enum name="MDProvider" value="1" label="行情商"/>
+		<enum name="InternalORG" value="2" label="所内机构"/>
+	</EnumChar>
+	<EnumChar typename="InvestorStatus" label="投资者状态" prefix="IS">
+		<enum name="UnUsed" value="0" label="未使用"/>
+		<enum name="Active" value="1" label="活跃"/>
+		<enum name="NonActive" value="2" label="不活跃"/>
+		<enum name="Canceled" value="3" label="注销"/>
+	</EnumChar>
+	<EnumChar typename="ActivityStatus" label="赛事活动状态" prefix="IS">
+		<enum name="UnUsed" value="0" label="未开始"/>
+		<enum name="Active" value="1" label="活跃"/>
+		<enum name="NonActive" value="2" label="不活跃"/>
+		<enum name="Canceled" value="3" label="注销"/>
+	</EnumChar>
+	<EnumChar typename="SecurityMarketID" label="证券市场代码" prefix="SMI">
+		<enum name="ID1" value="1" label="未知1"/>
+		<enum name="ID2" value="2" label="未知2"/>
+		<enum name="ID3" value="3" label="未知3"/>
+		<enum name="ID4" value="4" label="未知4"/>
+	</EnumChar>
+	<EnumChar typename="SettlementStatus" label="结算状态" prefix="SES">
+		<enum name="SES0" value="0" label="未结算"/>
+		<enum name="SES1" value="1" label="已结算"/>
+		<enum name="SES2" value="2" label="已发布"/>
+	</EnumChar>
+	<EnumChar typename="StrikeType" label="行权类型" prefix="STRT">
+		<enum name="STRT1" value="1" label="欧式"/>
+		<enum name="STRT2" value="2" label="美式"/>
+	</EnumChar>
+	<EnumChar typename="UnderlyingType" label="标的类型" prefix="UNDT">
+		<enum name="UNDT1" value="1" label="ETF"/>
+		<enum name="UNDT2" value="2" label="股票"/>
+	</EnumChar>
+	<EnumChar typename="JoinStatus" label="参与状态" prefix="JS">
+		<enum name="JS0" value="0" label="待重置"/>
+		<enum name="JS1" value="1" label="已参与"/>
+	</EnumChar>
+	<RangeInt typename="Year" length="4" from="1900" to="2100" label="年份"/>
+	<RangeInt typename="Month" length="2" from="1" to="12" label="月份"/>
+	<RangeInt typename="Day" length="2" from="1" to="31" label="日期"/>
+	<RangeInt typename="Bool" length="1" from="0" to="1" label="布尔型"/>
+	<RangeInt typename="UserActive" length="1" from="0" to="2" label="交易员活跃情况"/>
+	<FixNumber typename="Price" length="16" precision="6" label="价格"/>
+	<FixNumber typename="UnderlyingMultiple" length="9" precision="3" label="合约基础商品乘数"/>
+	<VString typename="CombOffsetFlag" length="4" label="组合开平标志"/>
+	<VString typename="CombHedgeFlag" length="4" label="组合投机套保标志"/>
+	<Float typename="SecurityProfit" length="22" precision="8" label="证券权益收益"/>
+	<Float typename="Ratio" length="22" precision="6" label="比率"/>
+	<Float typename="Money" length="19" precision="3" label="资金"/>
+	<Float typename="LargeVolume" length="19" precision="3" label="大额数量"/>
+	<VString typename="IdentifiedCardNo" label="证件号码" length="50"/>
+	<VString typename="FunctionCode" label="功能代码" length="24"/>
+	<VString typename="Description" label="描述" length="400"/>
+	<VString typename="PartyName" label="参与人名称" length="80"/>
+	<VString typename="IdCardType" label="证件类型" length="15"/>
+	<VString typename="InstrumentGroupID" length="30" label="合约组代码"/>
+</UFDataTypes>

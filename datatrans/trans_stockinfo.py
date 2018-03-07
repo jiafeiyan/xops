@@ -156,12 +156,13 @@ class trans_stockinfo:
     def __t_TradingSegmentAttr(self, mysqlDB, dbf):
         # 判断合约是否已存在
         sql_insert_segment = """INSERT INTO siminfo.t_TradingSegmentAttr(SettlementGroupID,TradingSegmentSN,
-                                            TradingSegmentName,StartTime,InstrumentStatus,InstrumentID)
-                                VALUES(%s,%s,%s,%s,%s,%s) 
+                                            TradingSegmentName,StartTime,InstrumentStatus,DayOffset,InstrumentID)
+                                VALUES(%s,%s,%s,%s,%s,%s,%s) 
                                 ON DUPLICATE KEY UPDATE 
                                 InstrumentStatus=VALUES(InstrumentStatus),
                                 StartTime=VALUES(StartTime),
-                                InstrumentStatus=VALUES(InstrumentStatus)"""
+                                InstrumentStatus=VALUES(InstrumentStatus),
+                                DayOffset=VALUES(DayOffset)"""
         sql_insert_params = []
         SegmentAttr = self.__loadJSON(tableName='t_TradingSegmentAttr')
         if SegmentAttr is None:
@@ -172,7 +173,7 @@ class trans_stockinfo:
             if SGID in SegmentAttr:
                 for attr in SegmentAttr[SGID]:
                     sql_insert_params.append((
-                        SGID, attr[1], attr[2], attr[3], attr[4], stock['ZQDM']))
+                        SGID, attr[1], attr[2], attr[3], attr[4], '1', stock['ZQDM']))
         mysqlDB.executemany(sql_insert_segment, sql_insert_params)
         self.logger.info("写入t_TradingSegmentAttr完成")
 
@@ -189,7 +190,7 @@ class trans_stockinfo:
                                 InstrumentID,
                                 ParticipantID
                             ) VALUES (%s,%s,%s,%s) 
-                            ON DUPLICATE KEY UPDATE MarginCalcID=VALUES(MarginCalcID),ParticipantID=VALUES(ParticipantID)"""
+                        ON DUPLICATE KEY UPDATE MarginCalcID=VALUES(MarginCalcID),ParticipantID=VALUES(ParticipantID)"""
         sql_insert_params = []
         for stock in dbf:
             SGID = self.self_conf[str(stock['SCDM'])]

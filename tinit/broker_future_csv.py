@@ -49,8 +49,22 @@ class exchange_future_csv:
         self.__data_to_csv("t_MDInstrument", mysqlDB)
         self.__data_to_csv("t_ProductGroup", mysqlDB)
         self.__data_to_csv("t_IndexPrice", mysqlDB)
-        self.__data_to_csv("t_InstrumentMarginRate", mysqlDB)
+        # self.__data_to_csv("t_InstrumentMarginRate", mysqlDB)
         self.__data_to_csv("t_InstrumentCommissionRate", mysqlDB)
+        # ======== 0301 新增 ========
+        self.__data_to_csv("t_Trader", mysqlDB)
+        self.__data_to_csv("t_TraderAssign", mysqlDB)
+        # indexprice  instrument mdinstrument交割日期  partbroker
+        # tradingaccount tradingaccountpassword  tradingcode  userrightsassign
+        self.__data_to_csv("t_BrokerUser", mysqlDB)
+        self.__data_to_csv("t_BrokerUserPassword", mysqlDB)
+        self.__data_to_csv("t_DepartmentUser", mysqlDB)
+        self.__data_to_csv("t_PartBroker", mysqlDB)
+        # self.__data_to_csv("t_TradingAccountPassword", mysqlDB)
+        self.__data_to_csv("t_TradingCode", mysqlDB)
+        self.__data_to_csv("t_UserRightsAssign", mysqlDB)
+        # todo
+        # self.__data_to_csv("t_InvestorPositionDtl", mysqlDB)
 
     def __data_to_csv(self, table_name, mysqlDB):
         table_sqls = dict(
@@ -190,8 +204,11 @@ class exchange_future_csv:
                                           FROM siminfo.t_Investor t""",
                                    quoting=True),
             t_InvestorDepartmentFlat=dict(columns=("BrokerID", "InvestorID", "DepartmentID"),
-                                          sql="""SELECT '10010' AS BrokerID,t.InvestorID,'00' AS DepartmentID
-                                                  FROM siminfo.t_Investor t""",
+                                          sql="""SELECT '10010' AS BrokerID,t.InvestorID,'01' AS DepartmentID 
+                                                 FROM siminfo.t_Investor t
+                                                 UNION ALL
+                                                 SELECT '10010' AS BrokerID,t.InvestorID,'0101' AS DepartmentID 
+                                                 FROM siminfo.t_Investor t""",
                                           quoting=True),
             t_InvestorPassword=dict(columns=("BrokerID", "InvestorID", "Password"),
                                     sql="""SELECT '10010' AS BrokerID,t.InvestorID,t.Password 
@@ -272,7 +289,83 @@ class exchange_future_csv:
                                                     FROM siminfo.t_Instrument t WHERE t.SettlementGroupID IN """ +
                                                 str(tuple([str(i) for i in self.settlementGroupID])),
                                             quoting=True),
-
+            t_Trader=dict(columns=("ExchangeID", "TraderID", "ParticipantID", "Password", "InstallCount", "BrokerID"),
+                          sql="""SELECT t2.ExchangeID,t1.UserID AS TraderID,t1.ParticipantID,
+                                    '111111' Password,'1' AS InstallCount,'10010' AS BrokerID 
+                                FROM siminfo.t_user t1,siminfo.t_settlementgroup t2 
+                                WHERE t1.SettlementGroupID = t2.SettlementGroupID 
+                                    AND t1.UserID NOT IN ( 'TRADE01', 'TRADE02' )
+                                    AND t1.SettlementGroupID IN """ +
+                              str(tuple([str(i) for i in self.settlementGroupID])),
+                          quoting=True),
+            t_TraderAssign=dict(columns=("BrokerID", "ExchangeID", "TraderID", "ParticipantID", "DRIdentityID"),
+                                sql="""SELECT '10010' AS BrokerID,t2.ExchangeID,t1.UserID AS TraderID,
+                                            t1.ParticipantID,'1' AS DRIdentityID 
+                                        FROM siminfo.t_user t1,siminfo.t_settlementgroup t2 
+                                        WHERE t1.SettlementGroupID = t2.SettlementGroupID 
+                                            AND t1.UserID NOT IN ( 'TRADE01', 'TRADE02' )
+                                            AND t1.SettlementGroupID IN """ +
+                                    str(tuple([str(i) for i in self.settlementGroupID])),
+                                quoting=True),
+            t_BrokerUser=dict(columns=("BrokerID", "UserID", "UserName", "UserType", "IsActive",
+                                       "IsUsingOTP", "IsAuthForce"),
+                              sql="""SELECT '10010' AS BrokerID,t.InvestorID AS UserID,t.InvestorName AS UserName,
+                                            '0' AS UserType,'1' AS IsActive,'0' AS IsUsingOTP,
+                                            '0' AS IsAuthForce 
+                                        FROM siminfo.t_investor t UNION ALL
+                                        SELECT '10010' AS BrokerID,'10010_admin' AS UserID,
+                                            '10010_admin' AS UserName,'1' AS UserType,'1' AS IsActive,
+                                            '0' AS IsUsingOTP,'0' AS IsAuthForce""",
+                              quoting=True),
+            t_BrokerUserPassword=dict(columns=("BrokerID", "UserID", "Password", "LastUpdateTime", "LastLoginTime",
+                                               "ExpireDate", "WeakExpireDate"),
+                                      sql="""SELECT '10010' AS BrokerID,t.InvestorID AS UserID,t.`Password` AS PASSWORD,
+                                                '' AS LastUpdateTime,'' AS LastLoginTime,'' AS ExpireDate,
+                                                '' AS WeakExpireDate 
+                                        FROM siminfo.t_investor t UNION ALL
+                                        SELECT '10010' AS BrokerID,'10010_admin' AS UserID,'10010_admin' AS PASSWORD,
+                                                '' AS LastUpdateTime,'' AS LastLoginTime,'' AS ExpireDate,
+                                                '' AS WeakExpireDate""",
+                                      quoting=True),
+            t_DepartmentUser=dict(columns=("BrokerID", "UserID", "InvestorRange", "InvestorID"),
+                                  sql="""SELECT '10010' AS BrokerID,t.InvestorID AS UserID,'3' AS InvestorRange,
+                                            t.InvestorID FROM siminfo.t_investor t UNION ALL
+                                         SELECT '10010' AS BrokerID,'10010_admin' AS UserID,
+                                            '1' AS InvestorRange,'00000000' AS InvestorID""",
+                                  quoting=True),
+            t_PartBroker=dict(columns=("BrokerID", "ExchangeID", "ParticipantID", "IsActive"),
+                              sql="""SELECT '10010' AS BrokerID,t.ExchangeID AS ExchangeID,t1.ParticipantID,t1.IsActive 
+                                    FROM siminfo.t_settlementgroup t,siminfo.t_participant t1
+                                    WHERE t.SettlementGroupID = t1.SettlementGroupID
+                                    AND t.SettlementGroupID IN """ +
+                                  str(tuple([str(i) for i in self.settlementGroupID])),
+                              quoting=True),
+            t_TradingAccountPassword=dict(columns=("BrokerID", "AccountID", "Password", "CurrencyID"),
+                                          sql="""""",
+                                          quoting=True),
+            t_TradingCode=dict(columns=("InvestorID", "BrokerID", "ExchangeID", "ClientID", "IsActive", "ClientIDType"),
+                               sql="""SELECT t.InvestorID,'10010' AS BrokerID,t1.ExchangeID,t.ClientID,
+                                            t2.IsActive,'1' AS ClientIDType 
+                                      FROM siminfo.t_investorclient t,siminfo.t_settlementgroup t1,siminfo.t_client t2 
+                                      WHERE t.SettlementGroupID = t1.SettlementGroupID 
+                                      AND t.SettlementGroupID = t2.SettlementGroupID 
+                                      AND t.ClientID = t2.ClientID AND t.SettlementGroupID IN """ +
+                                   str(tuple([str(i) for i in self.settlementGroupID])),
+                               quoting=True),
+            t_UserRightsAssign=dict(columns=("BrokerID","UserID","DRIdentityID"),
+                                    sql="""SELECT '10010' AS BrokerID,t.InvestorID AS UserID,'1' AS DRIdentityID 
+                                            FROM siminfo.t_investor t""",
+                                    quoting=True),
+            t_InvestorPositionDtl=dict(columns=("InstrumentID", "BrokerID", "InvestorID", "HedgeFlag", "Direction",
+                                                "OpenDate", "TradeID", "Volume", "OpenPrice", "TradingDay",
+                                                "SettlementID", "TradeType", "CombInstrumentID", "ExchangeID",
+                                                "CloseProfitByDate", "CloseProfitByTrade", "PositionProfitByDate",
+                                                "PositionProfitByTrade", "Margin", "ExchMargin", "MarginRateByMoney",
+                                                "MarginRateByVolume", "LastSettlementPrice", "SettlementPrice",
+                                                "CloseVolume", "CloseAmount"),
+                                       sql="""""" +
+                                           str(tuple([str(i) for i in self.settlementGroupID])),
+                                       quoting=True),
         )
         # 查询sync数据库数据内容
         csv_data = mysqlDB.select(table_sqls[table_name]["sql"], table_sqls[table_name].get("params"))

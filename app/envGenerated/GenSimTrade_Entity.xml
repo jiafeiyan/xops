@@ -1,0 +1,1097 @@
+<?xml version="1.0" encoding="gb2312"?>
+<!DOCTYPE UFEntityModel SYSTEM "../../commonenv/UFEntity.dtd">
+<UFEntityModel>
+	<Entity name="TradingDayRef" title="标识一个交易日" description="唯一指明一个交易日">
+		<Field name="TradingDay" type="Date" notnull="yes" label="交易日" description="交易发生的日期" iskey="yes"/>
+	</Entity>
+	<Entity name="TradeSystemRef" title="交易系统标识" description="标识一个交易系统">
+		<Field name="TradeSystemID" type="TradeSystemID" iskey="yes" notnull="yes" label="交易系统代码" description="交易系统代码，唯一标识一个交易系统"/>
+	</Entity>
+	<Entity name="BrokerSystemRef" title="柜台系统标识" description="标识一个柜台系统">
+		<Field name="BrokerSystemID" type="BrokerSystemID" iskey="yes" notnull="yes" label="柜台系统代码" description="柜台系统代码，唯一标识一个柜台系统"/>
+	</Entity>
+	<Entity name="SettlementGroupRef" title="结算组标识" description="标识一个结算组">
+		<Field name="SettlementGroupID" type="SettlementGroupID" iskey="yes" notnull="yes" label="结算组代码" description="结算组代码，唯一标识一个结算组"/>
+	</Entity>
+	<Entity name="TradeSystem" title="交易系统" description="交易系统基本信息">
+		<Ref entity="TradeSystemRef"/>
+		<Field name="TradeSystemName" type="TradeSystemName" notnull="yes" label="交易系统名称" description="交易系统的名称"/>
+	</Entity>
+	<Entity name="BrokerSystem" title="柜台系统" description="柜台系统基本信息">
+		<Ref entity="BrokerSystemRef"/>
+		<Field name="BrokerSystemName" type="BrokerSystemName" notnull="yes" label="柜台系统名称" description="柜台系统的名称"/>
+	</Entity>
+	<Entity name="BrokerSystem_Snap" title="柜台系统" description="柜台系统基本信息">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="BrokerSystem"/>
+	</Entity>
+	<Entity name="TradeSystem_Snap" title="交易系统" description="交易系统基本信息">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="TradeSystem"/>
+	</Entity>
+	<Entity name="TradeSystemTradingDay" title="交易系统交易日" description="交易系统交易日">
+		<Ref entity="TradeSystemRef"/>
+		<Ref entity="TradingDayRef" iskey="no"/>
+	</Entity>
+	<Entity name="TradeSystemBrokerSystem" title="交易系统柜台系统对应关系" description="交易系统柜台系统对应关系">
+		<Ref entity="TradeSystemRef"/>
+		<Ref entity="BrokerSystemRef"/>
+	</Entity>
+	<Entity name="TradeSystemBrokerSystem_Snap" title="交易系统柜台系统对应关系" description="交易系统柜台系统对应关系">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="TradeSystemBrokerSystem"/>
+	</Entity>
+	<Entity name="BrokerSystemParticipant_Sync" title="柜台系统会员对应关系" description="柜台系统会员对应关系">
+		<Ref entity="TradingDayRef"/>
+		<Field name="ParticipantID" type="ParticipantID" notnull="yes" label="会员代码" description="每一位会员在系统中的编码，编号唯一且遵循交易所制定的编码规则" iskey="yes"/>
+	</Entity>
+	<Entity name="BrokerSystemSettlementGroup" title="柜台系统结算组关系" description="柜台系统结算组对应关系">
+		<Ref entity="BrokerSystemRef"/>
+		<Ref entity="SettlementGroupRef"/>
+	</Entity>
+	<Entity name="BrokerSystemSettlementGroup_Snap" title="柜台系统结算组关系" description="柜台系统结算组对应关系">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="BrokerSystemSettlementGroup"/>
+	</Entity>
+	<Entity name="TradeSystemSettlementGroup" title="交易系统结算组关系" description="交易系统结算组对应关系">
+		<Ref entity="TradeSystemRef"/>
+		<Ref entity="SettlementGroupRef"/>
+	</Entity>
+	<Entity name="TradeSystemSettlementGroup_Snap" title="交易系统结算组关系" description="交易系统结算组对应关系">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="TradeSystemSettlementGroup"/>
+	</Entity>
+	<Entity name="SettlementGroupRef" title="结算组标识" description="标识一个结算组">
+		<Field name="SettlementGroupID" type="SettlementGroupID" iskey="yes" notnull="yes" label="结算组代码" description="结算组代码，唯一标识一个结算组"/>
+	</Entity>
+	<Entity name="Exchange" title="交易所" description="交易所的基本信息">
+		<Field name="ExchangeID" type="ExchangeID" notnull="yes" label="交易所代码" description="一个交易所的编号" iskey="yes"/>
+		<Field name="ExchangeName" type="ExchangeName" notnull="yes" label="交易所名称" description="交易所名称"/>
+	</Entity>
+	<Entity name="Exchange_Snap" title="交易所" description="交易所的基本信息">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="Exchange"/>
+	</Entity>
+	<Entity name="Exchange_Sync" title="交易所" description="交易所的基本信息">
+		<Ref entity="TradeSystemRef"/>
+		<Ref entity="Exchange"/>
+	</Entity>
+	<Entity name="SettlementGroup" title="结算组" description="一组共享资金、共同结算的产品组集合">
+		<Field name="SettlementGroupID" type="SettlementGroupID" notnull="yes" label="结算组代码" description="结算组代码，唯一标识一个结算组" iskey="yes"/>
+		<Field name="SettlementGroupName" type="SettlementGroupName" notnull="yes" label="结算组名称" description="结算组的名称"/>
+		<Field name="ExchangeID" type="ExchangeID" notnull="yes" label="交易所代码" description="交易所代码，唯一标识一个交易所"/>
+		<Field name="SettlementGroupType" type="ProductClass" notnull="yes" label="结算组类型" description="结算组的类型"/>
+		<Field name="Currency" type="Currency" notnull="yes" label="币种" description="根据国际标准确定的币种值"/>
+	</Entity>
+	<Entity name="SettlementGroup_Sync" title="结算组" description="一组共享资金、共同结算的产品组集合">
+		<Ref entity="TradeSystemRef"/>
+		<Ref entity="SettlementGroup"/>
+	</Entity>
+	<Entity name="SettlementGroup_Snap" title="结算组" description="一组共享资金、共同结算的产品组集合">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="SettlementGroup"/>
+	</Entity>
+	<Entity name="Activity" title="赛事活动" description="赛事活动">
+		<Field name="ActivityID" type="ActivityID" notnull="yes" label="赛事活动代码" description="赛事活动代码，唯一标识一个赛事活动" iskey="yes"/>
+		<Field name="ActivityName" type="ActivityName" notnull="yes" label="赛事活动名称" description="赛事活动的名称"/>
+		<Field name="ActivityType" type="ActivityType" notnull="yes" label="赛事活动类型" description="赛事活动类型"/>
+		<Field name="ActivityStatus" type="ActivityStatus" notnull="yes" label="赛事活动状态" description="赛事活动状态"/>
+		<Field name="CreateDate" type="Date" notnull="yes" label="创建日期" description="创建日期"/>
+		<Field name="CreateTime" type="Time" notnull="yes" label="创建时间" description="创建时间"/>
+		<Field name="BeginDate" type="Date" notnull="no" label="开始日期" description="开始日期"/>
+		<Field name="EndDate" type="Date" notnull="no" label="结束日期" description="结束日期"/>
+		<Field name="UpdateDate" type="Date" notnull="yes" label="最后修改日期" description="最后修改日期"/>
+		<Field name="UpdateTime" type="Time" notnull="yes" label="最后修改时间" description="最后修改时间"/>
+	</Entity>
+	<Entity name="Activity_Snap" title="赛事活动" description="赛事活动">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="Activity"/>
+	</Entity>
+	<Entity name="ActivitySettlementGroup" title="赛事活动结算组关系" description="赛事活动结算组关系">
+		<Field name="ActivityID" type="ActivityID" notnull="yes" label="赛事活动代码" description="赛事活动代码，唯一标识一个赛事活动" iskey="yes"/>
+		<Ref entity="SettlementGroupRef"/>
+	</Entity>
+	<Entity name="ActivitySettlementGroup_Snap" title="赛事活动结算组关系" description="赛事活动结算组关系">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="ActivitySettlementGroup"/>
+	</Entity>
+	<Entity name="TradingCalendar" title="结算工作日历" description="结算工作日历">
+		<Field name="Day" type="Date" notnull="yes" iskey="yes" label="日期" description="日期"/>
+		<Field name="Wrk" type="Bool" notnull="yes" iskey="no" label="工作日" description="是否工作日"/>
+		<Field name="Tra" type="Bool" notnull="yes" iskey="no" label="交易日" description="是否交易日"/>
+		<Field name="Sun" type="Bool" notnull="yes" iskey="no" label="周日" description="是否周日"/>
+		<Field name="Mon" type="Bool" notnull="yes" iskey="no" label="周一" description="是否周一"/>
+		<Field name="Tue" type="Bool" notnull="yes" iskey="no" label="周二" description="是否周二"/>
+		<Field name="Wed" type="Bool" notnull="yes" iskey="no" label="周三" description="是否周三"/>
+		<Field name="Thu" type="Bool" notnull="yes" iskey="no" label="周四" description="是否周四"/>
+		<Field name="Fri" type="Bool" notnull="yes" iskey="no" label="周五" description="是否周五"/>
+		<Field name="Sat" type="Bool" notnull="yes" iskey="no" label="周六" description="是否周六"/>
+		<Field name="Bom" type="Bool" notnull="yes" iskey="no" label="月初" description="是否月初"/>
+		<Field name="Eom" type="Bool" notnull="yes" iskey="no" label="月末" description="是否月末"/>
+		<Field name="Spr" type="Bool" notnull="yes" iskey="no" label="春节" description="是否春节"/>
+		<Field name="Hol" type="Bool" notnull="yes" iskey="no" label="法定假日" description="是否法定假日"/>
+	</Entity>
+	<Entity name="Calendar_Snap" title="日历" description="说明日历的各类属性">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="Calendar"/>
+	</Entity>
+	<Entity name="AccountBase" title="帐户基本信息" description="说明一个帐户中最基本的信息">
+		<Field name="PreBalance" type="Money" notnull="yes" label="上次结算准备金" description="上次结算准备金"/>
+		<Field name="CurrMargin" type="Money" notnull="yes" label="当前保证金总额" description="等于FuturesMargin＋OptionsMargin"/>
+		<Field name="CloseProfit" type="Money" notnull="yes" label="平仓盈亏" description="平仓造成的盈亏金额"/>
+		<Field name="Premium" type="Money" notnull="yes" label="期权权利金收支" description="期权权利金收支金额"/>
+		<Field name="Deposit" type="Money" notnull="yes" label="入金金额" description="当日入金的总额"/>
+		<Field name="Withdraw" type="Money" notnull="yes" label="出金金额" description="当日出金的总额"/>
+		<Field name="Balance" type="Money" notnull="yes" label="期货结算准备金" description="等于PreTotal＋Profit＋Premium＋Deposit－Withdraw＋Interest－Fee"/>
+		<Field name="Available" type="Money" notnull="yes" label="可提资金" description="等于Total－（CurrMargin－AvailableCollateral）"/>
+	</Entity>
+	<Entity name="AccountDetail" title="帐户的详细信息" description="说明一个帐户中除了基本信息以外的详细信息">
+		<Field name="PreMargin" type="Money" notnull="yes" label="上次保证金总额" description="上次保证金总额"/>
+		<Field name="FuturesMargin" type="Money" notnull="yes" label="期货保证金" description="期货持仓占用的保证金"/>
+		<Field name="OptionsMargin" type="Money" notnull="yes" label="期权保证金" description="期权持仓占用的保证金"/>
+		<Field name="PositionProfit" type="Money" notnull="yes" label="持仓盈亏" description="持仓造成的盈亏金额"/>
+		<Field name="Profit" type="Money" notnull="yes" label="当日盈亏" description="等于CloseProfit + PositionProfit"/>
+		<Field name="Interest" type="Money" notnull="yes" label="利息收入" description="当日计息的收入"/>
+		<Field name="Fee" type="Money" notnull="yes" label="手续费" description="当日的所有手续费支出"/>
+		<Field name="TotalCollateral" type="Money" notnull="yes" label="总质押金额" description="根据仓单价值计算的总质押金额"/>
+		<Field name="CollateralForMargin" type="Money" notnull="yes" label="用质押抵的保证金金额" description="等于min（TotalCollateral，CurrMargin×80％）"/>
+		<Field name="PreAccmulateInterest" type="Money" notnull="yes" label="上次资金利息积数" description="用于累计计算利息"/>
+		<Field name="AccumulateInterest" type="Money" notnull="yes" label="资金利息积数" description="当本次是今日最后一次结算时，等于PreAccmulateInterest＋PreTotal×（CurrDate－PreDate－1）＋Total"/>
+		<Field name="AccumulateFee" type="Money" notnull="yes" label="质押手续费积数" description="手续费累计"/>
+		<Field name="ForzenDeposit" type="Money" notnull="yes" label="冻结资金" description="冻结资金"/>
+		<Field name="AccountStatus" type="AccountStatus" notnull="yes" label="帐户状态" description="帐户状态"/>
+	</Entity>
+	<Entity name="TradingAccount" title="交易资金账户信息" description="说明在交易时使用的资金帐号信息">
+		<Ref entity="SettlementGroupRef"/>
+		<Ref entity="AccountBase"/>
+		<Field name="AccountID" type="AccountID" notnull="yes" label="资金帐号" description="内部资金帐号的标识" iskey="yes"/>
+		<Field name="FrozenMargin" type="Money" notnull="yes" label="冻结的保证金" description="因为下单而冻结的保证金"/>
+		<Field name="FrozenPremium" type="Money" notnull="yes" label="冻结的权利金" description="因为下单而冻结的权利金"/>
+	</Entity>
+	<Entity name="TradingAccount_Sync" title="交易资金账户信息" description="说明在交易时使用的资金帐号信息">
+		<Ref entity="TradeSystemRef"/>
+		<Ref entity="TradingAccount"/>
+	</Entity>
+	<Entity name="TradingAccount_Snap" title="交易资金账户信息" description="说明在交易时使用的资金帐号信息">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="TradingAccount"/>
+	</Entity>
+	<Entity name="Participant" title="会员" description="经交易所审批在交易所进行期货交易活动的企业法人">
+		<Ref entity="SettlementGroupRef"/>
+		<Field name="ParticipantID" type="ParticipantID" notnull="yes" label="会员代码" description="每一位会员在系统中的编码，编号唯一且遵循交易所制定的编码规则" iskey="yes"/>
+		<Field name="ParticipantName" type="ParticipantName" notnull="yes" label="会员名称" description="会员的企业名称"/>
+		<Field name="ParticipantAbbr" type="ParticipantAbbr" notnull="yes" label="会员简称" description="企业的简称"/>
+		<Field name="MemberType" type="MemberType" notnull="yes" label="会员类型" iskey="no" description="会员类型"/>
+		<Field name="IsActive" type="Bool" notnull="yes" label="是否活跃" description="表示该会员是否活跃"/>
+	</Entity>
+	<Entity name="Participant_Sync" title="会员" description="经交易所审批在交易所进行期货交易活动的企业法人">
+		<Ref entity="TradeSystemRef"/>
+		<Ref entity="Participant"/>
+	</Entity>
+	<Entity name="Participant_Snap" title="会员" description="经交易所审批在交易所进行期货交易活动的企业法人">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="Participant"/>
+	</Entity>
+	<Entity name="Client" title="客户" description="委托经纪会员进行期货交易的投资者">
+		<Ref entity="SettlementGroupRef"/>
+		<Field name="ClientID" type="ClientID" notnull="yes" label="客户代码" description="客户在系统中的编号，编号唯一且遵循交易所制定的编码规则" iskey="yes"/>
+		<Field name="ClientName" type="PartyName" notnull="yes" label="客户名称" description="客户名称"/>
+		<Field name="IdentifiedCardType" type="IdCardType" notnull="no" label="证件类型" description="个人的证件类型" iskey="no"/>
+		<Field name="IdentifiedCardNo" type="IdentifiedCardNo" notnull="no" label="证件号码" description="证件类型对应的的证件号码" iskey="no"/>
+		<Field name="TradingRole" type="TradingRole" notnull="yes" label="交易角色" description="经纪、自营、做市商"/>
+		<Field name="ClientType" type="ClientType" notnull="yes" label="客户类型" description="自然人，法人"/>
+		<Field name="IsActive" type="Bool" notnull="yes" label="是否活跃" description="表示该客户是否活跃"/>
+		<Field name="HedgeFlag" type="HedgeFlag" notnull="yes" label="客户交易类型" description="投机，套利，套保"/>
+	</Entity>
+	<Entity name="Client_Sync" title="客户" description="客户">
+		<Ref entity="TradeSystemRef"/>
+		<Ref entity="Client"/>
+	</Entity>
+	<Entity name="Client_Snap" title="客户" description="客户">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="Client"/>
+	</Entity>
+	<Entity name="PartClient" title="会员客户关系" description="说明投资者在会员开户的情况">
+		<Ref entity="SettlementGroupRef"/>
+		<Field name="ClientID" type="ClientID" notnull="yes" label="客户代码" description="客户在系统中的编号，编号唯一且遵循交易所制定的编码规则" iskey="yes"/>
+		<Field name="ParticipantID" type="ParticipantID" notnull="yes" label="会员代码" description="会员在系统中的编码" iskey="yes"/>
+	</Entity>
+	<Entity name="PartClient_Sync" title="会员客户关系" description="会员客户关系">
+		<Ref entity="TradeSystemRef"/>
+		<Ref entity="PartClient"/>
+	</Entity>
+	<Entity name="PartClient_Snap" title="会员客户关系" description="会员客户关系">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="PartClient"/>
+	</Entity>
+	<Entity name="Investor" title="投资者信息" description="投资者信息">
+		<Field name="InvestorID" type="InvestorID" notnull="yes" label="投资者代码" description="投资者代码" iskey="yes"/>
+		<Field name="InvestorName" type="InvestorName" notnull="no" label="投资者名称" description="投资者名称"/>
+		<Field name="OpenID" type="OpenID" notnull="no" label="投资者开户使用的身份认证代码" description="投资者开户使用的身份认证代码，现为手机号"/>
+		<Field name="Password" type="Password" notnull="yes" label="投资者登录密码" description="投资者登录交易终端的密码"/>
+		<Field name="InvestorStatus" type="InvestorStatus" notnull="yes" label="投资者状态" description="投资者状态"/>
+	</Entity>
+	<Entity name="Investor_Snap" title="投资者信息" description="投资者信息">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="Investor"/>
+	</Entity>
+	<Entity name="InvestorClient" title="投资者客户关系" description="投资者客户对应关系">
+		<Ref entity="SettlementGroupRef"/>
+		<Field name="InvestorID" type="InvestorID" notnull="yes" label="投资者代码" description="投资者代码" iskey="yes"/>
+		<Field name="ClientID" type="ClientID" notnull="yes" label="客户代码" description="客户在系统中的编号，编号唯一且遵循交易所制定的编码规则" iskey="yes"/>
+	</Entity>
+	<Entity name="InvestorClient_Snap" title="投资者客户关系" description="投资者客户对应关系">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="InvestorClient"/>
+	</Entity>
+	<Entity name="ActivityInvestor" title="赛事活动投资者关系" description="赛事活动投资者关系">
+		<Field name="ID" type="AutoIncrementID" notnull="yes" label="自增ID" description="自增ID" iskey="yes"/>
+		<Field name="ActivityID" type="SettlementGroupID" notnull="yes" label="结算组代码" description="结算组代码，唯一标识一个结算组" iskey="yes"/>
+		<Field name="InvestorID" type="InvestorID" notnull="yes" label="投资者代码" description="投资者代码" iskey="yes"/>
+		<Field name="JoinDate" type="Date" notnull="no" label="参与日期" description="参与日期"/>
+		<Field name="JoinStatus" type="JoinStatus" notnull="no" default="0" label="参与状态" description="参与状态"/>
+	</Entity>
+	<Entity name="ActivityInvestor_Snap" title="赛事活动投资者关系" description="赛事活动投资者关系">
+		<Ref entity="ActivityInvestor"/>
+		<Ref entity="TradingDayRef"/>
+	</Entity>
+	<Entity name="ActivityInvestorEvaluation" title="投资者赛事评估信息" description="投资者赛事评估信息">
+		<Field name="ActivityID" type="ActivityID" notnull="yes" label="赛事活动代码" description="赛事活动代码，唯一标识一个赛事活动" iskey="yes"/>
+		<Field name="InvestorID" type="InvestorID" notnull="yes" label="投资者代码" description="投资者代码" iskey="yes"/>
+		<Field name="InitialAsset" type="Money" notnull="yes" label="期初资产" description="期初资产"/>
+		<Field name="PreAsset" type="Money" notnull="yes" label="昨资产" description="昨资产"/>
+		<Field name="CurrentAsset" type="Money" notnull="yes" label="当前资产" description="当前资产"/>
+		<Field name="TotalReturnRate" type="Ratio" notnull="yes" label="总收益率" description="总收益率"/>
+		<Field name="ReturnRateOf1Day" type="Ratio" notnull="yes" label="日收益率" description="日收益率"/>
+	</Entity>
+	<Entity name="ActivityInvestorEvaluation_Snap" title="投资者赛事评估信息" description="投资者赛事评估信息">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="ActivityInvestorEvaluation"/>
+	</Entity>
+	<Entity name="User" title="交易用户" description="交易用户">
+		<Ref entity="SettlementGroupRef"/>
+		<Field name="ParticipantID" type="ParticipantID" notnull="yes" label="会员代码" description="会员、交易所、行情商等参与者在系统中的编码"/>
+		<Field name="UserID" type="UserID" notnull="yes" label="交易用户代码" description="交易用户代码" iskey="yes"/>
+		<Field name="UserType" type="UserType" notnull="yes" label="交易用户类型" description="交易用户类型"/>
+		<Field name="Password" type="Password" notnull="yes" label="密码" description="每一位交易员进入交易系统的口令"/>
+		<Field name="IsActive" type="UserActive" notnull="yes" label="交易员权限" description="表示该交易员是否可以交易"/>
+	</Entity>
+	<Entity name="User_Sync" title="交易用户" description="交易用户">
+		<Ref entity="TradeSystemRef"/>
+		<Ref entity="User"/>
+	</Entity>
+	<Entity name="User_Snap" title="交易用户" description="交易用户">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="User"/>
+	</Entity>
+	<Entity name="UserFunctionRight" title="用户功能权限" description="说明一个用户是否具有某个功能的权限">
+		<Ref entity="SettlementGroupRef"/>
+		<Field name="UserID" type="UserID" notnull="yes" label="交易用户代码" iskey="yes" description="交易用户代码"/>
+		<Field name="FunctionCode" type="FunctionCode" notnull="yes" label="功能代码" iskey="yes" description="功能代码"/>
+	</Entity>
+	<Entity name="UserFunctionRight_Sync" title="用户功能权限" description="说明一个用户是否具有某个功能的权限">
+		<Ref entity="TradeSystemRef"/>
+		<Ref entity="UserFunctionRight"/>
+	</Entity>
+	<Entity name="UserFunctionRight_Snap" title="用户功能权限" description="说明一个用户是否具有某个功能的权限">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="UserFunctionRight"/>
+	</Entity>
+	<Entity name="UserIP" title="交易员IP地址" description="说明交易员与IP地址的对应关系">
+		<Ref entity="SettlementGroupRef"/>
+		<Field name="UserID" type="UserID" notnull="yes" label="交易用户代码" description="交易用户代码" iskey="yes"/>
+		<Field name="IPAddress" type="IPAddress" label="IP地址" notnull="yes" iskey="yes" description="IP地址"/>
+		<Field name="IPMask" type="IPAddress" label="IP地址掩码" notnull="yes" description="IP地址掩码"/>
+	</Entity>
+	<Entity name="UserIP_Sync" title="交易员IP地址" description="说明交易员与IP地址的对应关系">
+		<Ref entity="TradeSystemRef"/>
+		<Ref entity="UserIP"/>
+	</Entity>
+	<Entity name="UserIP_Snap" title="交易员IP地址" description="说明交易员与IP地址的对应关系">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="UserIP"/>
+	</Entity>
+	<Entity name="ClearingTradingPart" title="结算交易会员关系" description="说明交易会员和结算会员之间的关系">
+		<Field name="ClearingPartID" type="ParticipantID" label="结算会员" iskey="yes" description="结算会员"/>
+		<Field name="ParticipantID" type="ParticipantID" label="交易会员" iskey="yes" description="交易会员"/>
+	</Entity>
+	<Entity name="ClearingTradingPart_Sync" title="结算交易会员关系" description="说明交易会员和结算会员之间的关系">
+		<Ref entity="TradeSystemRef"/>
+		<Ref entity="ClearingTradingPart"/>
+	</Entity>
+	<Entity name="ClearingTradingPart_Snap" title="结算交易会员关系" description="说明交易会员和结算会员之间的关系">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="ClearingTradingPart"/>
+	</Entity>
+	<Entity name="ProductGroup" title="产品组" description="一个产品组的信息">
+		<Ref entity="SettlementGroupRef"/>
+		<Field name="ProductGroupID" type="ProductGroupID" notnull="yes" label="产品组代码" description="一个产品组的编号" iskey="yes"/>
+		<Field name="ProductGroupName" type="ProductGroupName" notnull="yes" label="产品组名称" description="一个产品组的名称"/>
+		<Field name="CommodityID" type="CommodityID" notnull="yes" label="商品代码" description="一个产品组对应的基础商品代码"/>
+	</Entity>
+	<Entity name="ProductGroup_Snap" title="产品组" description="一个产品组的信息">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="ProductGroup"/>
+	</Entity>
+	<Entity name="Product" title="产品" description="有相同基础品种和衍生种类（即期货、期权或期货期权）的一组合约">
+		<Ref entity="SettlementGroupRef"/>
+		<Field name="ProductID" type="ProductID" notnull="yes" label="产品代码" description="交易品种在系统中的编号" iskey="yes"/>
+		<Field name="ProductGroupID" type="ProductGroupID" notnull="yes" label="产品组代码" description="一组产品在系统中的编号"/>
+		<Field name="ProductName" type="ProductName" notnull="yes" label="产品名称" description="产品名称"/>
+		<Field name="ProductClass" type="ProductClass" notnull="yes" label="产品类型" description="产品类型（1．期货2．期权3．组合4．即期）"/>
+	</Entity>
+	<Entity name="Product_Snap" title="产品" description="有相同基础品种和衍生种类（即期货、期权或期货期权）的一组合约">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="Product"/>
+	</Entity>
+	<Entity name="ProductProperty" title="产品属性" description="说明一个产品状态的属性">
+		<Ref entity="SettlementGroupRef"/>
+		<Field name="ProductID" type="ProductID" notnull="yes" label="产品代码" description="交易品种在系统中的编号" iskey="yes"/>
+		<Field name="ProductLifePhase" type="ProductLifePhase" notnull="yes" label="产品生命周期状态" description="1．活跃2．不活跃3．注销"/>
+		<Field name="TradingModel" type="TradingModel" notnull="yes" label="交易模式" description="说明是价格优先时间优先，还是价格优先按比例分配"/>
+		<Field name="OptionsLimitRatio" type="Ratio" notnull="no" label="期权限仓系数" description="等于1＋信用系数＋业务系数"/>
+		<Field name="OptionsMgRatio" type="Ratio" notnull="no" label="期权保证金调整系数" description="交易保证金的系数"/>
+		<Field name="SettlePriceSeconds" type="SettlePriceSeconds" notnull="yes" label="结算取样时间" description="结算取样时间"/>
+	</Entity>
+	<Entity name="ProductProperty_Snap" title="产品属性" description="说明一个产品状态的属性">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="ProductProperty"/>
+	</Entity>
+	<Entity name="InstrumentGroup" title="合约和合约组关系" description="说明合约和合约组关系">
+		<Ref entity="SettlementGroupRef"/>
+		<Field name="InstrumentID" type="InstrumentID" notnull="yes" label="合约代码" description="合约在系统中的编号" iskey="yes"/>
+		<Field name="InstrumentGroupID" type="InstrumentGroupID" notnull="yes" label="合约组代码" description="合约组代码在系统中的编号"/>
+	</Entity>
+	<Entity name="InstrumentGroup_Sync" title="合约和合约组关系" description="说明合约和合约组关系">
+		<Ref entity="TradeSystemRef"/>
+		<Ref entity="InstrumentGroup"/>
+	</Entity>
+	<Entity name="InstrumentGroup_Snap" title="合约和合约组关系" description="说明合约和合约组关系">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="InstrumentGroup"/>
+	</Entity>
+	<Entity name="InstTradingProperty" title="合约交易属性" description="某一个合约的与交易方式有关的属性">
+		<Field name="MaxMarketOrderVolume" type="Volume" notnull="yes" label="市价单最大下单量" description="市场价报单的最大下单量"/>
+		<Field name="MinMarketOrderVolume" type="Volume" notnull="yes" label="市价单最小下单量" description="市场价报单的最小下单量"/>
+		<Field name="MaxLimitOrderVolume" type="Volume" notnull="yes" label="限价单最大下单量" description="限价报单的最大下单量"/>
+		<Field name="MinLimitOrderVolume" type="Volume" notnull="yes" label="限价单最小下单量" description="限价报单的最小下单量"/>
+		<Field name="PriceTick" type="Price" notnull="yes" label="最小变动价位" description="合约的单位价格涨跌变化的最小值"/>
+		<Field name="AllowDelivPersonOpen" type="MonthCount" notnull="yes" label="交割月自然人开仓" description="标识提前交割月往前数几个月内自然人不准开仓，0表示没有限制，1表示仅当前月"/>
+	</Entity>
+	<Entity name="InstDynProperty" title="合约动态属性" description="某一个合约可能发生动态变化的属性">
+		<Field name="CreateDate" type="Date" notnull="yes" label="创建日" description="新合约创建时间"/>
+		<Field name="OpenDate" type="Date" notnull="yes" label="上市日" description="合约开仓日，交易者新买入或新卖出一定数量的期货合约的挂牌日期。"/>
+		<Field name="ExpireDate" type="Date" notnull="yes" label="到期日" description="合约到期时间"/>
+		<Field name="StartDelivDate" type="Date" notnull="yes" label="开始交割日" description="了结到期未平仓合约的开始日期"/>
+		<Field name="EndDelivDate" type="Date" notnull="yes" label="最后交割日" description="了结到期未平仓合约的最后日期"/>
+		<Field name="StrikeDate" type="Date" notnull="no" label="期权行权日" description="期权行权日"/>
+		<Field name="BasisPrice" type="Price" notnull="yes" label="挂牌基准价" description="新上市合约的挂牌基准价由交易所确定，是第一天交易涨跌停板的依据"/>
+	</Entity>
+	<Entity name="InstBasicProperty" title="合约基本属性" description="某一个合约最基本的属性">
+		<Field name="ProductID" type="ProductID" notnull="yes" label="产品代码" description="产品在系统中的编号"/>
+		<Field name="ProductGroupID" type="ProductGroupID" notnull="yes" label="产品组代码" description="一组产品在系统中的编号"/>
+		<Field name="UnderlyingInstrID" type="InstrumentID" notnull="no" label="基础商品代码" description="基础商品在系统中的编号，仅对衍生品的衍生品有效"/>
+		<Field name="ProductClass" type="ProductClass" notnull="yes" label="产品类型" description="产品类型（1．期货2．期权3．组合4．即期）"/>
+		<Field name="PositionType" type="PositionType" notnull="yes" label="持仓类型" description="表明合约的持仓类型"/>
+		<Field name="UnderlyingType" type="UnderlyingType" notnull="no" label="标的类型" description="期权专用"/>
+		<Field name="StrikeType" type="StrikeType" notnull="no" label="行权类型" description="期权专用"/>
+		<Field name="StrikePrice" type="Price" notnull="no" label="执行价" description="期权专用"/>
+		<Field name="OptionsType" type="OptionsType" notnull="no" label="期权类型" description="看涨、看跌"/>
+		<Field name="VolumeMultiple" type="VolumeMultiple" notnull="yes" label="合约数量乘数" description="品种的每手交易的规定数量，针对基础的商品"/>
+		<Field name="UnderlyingMultiple" type="UnderlyingMultiple" notnull="yes" label="合约基础商品乘数" description="品种的每手交易的规定数量，针对基础商品的商品，仅对衍生品的衍生品有效，对于直接衍生品，应当设为1"/>
+		<Field name="TotalEquity" type="LargeVolume" notnull="no" label="股票总股本数" description="股票总股本数"/>
+		<Field name="CirculationEquity" type="LargeVolume" notnull="no" label="股票流通股本数" description="股票流通股本数"/>
+	</Entity>
+	<Entity name="Instrument" title="合约" description="某一特定种类（即期货、期权或期货期权）的一个衍生品种">
+		<Ref entity="SettlementGroupRef"/>
+		<Ref entity="InstBasicProperty"/>
+		<Field name="InstrumentID" type="InstrumentID" notnull="yes" label="合约代码" description="合约在系统中的编号" iskey="yes"/>
+		<Field name="ExchInstrumentID" type="InstrumentID" label="交易所合约代码" description="交易所合约代码"/>
+		<Field name="InstrumentName" type="InstrumentName" notnull="yes" label="合约名称" description="合约的名称"/>
+		<Field name="DeliveryYear" type="Year" notnull="yes" label="交割年份" description="该合约规定进行实物交割的年份"/>
+		<Field name="DeliveryMonth" type="Month" notnull="yes" label="交割月" description="该合约规定进行实物交割的月份"/>
+		<Field name="AdvanceMonth" type="AdvanceMonth" notnull="yes" label="提前月份" description="提前月份"/>
+	</Entity>
+	<Entity name="Instrument_Sync" title="交易合约" description="某一特定种类（即期货、期权或期货期权）的一个衍生品种">
+		<Ref entity="TradeSystemRef"/>
+		<Ref entity="Instrument"/>
+		<Field name="IsTrading" type="Bool" notnull="yes" label="当前是否交易" description="当前是否交易"/>
+	</Entity>
+	<Entity name="Instrument_Snap" title="交易合约" description="某一特定种类（即期货、期权或期货期权）的一个衍生品种">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="Instrument"/>
+	</Entity>
+	<Entity name="InstrumentProperty" title="合约属性" description="说明一个合约当前状态的属性">
+		<Ref entity="SettlementGroupRef"/>
+		<Ref entity="InstDynProperty"/>
+		<Ref entity="InstTradingProperty"/>
+		<Field name="InstrumentID" type="InstrumentID" notnull="yes" label="合约代码" description="合约在系统中的编号" iskey="yes"/>
+		<Field name="InstLifePhase" type="InstLifePhase" notnull="yes" label="合约生命周期状态" description="分为合约未上市、上市、停牌、到期4个状态"/>
+	</Entity>
+	<Entity name="InstrumentProperty_Sync" title="Sync中的合约属性" description="说明一个合约当前状态的属性">
+		<Ref entity="TradeSystemRef"/>
+		<Ref entity="InstrumentProperty"/>
+		<Field name="IsFirstTradingDay" type="Bool" notnull="yes" label="是否首交易日" description="是否首交易日"/>
+	</Entity>
+	<Entity name="InstrumentProperty_Snap" title="Sync中的合约属性" description="说明一个合约当前状态的属性">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="InstrumentProperty"/>
+	</Entity>
+	<Entity name="SecurityProfit" title="证券权益" description="证券权益信息">
+		<Ref entity="SettlementGroupRef"/>
+		<Field name="SecurityID" type="InstrumentID" notnull="yes" label="证券代码" description="证券在系统中的编号" iskey="yes"/>
+		<Field name="SecurityType" type="SecurityType" notnull="yes" label="证券类型" description="证券类型" iskey="yes"/>
+		<Field name="SecurityMarketID" type="SecurityMarketID" notnull="yes" label="证券市场代码" description="证券市场代码" iskey="yes"/>
+		<Field name="ProfitType" type="ProfitType" notnull="yes" label="权益类型" description="权益类型" iskey="yes"/>
+		<Field name="DJDate" type="Date" notnull="no" label="登记日期" description="登记日期"/>
+		<Field name="CQDate" type="Date" notnull="no" label="除权日期" description="除权日期"/>
+		<Field name="EndDate" type="Date" notnull="no" label="结束日期" description="结束日期"/>
+		<Field name="DZDate" type="Date" notnull="no" label="到账日期" description="到账日期"/>
+		<Field name="BeforeRate" type="SecurityProfit" notnull="yes" label="税前收益" description="税前收益"/>
+		<Field name="AfterRate" type="SecurityProfit" notnull="yes" label="税后收益" description="税后收益"/>
+		<Field name="Price" type="Money" notnull="yes" label="价格" description="价格"/>
+	</Entity>
+	<Entity name="SecurityProfit_Snap" title="证券权益" description="证券权益信息">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="SecurityProfit"/>
+	</Entity>
+	<Entity name="Market" title="市场" description="产品和／或产品组的任意组合">
+		<Ref entity="SettlementGroupRef"/>
+		<Field name="MarketID" type="MarketID" notnull="yes" label="市场代码" description="交易市场的编号" iskey="yes"/>
+		<Field name="MarketName" type="MarketName" notnull="yes" label="市场名称" description="交易市场的名称"/>
+	</Entity>
+	<Entity name="Market_Sync" title="市场" description="产品和／或产品组的任意组合">
+		<Ref entity="TradeSystemRef"/>
+		<Ref entity="Market"/>
+	</Entity>
+	<Entity name="Market_Snap" title="市场" description="产品和／或产品组的任意组合">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="Market"/>
+	</Entity>
+	<Entity name="MarketProduct" title="市场产品关联" description="说明市场和产品间的多对多关系">
+		<Ref entity="SettlementGroupRef"/>
+		<Field name="MarketID" type="MarketID" notnull="yes" label="市场代码" description="交易市场的编号" iskey="yes"/>
+		<Field name="ProductID" type="ProductID" notnull="yes" label="产品代码" description="交易品种在系统中的编号" iskey="yes"/>
+	</Entity>
+	<Entity name="MarketProduct_Sync" title="市场产品关联" description="说明市场和产品间的多对多关系">
+		<Ref entity="TradeSystemRef"/>
+		<Ref entity="MarketProduct"/>
+	</Entity>
+	<Entity name="MarketProduct_Snap" title="市场产品关联" description="说明市场和产品间的多对多关系">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="MarketProduct"/>
+	</Entity>
+	<Entity name="MarketProductGroup" title="市场产品组关联" description="说明市场和产品组间的多对多关系">
+		<Ref entity="SettlementGroupRef"/>
+		<Field name="MarketID" type="MarketID" notnull="yes" label="市场代码" description="交易市场的编号" iskey="yes"/>
+		<Field name="ProductGroupID" type="ProductGroupID" notnull="yes" label="产品组代码" description="一组产品在系统中的编号" iskey="yes"/>
+	</Entity>
+	<Entity name="MarketProductGroup_Sync" title="市场产品组关联" description="说明市场和产品组间的多对多关系">
+		<Ref entity="TradeSystemRef"/>
+		<Ref entity="MarketProductGroup"/>
+	</Entity>
+	<Entity name="MarketProductGroup_Snap" title="市场产品组关联" description="说明市场和产品组间的多对多关系">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="MarketProductGroup"/>
+	</Entity>
+	<Entity name="MarketDataTopic" title="行情主题" description="说明一个行情主题的定义">
+		<Ref entity="SettlementGroupRef"/>
+		<Field name="TopicID" type="TopicID" notnull="yes" label="主题代码" description="标识主题的编号" iskey="yes"/>
+		<Field name="TopicName" type="TopicName" notnull="yes" label="主题名称" description="主题名称"/>
+		<Field name="MarketID" type="MarketID" notnull="yes" label="市场代码" description="交易市场的编号"/>
+		<Field name="SnapShotFeq" type="Seconds" notnull="yes" label="采样频率" description="每两次采样快照之间的时间间隔"/>
+		<Field name="MarketDataDepth" type="MarketDataDepth" notnull="yes" label="市场行情深度" description="市场行情深度"/>
+		<Field name="DelaySeconds" type="Seconds" notnull="yes" label="延迟秒数" description="延迟秒数"/>
+		<Field name="MarketDataMode" type="MarketDataMode" notnull="yes" label="行情模式" description="说明发布双边或者单边行情"/>
+	</Entity>
+	<Entity name="MarketDataTopic_Sync" title="行情主题" description="说明一个行情主题的定义">
+		<Ref entity="TradeSystemRef"/>
+		<Ref entity="MarketDataTopic"/>
+	</Entity>
+	<Entity name="MarketDataTopic_Snap" title="行情主题" description="说明一个行情主题的定义">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="MarketDataTopic"/>
+	</Entity>
+	<Entity name="PartTopicSubscribe" title="会员订阅主题" description="每个会员订阅的市场信息">
+		<Ref entity="SettlementGroupRef"/>
+		<Field name="ParticipantID" type="ParticipantID" notnull="yes" label="参与者代码" description="每一位会员在系统中的编码，编号唯一且遵循交易所制定的编码规则" iskey="yes"/>
+		<Field name="ParticipantType" type="ParticipantType" notnull="yes" label="参与者类型" description="参与者类型"/>
+		<Field name="TopicID" type="TopicID" notnull="yes" label="主题代码" description="标识主题的编号" iskey="yes"/>
+	</Entity>
+	<Entity name="PartTopicSubscribe_Sync" title="会员订阅主题" description="每个会员订阅的市场信息">
+		<Ref entity="TradeSystemRef"/>
+		<Ref entity="PartTopicSubscribe"/>
+	</Entity>
+	<Entity name="PartTopicSubscribe_Snap" title="会员订阅主题" description="每个会员订阅的市场信息">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="PartTopicSubscribe"/>
+	</Entity>
+	<Entity name="MdPubStatus" title="行情发布状态" description="合约在某个交易状态下是否发送行情">
+		<Ref entity="SettlementGroupRef"/>
+		<Field name="ProductID" type="ProductID" notnull="yes" label="产品代码" description="交易品种在系统中的编号" iskey="yes"/>
+		<Field name="InstrumentStatus" type="InstrumentStatus" notnull="yes" label="合约交易状态" description="合约交易状态分为非交易状态、集合竞价前委托输入状态、集合竞价价格平衡状态、集合竞价撮合状态、连续交易状态" iskey="yes"/>
+		<Field name="MdPubStatus" type="MdPubStatus" notnull="yes" label="行情发布状态" description="发布、不发布"/>
+	</Entity>
+	<Entity name="MdPubStatus_Sync" title="行情发布状态" description="合约在某个交易状态下是否发送行情">
+		<Ref entity="TradeSystemRef"/>
+		<Ref entity="MdPubStatus"/>
+	</Entity>
+	<Entity name="MdPubStatus_Snap" title="行情发布状态" description="合约在某个交易状态下是否发送行情">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="MdPubStatus"/>
+	</Entity>
+	<Entity name="PartRoleAccount" title="会员账户关系" description="说明会员和帐户的关系">
+		<Ref entity="SettlementGroupRef"/>
+		<Field name="ParticipantID" type="ParticipantID" notnull="yes" label="会员代码" description="会员代码" iskey="yes"/>
+		<Field name="TradingRole" type="TradingRole" notnull="yes" label="交易角色" description="自营，代理或者做市商" iskey="yes"/>
+		<Field name="AccountID" type="AccountID" notnull="yes" label="资金帐号" description="会员在交易所指定结算银行开设的专用资金账户"/>
+	</Entity>
+	<Entity name="PartRoleAccount_Sync" title="会员账户关系" description="说明会员和帐户的关系">
+		<Ref entity="TradeSystemRef"/>
+		<Ref entity="PartRoleAccount"/>
+	</Entity>
+	<Entity name="PartRoleAccount_Snap" title="会员账户关系" description="说明会员和帐户的关系">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="PartRoleAccount"/>
+	</Entity>
+	<Entity name="PartProductRole" title="会员产品角色" description="说明会员针对某个产品具有的交易角色">
+		<Ref entity="SettlementGroupRef"/>
+		<Field name="ParticipantID" type="ParticipantID" notnull="yes" label="会员代码" description="每一位会员在系统中的编码，编号唯一且遵循交易所制定的编码规则" iskey="yes"/>
+		<Field name="ProductID" type="ProductID" notnull="yes" label="产品代码" description="产品在系统中的编号" iskey="yes"/>
+		<Field name="TradingRole" type="TradingRole" notnull="yes" label="交易角色" description="自营，代理或者做市商" iskey="yes"/>
+	</Entity>
+	<Entity name="PartProductRole_Sync" title="会员产品角色" description="说明会员针对某个产品具有的交易角色">
+		<Ref entity="TradeSystemRef"/>
+		<Ref entity="PartProductRole"/>
+	</Entity>
+	<Entity name="PartProductRole_Snap" title="会员产品角色" description="说明会员针对某个产品具有的交易角色">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="PartProductRole"/>
+	</Entity>
+	<Entity name="PartProductRight" title="会员产品交易权限" description="说明会员是否可以交易某个产品">
+		<Ref entity="SettlementGroupRef"/>
+		<Field name="ProductID" type="ProductID" notnull="yes" label="产品代码" description="交易品种在系统中的编号，可以使用缺省产品号表示所有产品" iskey="yes"/>
+		<Field name="ParticipantID" type="ParticipantID" notnull="yes" label="会员代码" description="可以是缺省会员" iskey="yes"/>
+		<Field name="TradingRight" type="TradingRight" notnull="yes" label="交易权限" description="可以交易，只能平仓，不能交易"/>
+	</Entity>
+	<Entity name="PartProductRight_Sync" title="会员产品交易权限" description="说明会员是否可以交易某个产品">
+		<Ref entity="TradeSystemRef"/>
+		<Ref entity="PartProductRight"/>
+	</Entity>
+	<Entity name="PartProductRight_Snap" title="会员产品交易权限" description="说明会员是否可以交易某个产品">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="PartProductRight"/>
+	</Entity>
+	<Entity name="ClientProductRight" title="客户产品交易权限" description="说明客户是否可以交易某个产品">
+		<Ref entity="SettlementGroupRef"/>
+		<Field name="ProductID" type="ProductID" notnull="yes" label="产品代码" description="交易品种在系统中的编号，可以使用缺省产品号表示所有产品" iskey="yes"/>
+		<Field name="ClientID" type="ClientID" notnull="yes" label="客户代码" description="客户在系统中的编号，可以使用缺省客户号表示所有客户" iskey="yes"/>
+		<Field name="TradingRight" type="TradingRight" notnull="yes" label="交易权限" description="可以交易，只能平仓，不能交易"/>
+	</Entity>
+	<Entity name="ClientProductRight_Sync" title="客户产品交易权限" description="说明客户是否可以交易某个产品">
+		<Ref entity="TradeSystemRef"/>
+		<Ref entity="ClientProductRight"/>
+	</Entity>
+	<Entity name="ClientProductRight_Snap" title="客户产品交易权限" description="说明客户是否可以交易某个产品">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="ClientProductRight"/>
+	</Entity>
+	<Entity name="TradingSegmentRule" title="交易阶段规则" description="说明一个交易阶段的规则">
+		<Field name="TradingSegmentSN" type="TradingSegmentSN" notnull="yes" label="交易阶段编号" description="0为保留值，表示相关交易日类型各交易阶段的缺省取值" iskey="yes"/>
+		<Field name="TradingSegmentName" type="TradingSegmentName" notnull="no" label="交易阶段名称" description="交易各个阶段的名称"/>
+		<Field name="StartTime" type="Time" notnull="yes" label="起始时间" description="阶段起始时间"/>
+		<Field name="InstrumentStatus" type="InstrumentStatus" notnull="yes" label="合约交易状态" description="合约交易状态分为非交易状态、集合竞价前委托输入状态、集合竞价价格平衡状态、集合竞价撮合状态、连续交易状态"/>
+		<Field name="DayOffset" type="DayOffset" notnull="yes" default="0" label="日期偏移量" description="日期偏移量"/>
+	</Entity>
+	<Entity name="TradingSegmentAttr" title="合约交易阶段属性" description="说明一个合约的一个交易阶段的属性">
+		<Ref entity="SettlementGroupRef"/>
+		<Ref entity="TradingSegmentRule"/>
+		<Field name="InstrumentID" type="InstrumentID" notnull="yes" label="合约代码" description="合约的编号" iskey="yes"/>
+	</Entity>
+	<Entity name="TradingSegmentAttr_Sync" title="合约交易阶段属性" description="说明一个合约的一个交易阶段的属性">
+		<Ref entity="TradeSystemRef"/>
+		<Ref entity="TradingSegmentAttr"/>
+	</Entity>
+	<Entity name="TradingSegmentAttr_Snap" title="合约交易阶段属性" description="说明一个合约的一个交易阶段的属性">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="TradingSegmentAttr"/>
+	</Entity>
+	<Entity name="PriceBindingRule" title="价格绑定规则" description="说明合约自动的价格绑定限制的一条规则">
+		<Field name="PriceLimitType" type="PriceLimitType" notnull="yes" label="限价类型" description="动态或静态"/>
+		<Field name="ValueMode" type="ValueMode" notnull="yes" label="取值方式" description="无、百分比或绝对值"/>
+		<Field name="RoundingMode" type="RoundingMode" notnull="yes" label="舍入方式" description="舍去、四舍五入、舍入"/>
+		<Field name="UpperValue" type="Price" notnull="yes" label="上限" description="交易价格上限"/>
+		<Field name="LowerValue" type="Price" notnull="yes" label="下限" description="交易价格下限"/>
+	</Entity>
+	<Entity name="PriceBanding" title="合约价格绑定" description="说明在当前交易会话中使用的价格绑定">
+		<Ref entity="SettlementGroupRef"/>
+		<Ref entity="PriceBindingRule"/>
+		<Field name="InstrumentID" type="InstrumentID" notnull="yes" label="合约代码" description="合约的编号" iskey="yes"/>
+		<Field name="TradingSegmentSN" type="TradingSegmentSN" notnull="yes" label="交易阶段编号" description="0为保留值，表示相关交易日类型各交易阶段的缺省取值" iskey="yes"/>
+	</Entity>
+	<Entity name="PriceBanding_Sync" title="合约价格绑定" description="说明在当前交易会话中使用的价格绑定">
+		<Ref entity="TradeSystemRef"/>
+		<Ref entity="PriceBanding"/>
+	</Entity>
+	<Entity name="PriceBanding_Snap" title="合约价格绑定" description="说明在当前交易会话中使用的价格绑定">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="PriceBanding"/>
+	</Entity>
+	<Entity name="MarginCalcAlgoRef" title="保证金率算法标识" description="指名一个保证金率的计算公式">
+		<Field name="MarginCalcID" type="MarginCalcID" notnull="yes" label="保证金算法代码" description="说明采用哪一个保证金计算公式"/>
+	</Entity>
+	<Entity name="MarginRateRule" title="保证金率规则" description="说明一条保证金率的计算规则">
+		<Field name="TradingRole" type="TradingRole" notnull="yes" label="交易角色" description="自营代理做市商" iskey="yes"/>
+		<Field name="HedgeFlag" type="HedgeFlag" notnull="yes" label="投机套保标志" description="投机还是套期保值" iskey="yes"/>
+		<Field name="ValueMode" type="ValueMode" notnull="yes" label="取值方式" description="百分比或绝对值"/>
+		<Field name="LongMarginRatio" type="Ratio" notnull="yes" label="多头保证金率" description="多头交易保证金比率"/>
+		<Field name="ShortMarginRatio" type="Ratio" notnull="yes" label="空头保证金率" description="空头交易保证金比率"/>
+		<Field name="AdjustRatio1" type="Ratio" notnull="no" label="保证金率调整参数1" description="保证金率调整参数1"/>
+		<Field name="AdjustRatio2" type="Ratio" notnull="no" label="保证金率调整参数2" description="保证金率调整参数2"/>
+	</Entity>
+	<Entity name="MarginRate" title="合约保证金率" description="说明针对某个合约某个会员（或者缺省对所有会员）的当前保证金率">
+		<Ref entity="SettlementGroupRef"/>
+		<Ref entity="MarginCalcAlgoRef"/>
+		<Field name="InstrumentID" type="InstrumentID" notnull="yes" label="合约代码" description="合约的编号" iskey="yes"/>
+		<Field name="ParticipantID" type="ParticipantID" notnull="yes" label="会员代码" description="或采用缺省会员代码表示缺省保证金率" iskey="yes"/>
+	</Entity>
+	<Entity name="MarginRate_Sync" title="合约保证金率" description="说明针对某个合约某个会员（或者缺省对所有会员）的当前保证金率">
+		<Ref entity="TradeSystemRef"/>
+		<Ref entity="MarginRate"/>
+	</Entity>
+	<Entity name="MarginRate_Snap" title="合约保证金率" description="说明针对某个合约某个会员（或者缺省对所有会员）的当前保证金率">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="MarginRate"/>
+	</Entity>
+	<Entity name="MarginRateDetail" title="合约保证金率的详细内容" description="说明针对某个合约某个会员（或者缺省对所有会员）的保证金率的具体内容">
+		<Ref entity="SettlementGroupRef"/>
+		<Ref entity="MarginRateRule"/>
+		<Field name="InstrumentID" type="InstrumentID" notnull="yes" label="合约代码" description="合约的编号" iskey="yes"/>
+		<Field name="ParticipantID" type="ParticipantID" notnull="yes" label="会员代码" description="或采用缺省会员代码表示缺省保证金率" iskey="yes"/>
+		<Field name="ClientID" type="ClientID" notnull="yes" label="客户代码" description="或采用缺省客户代码表示缺省保证金率" iskey="yes"/>
+	</Entity>
+	<Entity name="MarginRateDetail_Sync" title="合约保证金率的详细内容" description="说明针对某个合约某个会员（或者缺省对所有会员）的保证金率的具体内容">
+		<Ref entity="TradeSystemRef"/>
+		<Ref entity="MarginRateDetail"/>
+	</Entity>
+	<Entity name="MarginRateDetail_Snap" title="合约保证金率的详细内容" description="说明针对某个合约某个会员（或者缺省对所有会员）的保证金率的具体内容">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="MarginRateDetail"/>
+	</Entity>
+	<Entity name="TransFeeRateRule" title="交易手续费率规则" description="说明一条交易手续费率的计算规则">
+		<Field name="TradingRole" type="TradingRole" notnull="yes" label="交易角色" description="自营代理做市商" iskey="yes"/>
+		<Field name="HedgeFlag" type="HedgeFlag" notnull="yes" label="投机套保标志" description="投机还是套期保值" iskey="yes"/>
+		<Field name="ValueMode" type="ValueMode" notnull="yes" label="取值方式" description="百分比或绝对值"/>
+		<Field name="OpenFeeRatio" type="Ratio" notnull="yes" label="开仓手续费率" description="开仓手续费率"/>
+		<Field name="CloseYesterdayFeeRatio" type="Ratio" notnull="yes" label="平昨手续费率" description="平昨手续费率"/>
+		<Field name="CloseTodayFeeRatio" type="Ratio" notnull="yes" label="平今手续费率" description="平今手续费率"/>
+		<Field name="MinOpenFee" type="Money" default="0" notnull="yes" label="最低开仓费用" description="最低开仓费用"/>
+		<Field name="MinCloseFee" type="Money" default="0" notnull="yes" label="最低平仓费用" description="最低平仓费用"/>
+		<Field name="MaxOpenFee" type="Money" default="0" notnull="yes" label="最高开仓费用" description="最高开仓费用"/>
+		<Field name="MaxCloseFee" type="Money" default="0" notnull="yes" label="最高平仓费用" description="最高平仓费用"/>
+	</Entity>
+	<Entity name="TransFeeRateDetail" title="合约交易手续费率的详细内容" description="说明针对某个合约某个会员（或者缺省对所有会员）的交易手续费率的具体内容">
+		<Ref entity="SettlementGroupRef"/>
+		<Ref entity="TransFeeRateRule"/>
+		<Field name="InstrumentID" type="InstrumentID" notnull="yes" label="合约代码" description="合约的编号" iskey="yes"/>
+		<Field name="ParticipantID" type="ParticipantID" notnull="yes" label="会员代码" description="或采用缺省会员代码表示缺省交易手续费率" iskey="yes"/>
+		<Field name="ClientID" type="ClientID" notnull="yes" label="客户代码" description="或采用缺省客户代码表示缺省交易手续费率" iskey="yes"/>
+	</Entity>
+	<Entity name="TransFeeRateDetail_Snap" title="合约交易手续费率的详细内容" description="说明针对某个合约某个会员（或者缺省对所有会员）的交易手续费率的具体内容">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="TransFeeRateDetail"/>
+	</Entity>
+	<Entity name="DelivFeeRateRule" title="交割手续费率规则" description="说明一条交割手续费率的计算规则">
+		<Field name="ValueMode" type="ValueMode" notnull="yes" label="取值方式" description="百分比或绝对值"/>
+		<Field name="DelivFeeRatio" type="Ratio" notnull="yes" label="交割手续费率" description="交割手续费率"/>
+	</Entity>
+	<Entity name="DelivFeeRateDetail" title="合约交割手续费率的详细内容" description="说明针对某个合约某个会员（或者缺省对所有会员）的交割手续费率的具体内容">
+		<Ref entity="SettlementGroupRef"/>
+		<Ref entity="DelivFeeRateRule"/>
+		<Field name="InstrumentID" type="InstrumentID" notnull="yes" label="合约代码" description="合约的编号" iskey="yes"/>
+		<Field name="ParticipantID" type="ParticipantID" notnull="yes" label="会员代码" description="或采用缺省会员代码表示缺省交割手续费率" iskey="yes"/>
+		<Field name="ClientID" type="ClientID" notnull="yes" label="客户代码" description="或采用缺省客户代码表示缺省交割手续费率" iskey="yes"/>
+	</Entity>
+	<Entity name="DelivFeeRateDetail_Snap" title="合约交割手续费率的详细内容" description="说明针对某个合约某个会员（或者缺省对所有会员）的交割手续费率的具体内容">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="DelivFeeRateDetail"/>
+	</Entity>
+	<Entity name="Account" title="帐户定义" description="说明一个帐户的定义">
+		<Ref entity="SettlementGroupRef"/>
+		<Field name="AccountID" type="AccountID" notnull="yes" label="资金帐号" description="内部资金帐号的标识" iskey="yes"/>
+		<Field name="ParticipantID" type="ParticipantID" notnull="yes" label="会员代码" description="会员代码"/>
+		<Field name="Currency" type="Currency" notnull="yes" label="币种" description="根据国际标准确定的币种值"/>
+	</Entity>
+	<Entity name="Account_Sync" title="帐户定义" description="说明一个帐户的定义">
+		<Ref entity="TradeSystemRef"/>
+		<Ref entity="Account"/>
+	</Entity>
+	<Entity name="Account_Snap" title="帐户定义" description="说明一个帐户的定义">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="Account"/>
+	</Entity>
+	<Entity name="BaseReserveAccount" title="基本准备金账户" description="说明在账户的基本准备金情况">
+		<Ref entity="SettlementGroupRef"/>
+		<Field name="ParticipantID" type="ParticipantID" notnull="yes" label="会员代码" description="每一位会员在系统中的编码，编号唯一且遵循交易所制定的编码规则"/>
+		<Field name="AccountID" type="AccountID" notnull="yes" label="资金帐号" description="内部资金帐号的标识" iskey="yes"/>
+		<Field name="Reserve" type="Money" notnull="yes" label="基本准备金" description="基本准备金"/>
+	</Entity>
+	<Entity name="BaseReserveAccount_Sync" title="基本准备金账户" description="说明在账户的基本准备金情况">
+		<Ref entity="TradeSystemRef"/>
+		<Ref entity="BaseReserveAccount"/>
+	</Entity>
+	<Entity name="BaseReserveAccount_Snap" title="基本准备金账户" description="说明在账户的基本准备金情况">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="BaseReserveAccount"/>
+	</Entity>
+	<Entity name="BusinessConfig" title="业务配置参数表" description="说明相关的业务是否开启">
+		<Ref entity="SettlementGroupRef"/>
+		<Field name="FunctionCode" type="FunctionCode" notnull="yes" label="功能代码" description="功能的编号" iskey="yes"/>
+		<Field name="OperationType" type="OperationType" notnull="yes" label="操作类型" description="操作类型"/>
+		<Field name="Description" type="Description" notnull="no" label="功能描述" description="功能描述"/>
+	</Entity>
+	<Entity name="BusinessConfig_Sync" title="业务配置参数表" description="说明相关的业务是否开启">
+		<Ref entity="TradeSystemRef"/>
+		<Ref entity="BusinessConfig"/>
+	</Entity>
+	<Entity name="BusinessConfig_Snap" title="业务配置参数表" description="说明相关的业务是否开启">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="BusinessConfig"/>
+	</Entity>
+	<Entity name="SettlementGroupSettlementRef" title="标识一个结算会话" description="唯一指明一个结算会话">
+		<Ref entity="TradingDayRef"/>
+		<Field name="SettlementGroupID" type="SettlementGroupID" notnull="yes" label="结算组代码" description="一个结算组的编号" iskey="yes"/>
+		<Field name="SettlementID" type="SettlementID" notnull="yes" label="结算编号" description="结算编号" iskey="yes"/>
+	</Entity>
+	<Entity name="Settlement" title="标识一个结算会话" description="唯一指明一个结算会话">
+		<Ref entity="SettlementGroupSettlementRef"/>
+		<Field name="SettlementStatus" type="SettlementStatus" notnull="yes" label="结算状态" description="0．未结算1．已结算2．已发布"/>
+	</Entity>
+	<Entity name="BasePosition" title="基本的持仓信息" description="说明一条持仓的基本信息">
+		<Field name="HedgeFlag" type="HedgeFlag" notnull="yes" label="投机套保标志" description="1．投机3．套保" iskey="yes"/>
+		<Field name="PosiDirection" type="PosiDirection" notnull="yes" label="持仓多空方向" description="1．净2．多3．空" iskey="yes"/>
+		<Field name="YdPosition" type="Volume" notnull="yes" label="上日持仓" description="上日持仓的当前数量"/>
+		<Field name="Position" type="Volume" notnull="yes" label="今日持仓" description="今日持仓的当前数量"/>
+	</Entity>
+	<Entity name="FrozenPosition" title="交易冻结信息" description="说明交易时需要补充的持仓信息">
+		<Field name="LongFrozen" type="Volume" notnull="yes" label="多头冻结" description="多头冻结的持仓数量"/>
+		<Field name="ShortFrozen" type="Volume" notnull="yes" label="空头冻结" description="空头冻结的持仓数量"/>
+		<Field name="YdLongFrozen" type="Volume" notnull="yes" label="昨日多头冻结" description="昨日多头冻结的持仓数量"/>
+		<Field name="YdShortFrozen" type="Volume" notnull="yes" label="昨日空头冻结" description="昨日空头冻结的持仓数量"/>
+	</Entity>
+	<Entity name="TradingPosition" title="交易持仓信息" description="说明交易时需要补充的持仓信息">
+		<Ref entity="FrozenPosition"/>
+		<Field name="BuyTradeVolume" type="Volume" notnull="yes" label="当日买成交量" description="当日买成交量"/>
+		<Field name="SellTradeVolume" type="Volume" notnull="yes" label="当日卖成交量" description="当日卖成交量"/>
+		<Field name="PositionCost" type="Money" notnull="yes" label="持仓成本" description="当前所有持仓的持有成本"/>
+		<Field name="YdPositionCost" type="Money" notnull="yes" label="昨日持仓成本" description="昨日当前所有持仓的持有成本"/>
+		<Field name="UseMargin" type="Money" notnull="yes" label="占用的保证金" description="所有持仓占用的保证金"/>
+		<Field name="FrozenMargin" type="Money" notnull="yes" label="冻结的保证金" description="所有冻结持仓占用的保证金"/>
+		<Field name="LongFrozenMargin" type="Money" notnull="yes" label="多头冻结的保证金" description="所有冻结持仓占用的保证金"/>
+		<Field name="ShortFrozenMargin" type="Money" notnull="yes" label="空头冻结的保证金" description="所有冻结持仓占用的保证金"/>
+		<Field name="FrozenPremium" type="Money" notnull="yes" label="冻结的权利金" description="所有冻结持仓占用的权利金"/>
+	</Entity>
+	<Entity name="PartPosition" title="会员合约持仓" description="说明会员当前持仓信息">
+		<Ref entity="SettlementGroupSettlementRef"/>
+		<Ref entity="BasePosition"/>
+		<Ref entity="FrozenPosition"/>
+		<Field name="InstrumentID" type="InstrumentID" notnull="yes" label="合约代码" description="合约在系统中的编号" iskey="yes"/>
+		<Field name="ParticipantID" type="ParticipantID" notnull="yes" label="会员代码" description="每一位会员在系统中的编码，编号唯一且遵循交易所制定的编码规则" iskey="yes"/>
+		<Field name="TradingRole" type="TradingRole" notnull="yes" label="交易角色" description="交易角色" iskey="yes"/>
+	</Entity>
+	<Entity name="PartPosition_SimInfo" title="会员合约持仓" description="说明会员当前持仓信息">
+		<Ref entity="SettlementGroupRef"/>
+		<Ref entity="BasePosition"/>
+		<Ref entity="FrozenPosition"/>
+		<Field name="InstrumentID" type="InstrumentID" notnull="yes" label="合约代码" description="合约在系统中的编号" iskey="yes"/>
+		<Field name="ParticipantID" type="ParticipantID" notnull="yes" label="会员代码" description="每一位会员在系统中的编码，编号唯一且遵循交易所制定的编码规则" iskey="yes"/>
+		<Field name="TradingRole" type="TradingRole" notnull="yes" label="交易角色" description="交易角色" iskey="yes"/>
+	</Entity>
+	<Entity name="PartPosition_Sync" title="会员合约持仓" description="说明会员当前持仓信息">
+		<Ref entity="TradeSystemRef"/>
+		<Ref entity="PartPosition"/>
+	</Entity>
+	<Entity name="PartPosition_Snap" title="会员合约持仓" description="说明会员当前持仓信息">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="PartPosition"/>
+	</Entity>
+	<Entity name="ClientPosition" title="客户合约持仓" description="说明客户当前持仓信息">
+		<Ref entity="SettlementGroupSettlementRef"/>
+		<Ref entity="BasePosition"/>
+		<Ref entity="TradingPosition"/>
+		<Field name="InstrumentID" type="InstrumentID" notnull="yes" label="合约代码" description="合约在系统中的编号" iskey="yes"/>
+		<Field name="ParticipantID" type="ParticipantID" notnull="yes" label="会员代码" description="每一位会员在系统中的编码，编号唯一且遵循交易所制定的编码规则" iskey="yes"/>
+		<Field name="ClientID" type="ClientID" notnull="yes" label="客户代码" description="客户在系统中的编号，编号唯一且遵循交易所制定的编码规则" iskey="yes"/>
+	</Entity>
+	<Entity name="ClientPosition_Sync" title="客户合约持仓" description="说明客户当前持仓信息">
+		<Ref entity="TradeSystemRef"/>
+		<Ref entity="ClientPosition"/>
+	</Entity>
+	<Entity name="ClientPosition_Snap" title="客户合约持仓" description="说明客户当前持仓信息">
+		<Ref entity="ClientPosition"/>
+	</Entity>
+	<Entity name="ClientPositionForSecurityProfit" title="客户分红股票持仓" description="客户分红股票持仓">
+		<Field name="DJDate" type="Date" notnull="yes" iskey="yes" label="登记日期" description="登记日期"/>
+		<Field name="SettlementGroupID" type="SettlementGroupID" notnull="yes" label="结算组代码" description="一个结算组的编号" iskey="yes"/>
+		<Ref entity="BasePosition"/>
+		<Ref entity="TradingPosition"/>
+		<Field name="InstrumentID" type="InstrumentID" notnull="yes" label="合约代码" description="合约在系统中的编号" iskey="yes"/>
+		<Field name="ParticipantID" type="ParticipantID" notnull="yes" label="会员代码" description="每一位会员在系统中的编码，编号唯一且遵循交易所制定的编码规则" iskey="yes"/>
+		<Field name="ClientID" type="ClientID" notnull="yes" label="客户代码" description="客户在系统中的编号，编号唯一且遵循交易所制定的编码规则" iskey="yes"/>
+	</Entity>
+	<Entity name="ClientPositionForSecurityProfit_DBClear" title="客户分红股票持仓" description="客户分红股票持仓">
+		<Field name="DJDate" type="Date" notnull="yes" iskey="yes" label="登记日期" description="登记日期"/>
+		<Field name="SettlementGroupID" type="SettlementGroupID" notnull="yes" label="结算组代码" description="一个结算组的编号" iskey="yes"/>
+		<Field name="SettlementID" type="SettlementID" notnull="yes" label="结算编号" description="结算编号" iskey="yes"/>
+		<Ref entity="BasePosition"/>
+		<Ref entity="TradingPosition"/>
+		<Field name="InstrumentID" type="InstrumentID" notnull="yes" label="合约代码" description="合约在系统中的编号" iskey="yes"/>
+		<Field name="ParticipantID" type="ParticipantID" notnull="yes" label="会员代码" description="每一位会员在系统中的编码，编号唯一且遵循交易所制定的编码规则" iskey="yes"/>
+		<Field name="ClientID" type="ClientID" notnull="yes" label="客户代码" description="客户在系统中的编号，编号唯一且遵循交易所制定的编码规则" iskey="yes"/>
+	</Entity>
+	<Entity name="BaseMarketData" title="基本行情信息" description="说明合约基本的行情信息">
+		<Field name="LastPrice" type="Price" label="最新价" description="当日该合约交易期间的最新成交价格"/>
+		<Field name="PreSettlementPrice" type="Price" notnull="no" label="昨结算" description="上一日的结算价"/>
+		<Field name="PreClosePrice" type="Price" notnull="no" label="昨收盘" description="上一日收盘价"/>
+		<Field name="UnderlyingClosePx" type="Price" notnull="no" label="标的昨收盘" description="上一日标的收盘价"/>
+		<Field name="PreOpenInterest" type="LargeVolume" notnull="yes" label="昨持仓量" description="前最后持仓量，双向计算"/>
+		<Field name="OpenPrice" type="Price" notnull="no" label="今开盘" description="该期货合约开市前五分钟内经集合竞价产生的成交价格"/>
+		<Field name="HighestPrice" type="Price" notnull="no" label="最高价" description="指一定时间内该合约成交价中的最高成交价格"/>
+		<Field name="LowestPrice" type="Price" notnull="no" label="最低价" description="指一定时间内该合约成交价中的最低成交价格"/>
+		<Field name="Volume" type="Volume" notnull="no" label="数量" description="该合约在当日交易期价所有成交合约的双边数量"/>
+		<Field name="Turnover" type="Money" notnull="no" label="成交金额" description="该合约完成交易的市值"/>
+		<Field name="OpenInterest" type="LargeVolume" notnull="no" label="持仓量" description="最后持仓量，双向计算"/>
+		<Field name="ClosePrice" type="Price" notnull="no" label="今收盘" description="该合约当日交易的最后一笔成交价格"/>
+		<Field name="SettlementPrice" type="Price" notnull="no" label="今结算" description="该合约当日成交价格按成交量的加权平均价，当日无成交的，按上一日结算价"/>
+		<Field name="UpperLimitPrice" type="Price" notnull="no" label="涨停板价" description="涨停板价"/>
+		<Field name="LowerLimitPrice" type="Price" notnull="no" label="跌停板价" description="跌停板价"/>
+		<Field name="PreDelta" type="Ratio" notnull="no" label="昨虚实度" description="期权用的昨日虚实度"/>
+		<Field name="CurrDelta" type="Ratio" notnull="no" label="今虚实度" description="期权用的今日虚实度"/>
+		<Field name="UpdateTime" type="Time" notnull="no" label="最后修改时间" description="最后修改时间"/>
+		<Field name="UpdateMillisec" type="Millisec" notnull="no" label="最后修改毫秒" description="最后修改毫秒"/>
+	</Entity>
+	<Entity name="MarketData_SimInfo" title="市场行情" description="说明合约在当前的行情">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="SettlementGroupRef"/>
+		<Ref entity="BaseMarketData"/>
+		<Field name="InstrumentID" type="InstrumentID" notnull="yes" label="合约代码" description="合约在系统中的编号" iskey="yes"/>
+	</Entity>
+	<Entity name="MarketData_Sync" title="市场行情" description="说明合约在当前的行情">
+		<Ref entity="TradeSystemRef"/>
+		<Ref entity="MarketData_SimInfo"/>
+	</Entity>
+	<Entity name="MarketData_Snap" title="市场行情" description="说明合约在当前的行情">
+		<Ref entity="MarketData_SimInfo"/>
+	</Entity>
+	<Entity name="MarketData" title="市场行情" description="说明合约在当前的行情">
+		<Ref entity="SettlementGroupSettlementRef"/>
+		<Ref entity="BaseMarketData"/>
+		<Field name="InstrumentID" type="InstrumentID" notnull="yes" label="合约代码" description="合约在系统中的编号" iskey="yes"/>
+	</Entity>
+	<Entity name="Trade" title="成交" description="说明成交的详细内容">
+		<Ref entity="SettlementGroupSettlementRef"/>
+		<Field name="TradeID" type="TradeID" notnull="yes" label="成交编号" description="成交编号" iskey="yes"/>
+		<Field name="Direction" type="Direction" notnull="yes" label="买卖方向" description="1.买2.卖" iskey="yes"/>
+		<Field name="OrderSysID" type="OrderSysID" label="报单编号" description="报单编号"/>
+		<Field name="ParticipantID" type="ParticipantID" notnull="yes" label="会员代码" description="每一位会员在系统中的编码，编号唯一且遵循交易所制定的编码规则"/>
+		<Field name="ClientID" type="ClientID" notnull="yes" label="客户代码" description="客户在系统中的编号，编号唯一且遵循交易所制定的编码规则"/>
+		<Field name="TradingRole" type="TradingRole" notnull="yes" label="交易角色" description="经纪、自营、做市商"/>
+		<Field name="AccountID" type="AccountID" notnull="yes" label="资金帐号" description="本成交所使用的资金帐户"/>
+		<Field name="InstrumentID" type="InstrumentID" notnull="yes" label="合约代码" description="合约在系统中的编号"/>
+		<Field name="OffsetFlag" type="OffsetFlag" notnull="yes" label="开平标志" description="1．开仓2．平今3．平昨4．强平"/>
+		<Field name="HedgeFlag" type="HedgeFlag" notnull="yes" label="投机套保标志" description="1.投机3.套保"/>
+		<Field name="Price" type="Price" notnull="yes" label="价格" description="成交价格"/>
+		<Field name="Volume" type="Volume" notnull="yes" label="数量" description="成交数量"/>
+		<Field name="TradeTime" type="Time" notnull="yes" label="成交时间" description="成交时间"/>
+		<Field name="TradeType" type="TradeType" notnull="yes" label="成交类型" description="成交类型"/>
+		<Field name="PriceSource" type="PriceSource" notnull="yes" label="成交价来源" description="成交价来源"/>
+		<Field name="UserID" type="UserID" notnull="no" label="交易用户代码" description="交易员在系统中的编号，编号唯一且遵循交易所制定的编码规则"/>
+		<Field name="OrderLocalID" type="OrderLocalID" notnull="no" label="本地报单编号" description="本地报单顺序号"/>
+		<Field name="ClearingPartID" type="ParticipantID" notnull="yes" label="结算会员编号" description="结算会员编号"/>
+		<Field name="BusinessUnit" type="BusinessUnit" notnull="no" label="业务单元" description="业务单元"/>
+	</Entity>
+	<Entity name="Trade_Snap" title="成交" description="说明成交的详细内容">
+		<Ref entity="Trade"/>
+	</Entity>
+	<Entity name="InputOrderV1" title="输入报单版本1" description="说明输入报单的详细内容">
+		<Field name="OrderSysID" type="OrderSysID" notnull="yes" label="报单编号" description="报单编号" iskey="yes"/>
+		<Field name="ParticipantID" type="ParticipantID" notnull="yes" label="会员代码" description="每一位会员在系统中的编码，编号唯一且遵循交易所制定的编码规则"/>
+		<Field name="ClientID" type="ClientID" notnull="yes" label="客户代码" description="客户在系统中的编号，编号唯一且遵循交易所制定的编码规则"/>
+		<Field name="UserID" type="UserID" notnull="yes" label="交易用户代码" description="交易员在系统中的编号，编号唯一且遵循交易所制定的编码规则"/>
+		<Field name="InstrumentID" type="InstrumentID" notnull="yes" label="合约代码" description="合约在系统中的编号"/>
+		<Field name="OrderPriceType" type="OrderPriceType" notnull="yes" label="报单价格条件" description="限价单或市价单"/>
+		<Field name="Direction" type="Direction" notnull="yes" label="买卖方向" description="1．买2．卖"/>
+		<Field name="CombOffsetFlag" type="CombOffsetFlag" notnull="yes" label="组合开平标志" description="按字节表示各单个合约的开平方向"/>
+		<Field name="CombHedgeFlag" type="CombHedgeFlag" notnull="yes" label="组合投机套保标志" description="按字节表示各单个合约的组合套保标志"/>
+		<Field name="LimitPrice" type="Price" notnull="no" label="价格" description="限价单价格"/>
+		<Field name="VolumeTotalOriginal" type="Volume" notnull="yes" label="数量" description="报单数量"/>
+		<Field name="TimeCondition" type="TimeCondition" notnull="yes" label="有效期类型" description="IOC、GFS、GFD、GTD、GTC、GFA"/>
+		<Field name="GTDDate" type="Date" notnull="no" label="GTD日期" description="报单指定的之前报单有效的日期"/>
+		<Field name="VolumeCondition" type="VolumeCondition" notnull="yes" label="成交量类型" description="AV、MV、CV"/>
+		<Field name="MinVolume" type="Volume" notnull="no" label="最小成交量" description="当成交量类型为MV时有效"/>
+		<Field name="ContingentCondition" type="ContingentCondition" notnull="yes" label="触发条件" description="1．立即2．止损"/>
+		<Field name="StopPrice" type="Price" notnull="no" label="止损价" description="期货合约发生亏损时，为了防止亏损进一步扩大，交易者预先设定的触发限价平仓指令的价位。"/>
+		<Field name="ForceCloseReason" type="ForceCloseReason" notnull="no" label="强平原因" description="强平原因"/>
+		<Field name="OrderLocalID" type="OrderLocalID" notnull="no" label="本地报单编号" description="本地报单顺序号"/>
+		<Field name="IsAutoSuspend" type="Bool" notnull="yes" label="自动挂起标志" description="自动挂起标志"/>
+	</Entity>
+	<Entity name="Order" title="报单" description="说明报单的详细内容">
+		<Ref entity="SettlementGroupSettlementRef"/>
+		<Ref entity="InputOrderV1"/>
+		<Field name="OrderSource" type="OrderSource" notnull="yes" label="报单来源" description="报单来源"/>
+		<Field name="OrderStatus" type="OrderStatus" notnull="yes" label="报单状态" description="0．全部成交1．部分成交还在队列中2．部分成交不在队列中3．未成交还在队列中4．未成交不在队列中5．撤单"/>
+		<Field name="OrderType" type="OrderType" notnull="yes" label="报单类型" description="0．普通1．报价派生2．组合派生"/>
+		<Field name="VolumeTraded" type="Volume" notnull="yes" label="今成交数量" description="报单完成数量"/>
+		<Field name="VolumeTotal" type="Volume" notnull="yes" label="剩余数量" description="报单未完成数量"/>
+		<Field name="InsertDate" type="Date" notnull="yes" label="报单日期" description="报单日期"/>
+		<Field name="InsertTime" type="Time" notnull="yes" label="插入时间" description="插入时间"/>
+		<Field name="ActiveTime" type="Time" notnull="no" label="激活时间" description="激活时间"/>
+		<Field name="SuspendTime" type="Time" notnull="no" label="挂起时间" description="挂起时间"/>
+		<Field name="UpdateTime" type="Time" notnull="no" label="最后修改时间" description="最后修改时间"/>
+		<Field name="CancelTime" type="Time" label="撤销时间" description="撤销时间"/>
+		<Field name="ActiveUserID" type="UserID" notnull="no" label="最后修改交易用户代码" description="交易员在系统中的编号，编号唯一且遵循交易所制定的编码规则"/>
+		<Field name="Priority" type="Priority" notnull="yes" label="优先权" description="对于停板平仓单等报单具有优先权，数字越大，优先权越高"/>
+		<Field name="TimeSortID" type="TimeSortID" notnull="yes" label="按时间排队的序号" description="说明按时间排序时的值"/>
+		<Field name="ClearingPartID" type="ParticipantID" notnull="yes" label="结算会员编号" description="结算会员编号"/>
+		<Field name="BusinessUnit" type="BusinessUnit" notnull="no" label="业务单元" description="业务单元"/>
+	</Entity>
+	<Entity name="Order_Snap" title="报单" description="说明报单的详细内容">
+		<Ref entity="Order"/>
+	</Entity>
+	<Entity name="ClientPositionMargin" title="客户合约持仓保证金" description="客户合约持仓保证金">
+		<Ref entity="SettlementGroupSettlementRef"/>
+		<Field name="InstrumentID" type="InstrumentID" notnull="yes" label="合约代码" description="合约的编号" iskey="yes"/>
+		<Field name="ParticipantID" type="ParticipantID" notnull="yes" label="会员代码" description="会员代码" iskey="yes"/>
+		<Field name="ClientID" type="ClientID" notnull="yes" label="客户代码" description="客户代码" iskey="yes"/>
+		<Field name="AccountID" type="AccountID" notnull="yes" label="资金帐号" description="内部资金帐号的标识" iskey="yes"/>
+		<Field name="ProductGroupID" type="ProductGroupID" notnull="yes" label="产品组代码" description="一个产品组的编号" iskey="yes"/>
+		<Field name="ProductID" type="ProductID" notnull="yes" label="产品代码" description="交易品种在系统中的编号" iskey="yes"/>
+		<Field name="UnderlyingInstrID" type="InstrumentID" label="基础商品代码" description="基础商品在系统中的编号，仅对衍生品的衍生品有效"/>
+		<Field name="TradingRole" type="TradingRole" notnull="yes" label="交易角色" description="自营代理做市商" iskey="yes"/>
+		<Field name="HedgeFlag" type="HedgeFlag" notnull="yes" label="投机套保标志" description="投机还是套期保值" iskey="yes"/>
+		<Field name="ValueMode" type="ValueMode" notnull="yes" label="取值方式" description="百分比或绝对值"/>
+		<Field name="MarginRatio" type="Ratio" notnull="yes" label="保证金率" description="交易保证金比率"/>
+		<Field name="PosiDirection" type="PosiDirection" notnull="yes" label="持仓多空方向" description="1．净2．多3．空" iskey="yes"/>
+		<Field name="Position" type="Volume" notnull="yes" label="今日持仓" description="今日持仓的当前数量"/>
+		<Field name="SettlementPrice" type="Price" label="今结算" description="该合约当日成交价格按成交量的加权平均价，当日无成交的，按上一日结算价"/>
+		<Field name="PositionMargin" type="Money" notnull="yes" label="占用的保证金" description="持仓占用的保证金"/>
+	</Entity>
+	<Entity name="ClientTradeProfit" title="客户合约成交盈亏" description="客户合约成交盈亏">
+		<Ref entity="SettlementGroupSettlementRef"/>
+		<Field name="InstrumentID" type="InstrumentID" notnull="yes" label="合约代码" description="合约的编号" iskey="yes"/>
+		<Field name="ParticipantID" type="ParticipantID" notnull="yes" label="会员代码" description="会员代码" iskey="yes"/>
+		<Field name="ClientID" type="ClientID" notnull="yes" label="客户代码" description="客户代码" iskey="yes"/>
+		<Field name="AccountID" type="AccountID" notnull="yes" label="资金帐号" description="内部资金帐号的标识" iskey="yes"/>
+		<Field name="TradeID" type="TradeID" notnull="yes" label="成交编号" description="成交编号" iskey="yes"/>
+		<Field name="Direction" type="Direction" notnull="yes" label="买卖方向" description="1.买2.卖" iskey="yes"/>
+		<Field name="OffsetFlag" type="OffsetFlag" notnull="yes" label="开平标志" description="1．开仓2．平今3．平昨4．强平" iskey="yes"/>
+		<Field name="Price" type="Price" notnull="yes" label="价格" description="成交价格"/>
+		<Field name="Volume" type="Volume" notnull="yes" label="数量" description="成交数量"/>
+		<Field name="Profit" type="Money" notnull="yes" label="盈亏" description="盈亏"/>
+	</Entity>
+	<Entity name="ClientPositionProfit" title="客户合约持仓盈亏" description="客户合约持仓盈亏">
+		<Ref entity="SettlementGroupSettlementRef"/>
+		<Field name="InstrumentID" type="InstrumentID" notnull="yes" label="合约代码" description="合约的编号" iskey="yes"/>
+		<Field name="ParticipantID" type="ParticipantID" notnull="yes" label="会员代码" description="或采用缺省会员代码表示缺省保证金率" iskey="yes"/>
+		<Field name="ClientID" type="ClientID" notnull="yes" label="客户代码" description="客户代码" iskey="yes"/>
+		<Field name="HedgeFlag" type="HedgeFlag" notnull="yes" label="投机套保标志" description="投机还是套期保值" iskey="yes"/>
+		<Field name="PosiDirection" type="PosiDirection" notnull="yes" label="持仓多空方向" description="1．净2．多3．空" iskey="yes"/>
+		<Field name="PositionCost" type="Money" notnull="yes" label="持仓成本" description="持仓成本"/>
+		<Field name="SettlementPositionCost" type="Money" notnull="yes" label="今结算持仓成本" description="今结算持仓成本"/>
+		<Field name="PositionProfit" type="Money" notnull="yes" label="持仓盈亏" description="持仓盈亏"/>
+	</Entity>
+	<Entity name="ClientTransFee" title="客户合约交易手续费" description="客户合约交易手续费">
+		<Ref entity="SettlementGroupSettlementRef"/>
+		<Field name="InstrumentID" type="InstrumentID" notnull="yes" label="合约代码" description="合约的编号" iskey="yes"/>
+		<Field name="ParticipantID" type="ParticipantID" notnull="yes" label="会员代码" description="会员代码" iskey="yes"/>
+		<Field name="ClientID" type="ClientID" notnull="yes" label="客户代码" description="客户代码" iskey="yes"/>
+		<Field name="AccountID" type="AccountID" notnull="yes" label="资金帐号" description="内部资金帐号的标识" iskey="yes"/>
+		<Field name="ProductGroupID" type="ProductGroupID" notnull="yes" label="产品组代码" description="一个产品组的编号" iskey="yes"/>
+		<Field name="ProductID" type="ProductID" notnull="yes" label="产品代码" description="交易品种在系统中的编号" iskey="yes"/>
+		<Field name="UnderlyingInstrID" type="InstrumentID" label="基础商品代码" description="基础商品在系统中的编号，仅对衍生品的衍生品有效"/>
+		<Field name="TradeID" type="TradeID" notnull="yes" label="成交编号" description="成交编号" iskey="yes"/>
+		<Field name="OrderSysID" type="OrderSysID" notnull="yes" label="报单编号" description="报单编号" iskey="yes"/>
+		<Field name="Direction" type="Direction" notnull="yes" label="买卖方向" description="1.买2.卖" iskey="yes"/>
+		<Field name="TradingRole" type="TradingRole" notnull="yes" label="交易角色" description="自营代理做市商" iskey="yes"/>
+		<Field name="HedgeFlag" type="HedgeFlag" notnull="yes" label="投机套保标志" description="投机还是套期保值" iskey="yes"/>
+		<Field name="OffsetFlag" type="OffsetFlag" notnull="yes" label="开平标志" description="1．开仓2．平今3．平昨4．强平" iskey="yes"/>
+		<Field name="ValueMode" type="ValueMode" notnull="yes" label="取值方式" description="百分比或绝对值"/>
+		<Field name="TransFeeRatio" type="Ratio" notnull="yes" label="交易手续费率" description="交易手续费率"/>
+		<Field name="MinFee" type="Money" notnull="yes" label="最低费用" description="最低费用"/>
+		<Field name="MaxFee" type="Money" notnull="yes" label="最高费用" description="最高费用"/>
+		<Field name="Price" type="Price" notnull="yes" label="价格" description="成交价格"/>
+		<Field name="Volume" type="Volume" notnull="yes" label="数量" description="成交数量"/>
+		<Field name="TransFee" type="Money" notnull="yes" label="交易手续费" description="交易手续费"/>
+		<Field name="Tax" type="Money" notnull="yes" default="0" label="税费等" description="税费等"/>
+	</Entity>
+	<Entity name="ClientTransFeeRatio" title="客户合约交易手续费率" description="客户合约交易手续费率">
+		<Ref entity="SettlementGroupSettlementRef"/>
+		<Field name="InstrumentID" type="InstrumentID" notnull="yes" label="合约代码" description="合约的编号" iskey="yes"/>
+		<Field name="ParticipantID" type="ParticipantID" notnull="yes" label="会员代码" description="会员代码" iskey="yes"/>
+		<Field name="ClientID" type="ClientID" notnull="yes" label="客户代码" description="客户代码" iskey="yes"/>
+		<Field name="TradingRole" type="TradingRole" notnull="yes" label="交易角色" description="自营代理做市商" iskey="yes"/>
+		<Field name="HedgeFlag" type="HedgeFlag" notnull="yes" label="投机套保标志" description="投机还是套期保值" iskey="yes"/>
+		<Field name="ValueMode" type="ValueMode" notnull="yes" label="取值方式" description="百分比或绝对值"/>
+		<Field name="OpenFeeRatio" type="Ratio" notnull="yes" label="开仓手续费率" description="开仓手续费率"/>
+		<Field name="CloseYesterdayFeeRatio" type="Ratio" notnull="yes" label="平昨手续费率" description="平昨手续费率"/>
+		<Field name="CloseTodayFeeRatio" type="Ratio" notnull="yes" label="平今手续费率" description="平今手续费率"/>
+		<Field name="MinOpenFee" type="Money" default="0" notnull="yes" label="最低开仓费用" description="最低开仓费用"/>
+		<Field name="MinCloseFee" type="Money" default="0" notnull="yes" label="最低平仓费用" description="最低平仓费用"/>
+		<Field name="MaxOpenFee" type="Money" default="0" notnull="yes" label="最高开仓费用" description="最高开仓费用"/>
+		<Field name="MaxCloseFee" type="Money" default="0" notnull="yes" label="最高平仓费用" description="最高平仓费用"/>
+	</Entity>
+	<Entity name="ClientFund_SimInfo" title="客户资金" description="客户资金">
+		<Ref entity="SettlementGroupRef"/>
+		<Field name="ParticipantID" type="ParticipantID" notnull="yes" label="会员代码" description="会员代码" iskey="yes"/>
+		<Field name="ClientID" type="ClientID" notnull="yes" label="客户代码" description="客户代码" iskey="yes"/>
+		<Field name="AccountID" type="AccountID" notnull="yes" label="资金帐号" description="内部资金帐号的标识" iskey="yes"/>
+		<Field name="Available" type="Money" notnull="yes" label="可用资金" description="可用资金"/>
+		<Field name="TransFee" type="Money" notnull="yes" label="交易手续费" description="交易手续费"/>
+		<Field name="DelivFee" type="Money" notnull="yes" label="交割手续费" description="交割手续费"/>
+		<Field name="PositionMargin" type="Money" notnull="yes" label="持仓保证金" description="持仓保证金"/>
+		<Field name="Profit" type="Money" notnull="yes" label="盈亏" description="盈亏"/>
+		<Field name="StockValue" type="Money" notnull="yes" label="市值" description="市值"/>
+	</Entity>
+	<Entity name="ClientFund" title="客户资金" description="客户资金">
+		<Ref entity="SettlementGroupSettlementRef"/>
+		<Field name="ParticipantID" type="ParticipantID" notnull="yes" label="会员代码" description="会员代码" iskey="yes"/>
+		<Field name="ClientID" type="ClientID" notnull="yes" label="客户代码" description="客户代码" iskey="yes"/>
+		<Field name="AccountID" type="AccountID" notnull="yes" label="资金帐号" description="内部资金帐号的标识" iskey="yes"/>
+		<Field name="Available" type="Money" notnull="yes" label="可用资金" description="可用资金"/>
+		<Field name="TransFee" type="Money" notnull="yes" label="交易手续费" description="交易手续费"/>
+		<Field name="DelivFee" type="Money" notnull="yes" label="交割手续费" description="交割手续费"/>
+		<Field name="PositionMargin" type="Money" notnull="yes" label="持仓保证金" description="持仓保证金"/>
+		<Field name="Profit" type="Money" notnull="yes" label="盈亏" description="盈亏"/>
+		<Field name="StockValue" type="Money" notnull="yes" label="市值" description="市值"/>
+	</Entity>
+	<Entity name="ClientFund_Snap" title="客户资金" description="客户资金">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="ClientFund_SimInfo"/>
+	</Entity>
+	<Entity name="InvestorFund_SimInfo" title="投资者资金" description="投资者资金">
+		<Ref entity="BrokerSystemRef"/>
+		<Field name="InvestorID" type="InvestorID" notnull="yes" label="投资者代码" description="投资者代码" iskey="yes"/>
+		<Ref entity="AccountBase"/>
+		<Ref entity="AccountDetail"/>
+		<Field name="PreStockValue" type="Money" notnull="yes" label="昨股票市值" description="昨股票市值"/>
+		<Field name="StockValue" type="Money" notnull="yes" label="股票市值" description="股票市值"/>
+	</Entity>
+	<Entity name="InvestorFund_Snap" title="投资者资金" description="投资者资金">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="InvestorFund_SimInfo"/>
+	</Entity>
+	<Entity name="PartFund" title="会员资金" description="会员资金">
+		<Ref entity="SettlementGroupSettlementRef"/>
+		<Field name="InstrumentID" type="InstrumentID" notnull="yes" label="合约代码" description="合约的编号" iskey="yes"/>
+		<Field name="ParticipantID" type="ParticipantID" notnull="yes" label="会员代码" description="会员代码" iskey="yes"/>
+		<Field name="AccountID" type="AccountID" notnull="yes" label="资金帐号" description="内部资金帐号的标识" iskey="yes"/>
+		<Field name="Available" type="Money" notnull="yes" label="可用资金" description="可用资金"/>
+		<Field name="TransFee" type="Money" notnull="yes" label="交易手续费" description="交易手续费"/>
+		<Field name="DelivFee" type="Money" notnull="yes" label="交割手续费" description="交割手续费"/>
+		<Field name="PositionMargin" type="Money" notnull="yes" label="持仓保证金" description="持仓保证金"/>
+		<Field name="Profit" type="Money" notnull="yes" label="盈亏" description="盈亏"/>
+	</Entity>
+	<Entity name="PartFund_Snap" title="会员资金" description="会员资金">
+		<Ref entity="PartFund"/>
+	</Entity>
+</UFEntityModel>

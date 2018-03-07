@@ -63,8 +63,6 @@ def settle_future(context, conf):
                       AND t1.settlementid = %s for update"""
         cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id))
         row = cursor.fetchone()
-        # test
-        row = ['0', '0', '0', '0']
         if row is None:
             logger.error("[settle future] Error: There is no data for %s-%s." % (settlement_group_id, settlement_id))
             result_code = -1
