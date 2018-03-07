@@ -405,7 +405,7 @@ class toSyncAll:
         self.logger.info("同步siminfo.t_TradingSegmentAttr ==>> sync.t_CurrTradingSegmentAttr")
         sql = """INSERT INTO sync.t_Curr""" + table_name + """ SELECT t2.TradeSystemID, 
                              t.SettlementGroupID,TradingSegmentSN,TradingSegmentName,
-                             StartTime,InstrumentStatus,InstrumentID
+                             StartTime,InstrumentStatus,DayOffset,InstrumentID
                              FROM siminfo.t_""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
                              WHERE t.SettlementGroupID = t2.SettlementGroupID
                              AND t2.TradeSystemID=%s"""
