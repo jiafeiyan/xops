@@ -54,13 +54,11 @@ class exchange_future_csv:
         # ======== 0301 新增 ========
         self.__data_to_csv("t_Trader", mysqlDB)
         self.__data_to_csv("t_TraderAssign", mysqlDB)
-        # indexprice  instrument mdinstrument交割日期  partbroker
-        # tradingaccount tradingaccountpassword  tradingcode  userrightsassign
         self.__data_to_csv("t_BrokerUser", mysqlDB)
         self.__data_to_csv("t_BrokerUserPassword", mysqlDB)
         self.__data_to_csv("t_DepartmentUser", mysqlDB)
         self.__data_to_csv("t_PartBroker", mysqlDB)
-        # self.__data_to_csv("t_TradingAccountPassword", mysqlDB)
+        self.__data_to_csv("t_TradingAccountPassword", mysqlDB)
         self.__data_to_csv("t_TradingCode", mysqlDB)
         self.__data_to_csv("t_UserRightsAssign", mysqlDB)
         # todo
@@ -167,26 +165,65 @@ class exchange_future_csv:
                                            "SpecProductPositionProfit", "SpecProductCloseProfit",
                                            "SpecProductPositionProfitByAlg", "SpecProductExchangeMargin",
                                            "FrozenSwap", "RemainSwap"),
-                                  sql="""SELECT '10010' AS BrokerID,t.AccountID,'0' AS PreMortgage,'0' AS PreCredit,
-                                            '0' AS PreDeposit,t.PreBalance,'0' AS PreMargin,'0' AS InterestBase,
-                                            '0' AS Interest,t.Deposit,t.Withdraw,t.FrozenMargin,'0' AS FrozenCash,
-                                            '0' AS FrozenCommission,t.CurrMargin,'0' AS CashIn,'0' AS Commission,
-                                            t.CloseProfit,'0' AS PositionProfit,t.Balance,t.Available,
-                                            '0' AS WithdrawQuota,'0' AS Reserve,t1.TradingDay,'1' AS SettlementID,
-                                            '0' AS Credit,'0' AS Mortgage,'0' AS ExchangeMargin,'0' AS DeliveryMargin,
-                                            '0' AS ExchangeDeliveryMargin,'0' AS ReserveBalance,'CNY' AS CurrencyID,
-                                            '0' AS PreFundMortgageIn,'0' AS PreFundMortgageOut,'0' AS FundMortgageIn,
-                                            '0' AS FundMortgageOut,'0' AS FundMortgageAvailable,'0' AS MortgageableFund,
-                                            '0' AS SpecProductMargin,'0' AS SpecProductFrozenMargin,
-                                            '0' AS SpecProductCommission,'0' AS SpecProductFrozenCommission,
-                                            '0' AS SpecProductPositionProfit,'0' AS SpecProductCloseProfit,
-                                            '0' AS SpecProductPositionProfitByAlg,'0' AS SpecProductExchangeMargin,
-                                            '0' AS FrozenSwap,'0' AS RemainSwap
-                                        FROM siminfo.t_TradingAccount t,siminfo.t_TradeSystemTradingDay t1,
-                                             siminfo.t_TradeSystemSettlementGroup t2
-                                        WHERE t.SettlementGroupID = t2.SettlementGroupID 
-                                          AND t1.TradeSystemID = t2.TradeSystemID 
-                                          AND t.SettlementGroupID  in """ +
+                                  sql="""SELECT DISTINCT
+                                                '10010' AS BrokerID,
+                                                t.InvestorID AS AccountID,
+                                                '0' AS PreMortgage,
+                                                '0' AS PreCredit,
+                                                '0' AS PreDeposit,
+                                                t.PreBalance,
+                                                t.PreMargin,
+                                                '0' AS InterestBase,
+                                                '0' AS Interest,
+                                                t.Deposit,
+                                                t.Withdraw,
+                                                '0' AS FrozenMargin,
+                                                '0' AS FrozenCash,
+                                                '0' AS FrozenCommission,
+                                                t.CurrMargin,
+                                                '0' AS CashIn,
+                                                '0' AS Commission,
+                                                t.CloseProfit,
+                                                '0' AS PositionProfit,
+                                                t.Balance,
+                                                t.Available,
+                                                '0' AS WithdrawQuota,
+                                                '0' AS Reserve,
+                                                t1.TradingDay,
+                                                '1' AS SettlementID,
+                                                '0' AS Credit,
+                                                '0' AS Mortgage,
+                                                '0' AS ExchangeMargin,
+                                                '0' AS DeliveryMargin,
+                                                '0' AS ExchangeDeliveryMargin,
+                                                '0' AS ReserveBalance,
+                                                'CNY' AS CurrencyID,
+                                                '0' AS PreFundMortgageIn,
+                                                '0' AS PreFundMortgageOut,
+                                                '0' AS FundMortgageIn,
+                                                '0' AS FundMortgageOut,
+                                                '0' AS FundMortgageAvailable,
+                                                '0' AS MortgageableFund,
+                                                '0' AS SpecProductMargin,
+                                                '0' AS SpecProductFrozenMargin,
+                                                '0' AS SpecProductCommission,
+                                                '0' AS SpecProductFrozenCommission,
+                                                '0' AS SpecProductPositionProfit,
+                                                '0' AS SpecProductCloseProfit,
+                                                '0' AS SpecProductPositionProfitByAlg,
+                                                '0' AS SpecProductExchangeMargin,
+                                                '0' AS FrozenSwap,
+                                                '0' AS RemainSwap 
+                                            FROM
+                                                siminfo.t_InvestorFund t,
+                                                siminfo.t_TradeSystemTradingDay t1,
+                                                siminfo.t_brokersystemsettlementgroup t2,
+                                                siminfo.t_tradesystembrokersystem t3 
+                                            WHERE
+                                                t.BrokerSystemID = t2.BrokerSystemID 
+                                                AND t.BrokerSystemID = t3.BrokerSystemID 
+                                                AND t3.TradeSystemID = t1.TradeSystemID 
+                                                AND t2.SettlementGroupID IN """ +
                                       str(tuple([str(i) for i in self.settlementGroupID])),
                                   quoting=True),
             t_Investor=dict(columns=("InvestorID", "BrokerID", "InvestorGroupID", "InvestorName", "IdentifiedCardType",
@@ -341,7 +378,12 @@ class exchange_future_csv:
                                   str(tuple([str(i) for i in self.settlementGroupID])),
                               quoting=True),
             t_TradingAccountPassword=dict(columns=("BrokerID", "AccountID", "Password", "CurrencyID"),
-                                          sql="""""",
+                                          sql="""SELECT
+                                                    '10010' AS BrokerID,
+                                                    t.InvestorID AS AccountID,
+                                                    t.`Password` AS PASSWORD,
+                                                    'CNY' AS CurrencyID 
+                                                FROM t_investor t""",
                                           quoting=True),
             t_TradingCode=dict(columns=("InvestorID", "BrokerID", "ExchangeID", "ClientID", "IsActive", "ClientIDType"),
                                sql="""SELECT t.InvestorID,'10010' AS BrokerID,t1.ExchangeID,t.ClientID,
@@ -352,7 +394,7 @@ class exchange_future_csv:
                                       AND t.ClientID = t2.ClientID AND t.SettlementGroupID IN """ +
                                    str(tuple([str(i) for i in self.settlementGroupID])),
                                quoting=True),
-            t_UserRightsAssign=dict(columns=("BrokerID","UserID","DRIdentityID"),
+            t_UserRightsAssign=dict(columns=("BrokerID", "UserID", "DRIdentityID"),
                                     sql="""SELECT '10010' AS BrokerID,t.InvestorID AS UserID,'1' AS DRIdentityID 
                                             FROM siminfo.t_investor t""",
                                     quoting=True),

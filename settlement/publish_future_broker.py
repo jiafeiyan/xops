@@ -23,6 +23,27 @@ def publish_future(context, conf):
 
         logger.info("[get current trading day]......")
 
+        sql = """SELECT DISTINCT t1.tradingday 
+                   FROM siminfo.t_tradesystemtradingday t1,
+                        siminfo.t_tradesystemsettlementgroup t2,
+                        siminfo.t_brokersystemsettlementgroup t3 
+                   WHERE t1.tradesystemid = t2.tradesystemid 
+                        AND t2.settlementgroupid = t3.settlementgroupid 
+                        AND t3.brokersystemid = %s"""
+        cursor.execute(sql, (broker_system_id,))
+        row = cursor.fetchone()
+
+        current_trading_day = str(row[0])
+        logger.info("[get current trading day] current_trading_day = %s" % current_trading_day)
+
+        logger.info("[get next trading day]......")
+        sql = """SELECT DAY FROM siminfo.t_TradingCalendar t WHERE t.day > %s AND t.tra = '1' ORDER BY DAY LIMIT 1"""
+        cursor.execute(sql, (current_trading_day,))
+        row = cursor.fetchone()
+
+        next_trading_day = str(row[0])
+        logger.info("[get next trading day] next_trading_day = %s" % next_trading_day)
+
         mysql_conn.commit()
     except Exception as e:
         logger.error("[publish future broker] Error: %s" % e)

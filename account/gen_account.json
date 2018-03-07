@@ -1,5 +1,5 @@
 {
     "mysqlId" : "simplatform_base",
-    "start": 10000,
-    "count": 90000
+    "start": 1,
+    "count": 1000
 }

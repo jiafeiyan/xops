@@ -87,7 +87,10 @@ class trans_futureinfo:
                                 StrikePrice = VALUES (StrikePrice),
                                 VolumeMultiple = VALUES (VolumeMultiple),
                                 UnderlyingMultiple = VALUES (UnderlyingMultiple),
-                                InstrumentName = VALUES (InstrumentName)"""
+                                InstrumentName = VALUES (InstrumentName),
+                                DeliveryYear = VALUES (DeliveryYear),
+                                DeliveryMonth = VALUES (DeliveryMonth),
+                                AdvanceMonth = VALUES (AdvanceMonth)"""
         sql_insert_params = []
         for future in dbf:
             # 判断行业类型是否为CP,如果是为期权，其余为期货
@@ -115,11 +118,11 @@ class trans_futureinfo:
                         ProductID = str(future['JYPZ']) + '_P'
                 if settlement == 'SG06':
                     ProductID = str(future['JYPZ']) + 'O'
-
             sql_insert_params.append((settlement, ProductID, ProductGroupID, ProductID, ProductClass,
                                       "2", None, OptionsType,
                                       future['JYDW'], 1, future['ZQDM'], future['ZQMC'],
-                                      2099, 12, "12"))
+                                      9999 if not future['DQRQ'] else int(str(future['DQRQ'])[0:4]),
+                                      12 if not future['DQRQ'] else int(str(future['DQRQ'])[4:6]), "012"))
         mysqlDB.executemany(sql_insert_futures, sql_insert_params)
         self.logger.info("写入t_Instrument完成")
 
@@ -159,11 +162,16 @@ class trans_futureinfo:
                                          AllowDelivPersonOpen,InstrumentID,InstLifePhase
                                          )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
                                        ON DUPLICATE KEY UPDATE 
-                                          CreateDate=VALUES(CreateDate),OpenDate=VALUES(OpenDate)"""
+                                          CreateDate=VALUES(CreateDate),OpenDate=VALUES(OpenDate),
+                                          ExpireDate=VALUES(ExpireDate),StartDelivDate=VALUES(StartDelivDate),
+                                          EndDelivDate=VALUES(EndDelivDate)"""
         sql_params = []
         for future in dbf:
             sql_params.append((self.self_conf[future['JYSC'].encode('UTF-8')], future['SSRQ'], future['SSRQ'],
-                               '99991219', '99991219', '99991219', 0, 1000000, 100,
+                               '99991219' if not future['DQRQ'] else future['DQRQ'],
+                               '99991219' if not future['DQRQ'] else future['DQRQ'],
+                               '99991219' if not future['DQRQ'] else future['DQRQ'],
+                               0, 1000000, 100,
                                1000000, 100, 0.01, 0, future['ZQDM'], 1))
         mysqlDB.executemany(sql_Property, sql_params)
         self.logger.info("写入t_InstrumentProperty完成")
