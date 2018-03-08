@@ -130,17 +130,17 @@ def settle_activity(context, conf):
                                             WHERE t1.activityid = %s"""
             cursor.execute(sql, (activity_id,))
 
-        # 赛事结束状态设置
-        sql = """UPDATE siminfo.t_activity 
-                                SET
-                                  activitystatus = 
-                                  CASE
-                                    WHEN enddate < %s
-                                    THEN '2' 
-                                    ELSE activitystatus 
-                                  END 
-                                WHERE activitystatus = '1'"""
-        cursor.execute(sql, (current_trading_day,))
+            # 赛事结束状态设置
+            sql = """UPDATE siminfo.t_activity 
+                                    SET
+                                      activitystatus = 
+                                      CASE
+                                        WHEN enddate < %s
+                                        THEN '2' 
+                                        ELSE activitystatus 
+                                      END 
+                                    WHERE activitystatus = '1'"""
+            cursor.execute(sql, (current_trading_day,))
 
         mysql_conn.commit()
     except Exception as e:

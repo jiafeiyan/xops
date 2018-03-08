@@ -201,7 +201,7 @@ def settle_future(context, conf):
             logger.info("[Move DelivPosition] is processing......")
             sql = "delete from dbclear.t_delivinstrument where settlementgroupid = %s and settlementid = %s"
             cursor.execute(sql, (settlement_group_id, settlement_id))
-            # 1）插入到t_delivinstrument表，目前startdelivdate为999999
+            # 1）插入到t_delivinstrument表
             sql = """insert into dbclear.t_delivinstrument(TradingDay, SettlementGroupID, SettlementID, InstrumentID
                     )select %s, t.SettlementGroupID, %s, t.instrumentid
                     from siminfo.t_instrumentproperty t

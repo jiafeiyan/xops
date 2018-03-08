@@ -74,9 +74,9 @@ def settle_stock(context, conf):
 
             #计算交易手续费
             logger.info("[calculate trade trans fee]......")
-            sql = """DELETE FROM dbclear.t_clienttransfee WHERE settlementgroupid = %s AND settlementid = %s"""
-            cursor.execute(sql, (settlement_group_id, settlement_id))
-            sql = """INSERT INTO dbclear.t_clienttransfee(TradingDay, SettlementGroupID, SettlementID, ParticipantID, ClientID, AccountID, ProductGroupID, ProductID, UnderlyingInstrID, InstrumentID, TradeID, OrderSysID, Direction, TradingRole, HedgeFlag, OffsetFlag, Volume, Price, TransFeeRatio, ValueMode, MinFee, MaxFee, TransFee)
+            sql = """DELETE FROM dbclear.t_clienttransfee WHERE tradingday = %s AND settlementgroupid = %s AND settlementid = %s"""
+            cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id))
+            sql = """INSERT INTO dbclear.t_clienttransfee(TradingDay, SettlementGroupID, SettlementID, ParticipantID, ClientID, AccountID, ProductGroupID, ProductID, UnderlyingInstrID, InstrumentID, TradeID, OrderSysID, Direction, TradingRole, HedgeFlag, OffsetFlag, Volume, Price, TransFeeRatio, ValueMode, MinFee, MaxFee, TransFee, Tax)
                                         SELECT t1.tradingday, t1.settlementgroupid, t1.settlementid, t1.participantid, t1.clientid, t1.accountid, t3.productgroupid, t3.productid, t3.underlyinginstrid, t1.instrumentid, t1.tradeid, t1.ordersysid, t1.direction, t1.tradingrole, t1.hedgeflag, t1.offsetflag, t1.volume, t1.price,
                                                    CASE
                                                      WHEN t1.direction = '0' THEN
@@ -111,7 +111,17 @@ def settle_stock(context, conf):
                                                                   WHEN t1.direction = '1' THEN
                                                                    t2.closeyesterdayfeeratio
                                                                 END) * t1.price * t1.volume * t3.volumemultiple,
-                                                                2)) AS transfee
+                                                                2)) AS transfee,
+                                                       (CASE
+                                                         WHEN t1.direction = '0' THEN
+                                                          0
+                                                         WHEN t1.direction = '1' THEN
+                                                          ROUND(t1.price * t1.volume * 0.001, 2)
+                                                       END) + (CASE
+                                                         WHEN SUBSTR(t1.instrumentid, 1, 1) = '6' THEN
+                                                          ROUND(t1.price * t1.volume * 0.00002, 2)
+                                                         ELSE 0
+                                                       END) AS tax
                                                     FROM dbclear.t_trade t1, dbclear.t_clienttransfeeratio t2, siminfo.t_instrument t3
                                                     WHERE t1.tradingday = t2.tradingday AND t1.settlementgroupid = t2.settlementgroupid AND t1.settlementid = t2.settlementid
                                                     AND t2.participantid = '00000000' AND t2.clientid = '00000000' AND t1.instrumentid = t2.instrumentid
@@ -214,9 +224,9 @@ def settle_stock(context, conf):
             logger.info("[calculate client trans fee]......")
             sql = """INSERT INTO dbclear.t_clientfund(tradingday, settlementgroupid, settlementid, participantid, clientid, accountid, available, transfee, delivfee, positionmargin, profit, stockvalue)
                                 SELECT t.tradingday, t.settlementgroupid, t.settlementid, t.participantid, t.clientid, t.accountid, 0,
-                                    SUM(CASE WHEN t.calctransfee < t.minfee THEN t.minfee WHEN t.calctransfee > t.maxfee THEN t.minfee ELSE t.calctransfee END) AS transfee, 0, 0, 0, 0
+                                    ROUND(SUM(CASE WHEN t.calctransfee < t.minfee THEN t.minfee WHEN t.calctransfee > t.maxfee THEN t.minfee ELSE t.calctransfee END), 2) + ROUND(SUM(t.tax), 2) AS transfee, 0, 0, 0, 0
                                     FROM(SELECT tt.tradingday, tt.settlementgroupid, tt.settlementid, tt.participantid, tt.clientid, tt.accountid, tt.ordersysid, tt.minfee, tt.maxfee,
-                                          SUM(tt.transfee) AS calctransfee
+                                          SUM(tt.transfee) AS calctransfee, SUM(tt.tax) AS tax
                                         FROM dbclear.t_clienttransfee tt 
                                         WHERE tt.tradingday = %s AND tt.settlementgroupid = %s AND tt.settlementid = %s
                                         GROUP BY tt.tradingday, tt.settlementgroupid,tt.settlementid, tt.participantid, tt.clientid, tt.accountid, tt.ordersysid, tt.minfee, tt.maxfee ) t 
@@ -261,15 +271,25 @@ def settle_stock(context, conf):
 
             # 更新客户持仓
             logger.info("[update client position]......")
+            sql = """INSERT INTO dbclear.t_clientposition(TradingDay,SettlementGroupID,SettlementID,HedgeFlag,PosiDirection,YdPosition,Position,LongFrozen,ShortFrozen,YdLongFrozen,YdShortFrozen,BuyTradeVolume,SellTradeVolume,PositionCost,YdPositionCost,UseMargin,FrozenMargin,LongFrozenMargin,ShortFrozenMargin,FrozenPremium,InstrumentID,ParticipantID,ClientID)
+                                SELECT tradingday,SettlementGroupID,SettlementID,HedgeFlag,'9',0,SUM(Position),SUM(LongFrozen),SUM(ShortFrozen),0,0,SUM(BuyTradeVolume),SUM(SellTradeVolume),SUM(PositionCost),0,SUM(UseMargin),0,0,0,0,InstrumentID,ParticipantID,ClientID
+                                FROM dbclear.t_clientposition t WHERE t .tradingday = %s AND t.settlementgroupid = %s AND t.settlementid = %s
+                                GROUP BY t.tradingday, t.settlementgroupid, t.settlementid, t.hedgeflag, t.InstrumentID, t.ParticipantID, t.ClientID"""
+            cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id))
+            sql = """DELETE FROM dbclear.t_ClientPosition WHERE tradingday = %s AND SettlementGroupID = %s AND SettlementID = %s AND PosiDirection != '9'"""
+            cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id))
+            sql = """DELETE FROM dbclear.t_ClientPosition WHERE tradingday = %s AND SettlementGroupID = %s AND SettlementID = %s AND Position = 0"""
+            cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id))
             sql = """UPDATE dbclear.t_clientposition t,(SELECT t.tradingday, t.settlementgroupid, t.settlementid, t.participantid, t.clientid, t.instrumentid, 
-                                          SUM(CASE WHEN t.calctransfee < t.minfee THEN t.minfee WHEN t.calctransfee > t.maxfee THEN t.minfee ELSE t.calctransfee END) AS transfee
+                                          ROUND(SUM(CASE WHEN t.calctransfee < t.minfee THEN t.minfee WHEN t.calctransfee > t.maxfee THEN t.minfee ELSE t.calctransfee END), 2) AS transfee,
+                                          ROUND(SUM(t.tax), 2) as tax
                                     FROM(SELECT tt.tradingday, tt.settlementgroupid, tt.settlementid, tt.participantid, tt.clientid, tt.instrumentid, tt.ordersysid, tt.minfee, tt.maxfee,
-                                          SUM(tt.transfee) AS calctransfee
+                                          ROUND(SUM(tt.transfee), 2) AS calctransfee, ROUND(sum(tt.tax), 2) AS tax
                                         FROM dbclear.t_clienttransfee tt 
                                         WHERE tt.tradingday = %s AND tt.settlementgroupid = %s AND tt.settlementid = %s
                                         GROUP BY tt.tradingday, tt.settlementgroupid,tt.settlementid, tt.participantid, tt.clientid, tt.instrumentid, tt.ordersysid, tt.minfee, tt.maxfee ) t 
                                     GROUP BY t.tradingday, t.settlementgroupid, t.settlementid, t.participantid, t.clientid, t.instrumentid) t1
-                            SET t.usemargin = t.usemargin + t1.transfee
+                            SET t.usemargin = t.usemargin + t1.transfee + t1.tax
                             WHERE t.tradingday = %s AND t.settlementgroupid = %s AND t.settlementid = %s 
                             AND t.tradingday = t1.tradingday AND t.settlementgroupid = t1.settlementgroupid AND t.settlementid = t1.settlementid 
                             AND t.participantid = t1.participantid AND t.clientid = t1.clientid AND t.instrumentid = t1.instrumentid"""

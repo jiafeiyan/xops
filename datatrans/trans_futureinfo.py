@@ -181,11 +181,13 @@ class trans_futureinfo:
         sql_insert_segment = """INSERT INTO siminfo.t_TradingSegmentAttr (
                                     SettlementGroupID,TradingSegmentSN,
                                     TradingSegmentName,StartTime,
-                                    InstrumentStatus,InstrumentID
-                                ) VALUES (%s,%s,%s,%s,%s,%s)
+                                    InstrumentStatus,DayOffset,InstrumentID
+                                ) VALUES (%s,%s,%s,%s,%s,%s,%s)
                                 ON DUPLICATE KEY UPDATE 
-                                  TradingSegmentName=VALUES(TradingSegmentName),StartTime=VALUES(StartTime),
-                                  InstrumentStatus=VALUES(InstrumentStatus)"""
+                                  TradingSegmentName=VALUES(TradingSegmentName),
+                                  StartTime=VALUES(StartTime),
+                                  InstrumentStatus=VALUES(InstrumentStatus),
+                                  DayOffset=VALUES(DayOffset)"""
         sql_insert_params = []
         SegmentAttr = self.__loadJSON(tableName='t_TradingSegmentAttr')
         if SegmentAttr is None:
@@ -195,7 +197,7 @@ class trans_futureinfo:
             if SGID in SegmentAttr:
                 for attr in SegmentAttr[SGID]:
                     sql_insert_params.append((
-                        SGID, attr[1], attr[2], attr[3], attr[4], future['ZQDM']
+                        SGID, attr[1], attr[2], attr[3], attr[4], '1', future['ZQDM']
                     ))
         mysqlDB.executemany(sql_insert_segment, sql_insert_params)
         self.logger.info("写入t_TradingSegmentAttr完成")
