@@ -81,7 +81,7 @@ def settle_future(context, conf):
                                 t.instrumentid,
                             CASE
                                 WHEN t.Volume = 0 THEN
-                                    t.ClosePrice ELSE round( t.Turnover / t.Volume, 2 ) 
+                                    0 ELSE round( t.Turnover / t.Volume, 2 ) 
                                 END AS settlementprice 
                             FROM
                                 dbclear.t_marketdata t 
