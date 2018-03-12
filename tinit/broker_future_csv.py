@@ -170,8 +170,8 @@ class exchange_future_csv:
                                                 t.InvestorID AS AccountID,
                                                 '0' AS PreMortgage,
                                                 '0' AS PreCredit,
-                                                '0' AS PreDeposit,
-                                                t.PreBalance,
+                                                '1000000' AS PreDeposit,
+                                                '1000000' AS PreBalance,
                                                 t.PreMargin,
                                                 '0' AS InterestBase,
                                                 '0' AS Interest,
@@ -396,7 +396,9 @@ class exchange_future_csv:
                                quoting=True),
             t_UserRightsAssign=dict(columns=("BrokerID", "UserID", "DRIdentityID"),
                                     sql="""SELECT '10010' AS BrokerID,t.InvestorID AS UserID,'1' AS DRIdentityID 
-                                            FROM siminfo.t_investor t""",
+                                            FROM siminfo.t_investor t
+                                            UNION ALL 
+                                            SELECT '10010' AS BrokerID,'10010_admin' AS UserID,'1' AS DRIdentityID """,
                                     quoting=True),
             t_InvestorPositionDtl=dict(columns=("InstrumentID", "BrokerID", "InvestorID", "HedgeFlag", "Direction",
                                                 "OpenDate", "TradeID", "Volume", "OpenPrice", "TradingDay",
