@@ -770,7 +770,7 @@ def settle_future(context, conf):
                                 t1.valuemode
                          from siminfo.t_marginratedetail t1, siminfo.t_partroleaccount t2
                         where t1.SettlementGroupID = t2.SettlementGroupID) t2,
-                            dbclear.t_marketdata t3,
+                            dbclear.t_marketdata t3,  
                             siminfo.t_instrument t4
                         where t1.participantid = t1.participantid
                         and t2.clientid = t1.clientid
@@ -837,7 +837,7 @@ def settle_future(context, conf):
             sql = """insert into dbclear.t_clientfund (TradingDay,SettlementGroupID,SettlementID,ParticipantID,ClientID,AccountID,TransFee,DelivFee,PositionMargin,Profit,available,StockValue)
                     (select t.tradingday,t.settlementgroupid,t.settlementid,t.participantid,t.clientid,t.accountid,0,sum(t.delivfee) as delivfee,0,0,0,0
                       from dbclear.t_clientdelivfee t where t.tradingday = %s and t.settlementgroupid = %s and t.settlementid = %s
-                      group by t.tradingday,t.settlementgroupid,t.settlementid,t.participantid,t.clientid,t.accountid)
+                          group by t.tradingday,t.settlementgroupid,t.settlementid,t.participantid,t.clientid,t.accountid)
                       ON DUPLICATE KEY UPDATE t_clientfund.delivfee = values(delivfee)"""
             cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id))
             # 4）更新profit
