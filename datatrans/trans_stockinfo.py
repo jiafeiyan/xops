@@ -71,6 +71,9 @@ class trans_stockinfo:
             # ===========处理stock_exp写入t_MarketData表 ==============
             self.__t_MarketData(mysqlDB=mysqlDB, market=dbfs[2])
 
+        # 初始化 50ETF 和 300ETF 数据
+        self.__initETF(mysqlDB=mysqlDB)
+
     # 读取处理PAR_STOCK文件
     def __t_Instrument(self, mysqlDB, dbf):
         sql_insert_Instrument = """INSERT INTO siminfo.t_Instrument (
@@ -335,6 +338,112 @@ class trans_stockinfo:
         f = open(_path)
         return json.load(f)
 
+    # 初始化 50ETF 和 300ETF 数据
+    def __initETF(self, mysqlDB):
+        self.logger.info("初始化50ETF")
+        # 50ETF
+        sql = """INSERT INTO siminfo.t_instrument ( SettlementGroupID, ProductID, ProductGroupID, UnderlyingInstrID,
+                          ProductClass, PositionType, StrikePrice, OptionsType, VolumeMultiple, UnderlyingMultiple, 
+                          InstrumentID, InstrumentName, DeliveryYear, DeliveryMonth, AdvanceMonth)
+                  VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                  ON DUPLICATE KEY UPDATE
+                    SettlementGroupID=VALUES(SettlementGroupID),ProductID=VALUES(ProductID),
+                    ProductGroupID=VALUES(ProductGroupID),UnderlyingInstrID=VALUES(UnderlyingInstrID),
+                    ProductClass=VALUES(ProductClass),PositionType=VALUES(PositionType),
+                    StrikePrice=VALUES(StrikePrice),OptionsType=VALUES(OptionsType),
+                    VolumeMultiple=VALUES(VolumeMultiple),UnderlyingMultiple=VALUES(UnderlyingMultiple),
+                    InstrumentID=VALUES(InstrumentID),InstrumentName=VALUES(InstrumentName),
+                    DeliveryYear=VALUES(DeliveryYear),DeliveryMonth=VALUES(DeliveryMonth),
+                    AdvanceMonth=VALUES(AdvanceMonth)"""
+        mysqlDB.execute(sql, ("SG01", "ZQ_SH", "ZQ", "ZQ_SH", "3", "1", None, "0", "1", "1.000", "510050", "50ETF",
+                              2099, 12, 012))
+        sql = """INSERT INTO siminfo.t_instrumentproperty ( SettlementGroupID, CreateDate, OpenDate, ExpireDate, 
+                          StartDelivDate, EndDelivDate, BasisPrice, MaxMarketOrderVolume, MinMarketOrderVolume, 
+                          MaxLimitOrderVolume, MinLimitOrderVolume, PriceTick, AllowDelivPersonOpen, 
+                          InstrumentID, InstLifePhase )
+                  VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                  ON DUPLICATE KEY UPDATE 
+                    SettlementGroupID=VALUES(SettlementGroupID),CreateDate=VALUES(CreateDate),
+                    OpenDate=VALUES(OpenDate),ExpireDate=VALUES(ExpireDate),
+                    StartDelivDate=VALUES(StartDelivDate),EndDelivDate=VALUES(EndDelivDate),
+                    BasisPrice=VALUES(BasisPrice),MaxMarketOrderVolume=VALUES(MaxMarketOrderVolume),
+                    MinMarketOrderVolume=VALUES(MinMarketOrderVolume),MaxLimitOrderVolume=VALUES(MaxLimitOrderVolume),
+                    MinLimitOrderVolume=VALUES(MinLimitOrderVolume),PriceTick=VALUES(PriceTick),
+                    AllowDelivPersonOpen=VALUES(AllowDelivPersonOpen),InstrumentID=VALUES(InstrumentID),
+                    InstLifePhase=VALUES(InstLifePhase)"""
+        mysqlDB.execute(sql, ("SG01", "19881228", "19910129", "99991219", "99991219", "99991219", "0.000000",
+                              "1000000", "100", "1000000", "100", "0.001000", "0", "510050", "1"))
+        sql = """INSERT INTO siminfo.t_marketdata (TradingDay,SettlementGroupID,LastPrice,PreSettlementPrice,
+                            PreClosePrice,PreOpenInterest,OpenPrice,HighestPrice,LowestPrice,Volume,Turnover,
+                            OpenInterest,ClosePrice,SettlementPrice,UpperLimitPrice,LowerLimitPrice,PreDelta,
+                            CurrDelta,UpdateTime,UpdateMillisec,InstrumentID 
+                    )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                    ON DUPLICATE KEY UPDATE 
+                    TradingDay=VALUES(TradingDay),SettlementGroupID=VALUES(SettlementGroupID),
+                    LastPrice=VALUES(LastPrice),PreSettlementPrice=VALUES(PreSettlementPrice),
+                    PreClosePrice=VALUES(PreClosePrice),PreOpenInterest=VALUES(PreOpenInterest),
+                    OpenPrice=VALUES(OpenPrice),HighestPrice=VALUES(HighestPrice),
+                    LowestPrice=VALUES(LowestPrice),Volume=VALUES(Volume),
+                    Turnover=VALUES(Turnover),OpenInterest=VALUES(OpenInterest),
+                    ClosePrice=VALUES(ClosePrice),SettlementPrice=VALUES(SettlementPrice),
+                    UpperLimitPrice=VALUES(UpperLimitPrice),LowerLimitPrice=VALUES(LowerLimitPrice),
+                    PreDelta=VALUES(PreDelta),CurrDelta=VALUES(CurrDelta),
+                    UpdateTime=VALUES(UpdateTime),UpdateMillisec=VALUES(UpdateMillisec),
+                    InstrumentID =VALUES(InstrumentID)"""
+        mysqlDB.execute(sql, ("20180313", "SG01", None, "2.905", "2.905", "0.000", None, None, None, "0", "0", None,
+                              None, None, None, None, None, None, "09:32:19", "529", "510050"))
+        # 300ETF
+        self.logger.info("初始化300ETF")
+        sql = """INSERT INTO siminfo.t_instrument ( SettlementGroupID, ProductID, ProductGroupID, UnderlyingInstrID,
+                                 ProductClass, PositionType, StrikePrice, OptionsType, VolumeMultiple, UnderlyingMultiple, 
+                                 InstrumentID, InstrumentName, DeliveryYear, DeliveryMonth, AdvanceMonth)
+                     VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                     ON DUPLICATE KEY UPDATE
+                        SettlementGroupID=VALUES(SettlementGroupID),ProductID=VALUES(ProductID),
+                        ProductGroupID=VALUES(ProductGroupID),UnderlyingInstrID=VALUES(UnderlyingInstrID),
+                        ProductClass=VALUES(ProductClass),PositionType=VALUES(PositionType),
+                        StrikePrice=VALUES(StrikePrice),OptionsType=VALUES(OptionsType),
+                        VolumeMultiple=VALUES(VolumeMultiple),UnderlyingMultiple=VALUES(UnderlyingMultiple),
+                        InstrumentID=VALUES(InstrumentID),InstrumentName=VALUES(InstrumentName),
+                        DeliveryYear=VALUES(DeliveryYear),DeliveryMonth=VALUES(DeliveryMonth),
+                        AdvanceMonth=VALUES(AdvanceMonth)"""
+        mysqlDB.execute(sql, ("SG01", "ZQ_SH", "ZQ", "ZQ_SH", "3", "1", None, "0", "1", "1.000", "510300", "300ETF",
+                              2099, 12, 012))
+        sql = """INSERT INTO siminfo.t_instrumentproperty ( SettlementGroupID, CreateDate, OpenDate, ExpireDate, 
+                                 StartDelivDate, EndDelivDate, BasisPrice, MaxMarketOrderVolume, MinMarketOrderVolume, 
+                                 MaxLimitOrderVolume, MinLimitOrderVolume, PriceTick, AllowDelivPersonOpen, 
+                                 InstrumentID, InstLifePhase )
+                 VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                 ON DUPLICATE KEY UPDATE 
+                    SettlementGroupID=VALUES(SettlementGroupID),CreateDate=VALUES(CreateDate),
+                    OpenDate=VALUES(OpenDate),ExpireDate=VALUES(ExpireDate),
+                    StartDelivDate=VALUES(StartDelivDate),EndDelivDate=VALUES(EndDelivDate),
+                    BasisPrice=VALUES(BasisPrice),MaxMarketOrderVolume=VALUES(MaxMarketOrderVolume),
+                    MinMarketOrderVolume=VALUES(MinMarketOrderVolume),MaxLimitOrderVolume=VALUES(MaxLimitOrderVolume),
+                    MinLimitOrderVolume=VALUES(MinLimitOrderVolume),PriceTick=VALUES(PriceTick),
+                    AllowDelivPersonOpen=VALUES(AllowDelivPersonOpen),InstrumentID=VALUES(InstrumentID),
+                    InstLifePhase=VALUES(InstLifePhase)"""
+        mysqlDB.execute(sql, ("SG01", "19881228", "19910129", "99991219", "99991219", "99991219", "0.000000",
+                              "1000000", "100", "1000000", "100", "0.001000", "0", "510300", "1"))
+        sql = """INSERT INTO siminfo.t_marketdata (TradingDay,SettlementGroupID,LastPrice,PreSettlementPrice,
+                                   PreClosePrice,PreOpenInterest,OpenPrice,HighestPrice,LowestPrice,Volume,Turnover,
+                                   OpenInterest,ClosePrice,SettlementPrice,UpperLimitPrice,LowerLimitPrice,PreDelta,
+                                   CurrDelta,UpdateTime,UpdateMillisec,InstrumentID 
+               )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                 ON DUPLICATE KEY UPDATE 
+                    TradingDay=VALUES(TradingDay),SettlementGroupID=VALUES(SettlementGroupID),
+                    LastPrice=VALUES(LastPrice),PreSettlementPrice=VALUES(PreSettlementPrice),
+                    PreClosePrice=VALUES(PreClosePrice),PreOpenInterest=VALUES(PreOpenInterest),
+                    OpenPrice=VALUES(OpenPrice),HighestPrice=VALUES(HighestPrice),
+                    LowestPrice=VALUES(LowestPrice),Volume=VALUES(Volume),
+                    Turnover=VALUES(Turnover),OpenInterest=VALUES(OpenInterest),
+                    ClosePrice=VALUES(ClosePrice),SettlementPrice=VALUES(SettlementPrice),
+                    UpperLimitPrice=VALUES(UpperLimitPrice),LowerLimitPrice=VALUES(LowerLimitPrice),
+                    PreDelta=VALUES(PreDelta),CurrDelta=VALUES(CurrDelta),
+                    UpdateTime=VALUES(UpdateTime),UpdateMillisec=VALUES(UpdateMillisec),
+                    InstrumentID =VALUES(InstrumentID)"""
+        mysqlDB.execute(sql, ("20180313", "SG01", None, "4.123", "4.123", "0.000", None, None, None, "0", "0", None,
+                              None, None, None, None, None, None, "09:32:19", "529", "510300"))
 
 if __name__ == '__main__':
     base_dir, config_names, config_files, add_ons = parse_conf_args(__file__, config_names=["mysql", "log", "init"])

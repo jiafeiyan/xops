@@ -305,7 +305,7 @@ class trans_futureinfo:
             if SGID in SegmentAttr:
                 for attr in SegmentAttr[SGID]:
                     sql_insert_params.append((
-                        SGID, attr[1], attr[2], attr[3], attr[4], '1', future['ZQDM']
+                        SGID, attr[1], attr[2], attr[3], attr[4], '0', future['ZQDM']
                     ))
         mysqlDB.executemany(sql_insert_segment, sql_insert_params)
         self.logger.info("写入t_TradingSegmentAttr完成")

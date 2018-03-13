@@ -357,11 +357,11 @@ class exchange_future_csv:
             t_BrokerUserPassword=dict(columns=("BrokerID", "UserID", "Password", "LastUpdateTime", "LastLoginTime",
                                                "ExpireDate", "WeakExpireDate"),
                                       sql="""SELECT '10010' AS BrokerID,t.InvestorID AS UserID,t.`Password` AS PASSWORD,
-                                                '' AS LastUpdateTime,'' AS LastLoginTime,'' AS ExpireDate,
+                                                '' AS LastUpdateTime,'20180101' AS LastLoginTime,'' AS ExpireDate,
                                                 '' AS WeakExpireDate 
                                         FROM siminfo.t_investor t UNION ALL
                                         SELECT '10010' AS BrokerID,'10010_admin' AS UserID,'10010_admin' AS PASSWORD,
-                                                '' AS LastUpdateTime,'' AS LastLoginTime,'' AS ExpireDate,
+                                                '' AS LastUpdateTime,'20180101' AS LastLoginTime,'' AS ExpireDate,
                                                 '' AS WeakExpireDate""",
                                       quoting=True),
             t_DepartmentUser=dict(columns=("BrokerID", "UserID", "InvestorRange", "InvestorID"),

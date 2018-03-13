@@ -163,9 +163,9 @@ class exchange_future_csv:
                                                   ShortMarginRatio,InstrumentID,ParticipantID,ClientID
                                                 FROM sync.t_CurrMarginRateDetail WHERE TradeSystemID=%s"""),
             t_CurrTradingSegmentAttr=dict(columns=("SettlementGroupID", "TradingSegmentSN", "TradingSegmentName",
-                                                   "StartTime", "InstrumentStatus", "DayOffSet", "InstrumentID"),
+                                                   "StartTime", "InstrumentStatus", "DayOffset", "InstrumentID"),
                                           sql="""SELECT 'SG01' AS SettlementGroupID,TradingSegmentSN,TradingSegmentName,
-                                                        StartTime,InstrumentStatus,DayOffSet,InstrumentID
+                                                        StartTime,InstrumentStatus,DayOffset,InstrumentID
                                                 FROM sync.t_CurrTradingSegmentAttr WHERE TradeSystemID=%s
                                                 ORDER BY InstrumentID,TradingSegmentSN"""),
             t_Instrument=dict(columns=("SettlementGroupID", "ProductID", "ProductGroupID", "UnderlyingInstrID",
