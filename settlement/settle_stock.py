@@ -59,7 +59,7 @@ def settle_stock(context, conf):
             #计算结算价 股票中结算价设置为收盘价，如有除权除息，设置为除权价
             logger.info("[calculate settlement price]......")
             sql = """UPDATE dbclear.t_marketdata t, (SELECT t.tradingday, t.settlementgroupid, t.settlementid, t.instrumentid,
-                                                                                ROUND((t.closeprice - IFNULL(t1.beforerate, 0) + IFNULL(t3.beforerate, 0) * IFNULL(t3.price, 0))/(1 + IFNULL(t2.beforerate, 0) + IFNULL(t3.beforerate, 0)), 2) AS settlementprice 
+                                                                                ROUND((t.closeprice - IFNULL(t1.beforerate, 0) + IFNULL(t3.beforerate, 0) * IFNULL(t3.price, 0))/(1 + IFNULL(t2.beforerate, 0) + IFNULL(t3.beforerate, 0)), CASE WHEN t.InstrumentID IN ( '510050', '510300' ) THEN	3 ELSE 2 END ) AS settlementprice 
                                                                                 FROM dbclear.t_marketdata t
                                                                                 LEFT JOIN (SELECT settlementgroupid, securityid, beforerate, afterrate, price FROM siminfo.t_securityprofit WHERE securitytype = 'GP' AND profittype = 'HL' AND cqdate = %s) t1
                                                                                 ON (t.settlementgroupid = t1.settlementgroupid AND t.instrumentid = t1.securityid)

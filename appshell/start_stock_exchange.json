@@ -1,4 +1,4 @@
 {
   "host" : "stock_exchange_1_232",
-  "command" : "${HOME}/run/start.sh -d 20180224 -t 09:13:00"
+  "command" : "${HOME}/run/start.sh -d @tradingday@ -t `date +%H:%M:%S`"
 }

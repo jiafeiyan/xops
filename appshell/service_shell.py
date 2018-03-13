@@ -13,6 +13,12 @@ def execute_command(context, conf):
     hosts_config = context.get("hosts")
     host_id = conf.get("host")
     command = conf.get("command")
+
+    parameters = conf.get("parameters", None)
+    if parameters is not None:
+        for parameter in parameters:
+            command = command.replace("@%s@" % parameter, parameters.get(parameter))
+
     host_config = hosts_config.get(host_id)
 
     rsh = rshell(host_config)
@@ -24,7 +30,7 @@ def execute_command(context, conf):
         print("\033[1;32m %s \033[0m" % line)
 
     for line in stderr.readlines():
-        os.sys.stderr(line)
+        os.sys.stderr.write(line)
 
     rsh.disconnect()
 
@@ -34,7 +40,7 @@ def execute_command(context, conf):
 def main():
     base_dir, config_names, config_files, add_ons = parse_conf_args(__file__, config_names=["hosts"])
 
-    context, conf = Configuration.load(base_dir=base_dir, config_names=config_names, config_files=config_files)
+    context, conf = Configuration.load(base_dir=base_dir, config_names=config_names, config_files=config_files, add_ons = add_ons)
 
     execute_command(context, conf)
 
