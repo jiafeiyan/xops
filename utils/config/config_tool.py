@@ -5,7 +5,7 @@ import json
 
 class Configuration:
     @staticmethod
-    def load(base_dir, config_names, config_files):
+    def load(base_dir, config_names, config_files, add_ons={}):
         context = {}
         conf = {}
 
@@ -29,6 +29,9 @@ class Configuration:
             for config_file in config_files:
                 if config_file is not None and os.path.exists(config_file):
                     conf.update(Configuration.load_json(config_file))
+
+        if add_ons is not None:
+            conf.update(add_ons)
 
         return context, conf
 

@@ -1,15 +1,15 @@
 {
-    "tradeSystemId" : "0002",
+    "tradeSystemId" : "0001",
     "settlementId" : "1",
     "baseDataHome" : "${SIM_PLATFORM_HOME}/settlement_data",
     "Syncs": [
       {
-        "host": "future_exchange",
-        "items": ["/home/trade/tkernel1/dump/ClientPosition.csv",
-                      "/home/trade/tkernel1/dump/MarketData.csv",
-                      "/home/trade/tkernel1/dump/PartPosition.csv",
-                      "/home/trade/tkernel1/dump/Order.csv",
-                      "/home/trade/tkernel1/dump/Trade.csv"]
+        "host": "trade5_194",
+        "items": ["/home/trade5/run/tkernel1/dump/ClientPosition.csv",
+                      "/home/trade5/run/tkernel1/dump/MarketData.csv",
+                      "/home/trade5/run/tkernel1/dump/PartPosition.csv",
+                      "/home/trade5/run/tkernel1/dump/Order.csv",
+                      "/home/trade5/run/tkernel1/dump/Trade.csv"]
       }
     ]
 }
