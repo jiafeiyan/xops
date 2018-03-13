@@ -239,6 +239,7 @@ class trans_futureinfo:
 
     # 写入t_InstrumentProperty
     def __t_InstrumentProperty(self, mysqlDB, dbf):
+        property = self.__loadJSON("t_InstrumentProperty")
         sql_Property = """INSERT INTO siminfo.t_InstrumentProperty (
                                          SettlementGroupID,CreateDate,OpenDate,ExpireDate,StartDelivDate,
                                          EndDelivDate,BasisPrice,MaxMarketOrderVolume,MinMarketOrderVolume,
@@ -248,15 +249,38 @@ class trans_futureinfo:
                                        ON DUPLICATE KEY UPDATE 
                                           CreateDate=VALUES(CreateDate),OpenDate=VALUES(OpenDate),
                                           ExpireDate=VALUES(ExpireDate),StartDelivDate=VALUES(StartDelivDate),
-                                          EndDelivDate=VALUES(EndDelivDate)"""
+                                          EndDelivDate=VALUES(EndDelivDate),
+                                          MaxMarketOrderVolume=VALUES(MaxMarketOrderVolume),
+                                          MinMarketOrderVolume=VALUES(MinMarketOrderVolume),
+                                          MaxLimitOrderVolume=VALUES(MaxLimitOrderVolume),
+                                          MinLimitOrderVolume=VALUES(MinLimitOrderVolume),
+                                          PriceTick=VALUES(PriceTick)"""
         sql_params = []
         for future in dbf:
-            sql_params.append((self.self_conf[future['JYSC'].encode('UTF-8')], future['SSRQ'], future['SSRQ'],
+            ProductID = str.upper(str(future['JYPZ']))
+            settlement = self.self_conf[future['JYSC'].encode('UTF-8')]
+            if str(future['HYLX']) == 'C' or str(future['HYLX']) == 'P':
+                if settlement == 'SG03':
+                    ProductID = ProductID + '_O'
+                if settlement == 'SG04':
+                    ProductID = ProductID + '_O'
+                if settlement == 'SG05':
+                    if str(future['HYLX']) == 'C':
+                        ProductID = ProductID + '_C'
+                    elif str(future['HYLX']) == 'P':
+                        ProductID = ProductID + '_P'
+                if settlement == 'SG06':
+                    ProductID = ProductID + 'O'
+            sql_params.append((settlement, future['SSRQ'], future['SSRQ'],
                                '99991219' if not future['DQRQ'] else future['DQRQ'],
                                '99991219' if not future['DQRQ'] else future['DQRQ'],
-                               '99991219' if not future['DQRQ'] else future['DQRQ'],
-                               0, 1000000, 100,
-                               1000000, 100, 0.01, 0, future['ZQDM'], 1))
+                               '99991219' if not future['DQRQ'] else future['DQRQ'], 0,
+                               1000000 if not property[ProductID] else property[ProductID][0],
+                               1 if not property[ProductID] else property[ProductID][1],
+                               1000000 if not property[ProductID] else property[ProductID][2],
+                               1 if not property[ProductID] else property[ProductID][3],
+                               0.01 if not property[ProductID] else property[ProductID][4],
+                               0, future['ZQDM'], 1))
         mysqlDB.executemany(sql_Property, sql_params)
         self.logger.info("写入t_InstrumentProperty完成")
 

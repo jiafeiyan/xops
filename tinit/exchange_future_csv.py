@@ -106,6 +106,15 @@ class exchange_future_csv:
         self.__data_to_csv("t_UserIP", mysqlDB)
         self.__data_to_csv("t_InstrumentTradingRight", mysqlDB)
 
+        # ================shfe.txt====================
+        self.__generate_marketdata("shfe", mysqlDB)
+        # ================dce.txt=====================
+        self.__generate_marketdata("dce", mysqlDB)
+        # ================czce.txt====================
+        self.__generate_marketdata("czce", mysqlDB)
+        # ================cffex.txt===================
+        self.__generate_marketdata("cffex", mysqlDB)
+
     def __data_to_csv(self, table_name, mysqlDB):
         table_sqls = dict(
             t_Account=dict(columns=("SettlementGroupID", "AccountID", "ParticipantID", "Currency"),
@@ -315,6 +324,16 @@ class exchange_future_csv:
         # 生成csv文件
         self.__produce_csv(table_name, table_sqls[table_name], csv_data)
 
+    def __generate_marketdata(self, exchange, mysqlDB):
+        sql = """SELECT t.InstrumentID 
+                  FROM sync.t_instrument t,
+                       sync.t_settlementgroup t1 
+                  WHERE t.SettlementGroupID = t1.SettlementGroupID 
+                  AND t1.ExchangeID = UPPER(%s)"""
+        # 查询股票数据
+        txt_data = mysqlDB.select(sql, (exchange,))
+        self.__produce_txt(exchange, txt_data)
+
     # 生成csv文件
     def __produce_csv(self, table_name, columns, csv_data):
         self.logger.info("%s%s%s" % ("开始生成 ", table_name, ".csv"))
@@ -331,6 +350,19 @@ class exchange_future_csv:
             writer.writerows(csv_tool.covert_to_gbk(csv_data))
         self.logger.info("%s%s%s" % ("生成 ", table_name, ".csv 文件完成"))
 
+    # 生成txt文件
+    def __produce_txt(self, file_name, txt_data):
+        self.logger.info("%s%s%s" % ("开始生成", file_name, ".txt"))
+        _csv_path = "%s%s%s" % (str(self.csv_path), os.path.sep, "md")
+        _path = "%s%s%s%s%s%s" % (str(self.csv_path), os.path.sep, "md", os.path.sep, file_name, '.txt')
+        # 如果不存在目录则先创建
+        if not os.path.exists(_csv_path):
+            os.makedirs(_csv_path)
+        with open(_path, 'wb') as txt_file:
+            for ins in txt_data:
+                ins = str(ins[0])
+                txt_file.write(ins + '\n')
+        self.logger.info("%s%s%s" % ("生成 ", file_name, ".txt 文件完成"))
 
 if __name__ == '__main__':
     base_dir, config_names, config_files = parse_conf_args(__file__, config_names=["mysql", "log", "csv"])
