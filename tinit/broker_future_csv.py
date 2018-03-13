@@ -106,7 +106,7 @@ class exchange_future_csv:
                                    sql="""SELECT t1.TradingDay,t.InstrumentID,t2.ExchangeID,
                                         t.InstrumentID AS ExchangeInstID,t1.LastPrice,t1.PreSettlementPrice,
                                         t1.PreClosePrice,t1.PreOpenInterest,t1.OpenPrice,t1.HighestPrice,t1.LowestPrice,
-                                        t1.Volume,t1.Turnover,t1.OpenInterest,t1.ClosePrice,t1.SettlementPrice,
+                                        '0' AS Volume,'0' AS Turnover,t1.OpenInterest,t1.ClosePrice,t1.SettlementPrice,
                                         t1.UpperLimitPrice,t1.LowerLimitPrice,t1.PreDelta,t1.CurrDelta,t1.UpdateTime,
                                         t1.UpdateMillisec,'0' AS BidPrice1,'0' AS BidVolume1,'0' AS AskPrice1,
                                         '0' AS AskVolume1,'0' AS BidPrice2,'0' AS BidVolume2,'0' AS AskPrice2,

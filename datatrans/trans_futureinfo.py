@@ -96,8 +96,8 @@ class trans_futureinfo:
             # 判断行业类型是否为CP,如果是为期权，其余为期货
             ProductClass = '1'
             OptionsType = '0'
-            ProductID = future['JYPZ']
-            ProductGroupID = future['JYPZ']
+            ProductID = str.upper(str(future['JYPZ']))
+            ProductGroupID = str.upper(str(future['JYPZ']))
             # 获取结算组ID
             settlement = self.self_conf[future['JYSC'].encode('UTF-8')]
             if str(future['HYLX']) == 'C' or str(future['HYLX']) == 'P':
@@ -108,16 +108,16 @@ class trans_futureinfo:
                     OptionsType = '2'
 
                 if settlement == 'SG03':
-                    ProductID = str(future['JYPZ']) + '_O'
+                    ProductID = ProductID + '_O'
                 if settlement == 'SG04':
-                    ProductID = str(future['JYPZ']) + '_O'
+                    ProductID = ProductID + '_O'
                 if settlement == 'SG05':
                     if str(future['HYLX']) == 'C':
-                        ProductID = str(future['JYPZ']) + '_C'
+                        ProductID = ProductID + '_C'
                     elif str(future['HYLX']) == 'P':
-                        ProductID = str(future['JYPZ']) + '_P'
+                        ProductID = ProductID + '_P'
                 if settlement == 'SG06':
-                    ProductID = str(future['JYPZ']) + 'O'
+                    ProductID = ProductID + 'O'
             sql_insert_params.append((settlement, ProductID, ProductGroupID, ProductID, ProductClass,
                                       "2", None, OptionsType,
                                       future['JYDW'], 1, future['ZQDM'], future['ZQMC'],
@@ -125,6 +125,91 @@ class trans_futureinfo:
                                       12 if not future['DQRQ'] else int(str(future['DQRQ'])[4:6]), "012"))
         mysqlDB.executemany(sql_insert_futures, sql_insert_params)
         self.logger.info("写入t_Instrument完成")
+        # 导入完成后写入产品表
+        self.__init_product()
+
+    def __init_product(self):
+        mysqlDB = self.mysqlDB
+        # t_ClientProductRight
+        self.logger.info("产品类型导入t_ClientProductRight")
+        sql = """INSERT into siminfo.t_ClientProductRight(
+                SELECT SettlementGroupID,ProductID,'00000000' AS ClientID,'0' AS TradingRight 
+                FROM siminfo.t_instrument 
+                WHERE SettlementGroupID in ('SG03','SG04','SG05','SG06')
+                GROUP BY SettlementGroupID,ProductID)
+                ON DUPLICATE KEY UPDATE
+                SettlementGroupID = VALUES (SettlementGroupID),
+                ProductID = VALUES (ProductID)"""
+        mysqlDB.execute(sql=sql)
+        # t_MarketProduct
+        self.logger.info("产品类型导入t_MarketProduct")
+        sql = """INSERT into siminfo.t_MarketProduct(
+                SELECT t.SettlementGroupID, t1.MarketID, t.ProductID 
+                FROM siminfo.t_instrument t,siminfo.t_market t1 
+                WHERE t.SettlementGroupID = t1.SettlementGroupID 
+                    AND t.SettlementGroupID IN ( 'SG03', 'SG04', 'SG05', 'SG06' ) 
+                GROUP BY t.SettlementGroupID,t.ProductID,t1.MarketID)
+                ON DUPLICATE KEY UPDATE
+                SettlementGroupID = VALUES (SettlementGroupID),
+                MarketID = VALUES (MarketID),
+                ProductID = VALUES (ProductID)"""
+        mysqlDB.execute(sql=sql)
+        # t_MdPubStatus
+        self.logger.info("产品类型导入t_MdPubStatus")
+        sql = """INSERT into siminfo.t_MdPubStatus(
+                SELECT SettlementGroupID,ProductID,'3' AS InstrumentStatus,'0' AS MdPubStatus 
+                FROM siminfo.t_instrument 
+                WHERE SettlementGroupID IN ('SG03','SG04','SG05','SG06')
+                GROUP BY SettlementGroupID,ProductID)
+                ON DUPLICATE KEY UPDATE
+                SettlementGroupID = VALUES (SettlementGroupID),
+                ProductID = VALUES (ProductID)"""
+        mysqlDB.execute(sql=sql)
+        # t_PartProductRight
+        self.logger.info("产品类型导入t_PartProductRight")
+        sql = """INSERT INTO siminfo.t_PartProductRight(
+                SELECT SettlementGroupID,ProductID,'00000000' AS ParticipantID,'0' AS TradingRight 
+                FROM siminfo.t_instrument 
+                WHERE SettlementGroupID IN ('SG03','SG04','SG05','SG06')
+                GROUP BY SettlementGroupID,ProductID)
+                ON DUPLICATE KEY UPDATE
+                SettlementGroupID = VALUES (SettlementGroupID),
+                ProductID = VALUES (ProductID)"""
+        mysqlDB.execute(sql=sql)
+        # t_PartProductRole
+        self.logger.info("产品类型导入t_PartProductRole")
+        sql = """INSERT INTO siminfo.t_PartProductRole(
+                SELECT SettlementGroupID,'00000000' AS ParticipantID,ProductID,'1' AS TradingRole 
+                FROM siminfo.t_instrument 
+                WHERE SettlementGroupID IN ('SG03','SG04','SG05','SG06')
+                GROUP BY SettlementGroupID,ProductID)
+                ON DUPLICATE KEY UPDATE
+                SettlementGroupID = VALUES (SettlementGroupID),
+                ProductID = VALUES (ProductID)"""
+        mysqlDB.execute(sql=sql)
+        # t_Product
+        self.logger.info("产品类型导入t_Product")
+        sql = """INSERT INTO siminfo.t_Product(
+                SELECT SettlementGroupID, ProductID, ProductGroupID, '' AS ProductName,'' AS ProductClass 
+                FROM siminfo.t_instrument 
+                WHERE SettlementGroupID IN ('SG03','SG04','SG05','SG06')
+                GROUP BY SettlementGroupID,ProductID,ProductGroupID)
+                ON DUPLICATE KEY UPDATE
+                SettlementGroupID = VALUES (SettlementGroupID),
+                ProductID = VALUES (ProductID),
+                ProductGroupID = VALUES (ProductGroupID)"""
+        mysqlDB.execute(sql=sql)
+        # t_ProductGroup
+        self.logger.info("产品类型导入t_ProductGroup")
+        sql = """INSERT INTO siminfo.t_ProductGroup(
+                SELECT SettlementGroupID,ProductGroupID,'' AS ProductGroupName,ProductGroupID as CommodityID
+                FROM siminfo.t_instrument 
+                WHERE SettlementGroupID IN ('SG03','SG04','SG05','SG06')
+                GROUP BY SettlementGroupID,ProductGroupID,ProductGroupID)
+                ON DUPLICATE KEY UPDATE
+                SettlementGroupID = VALUES (SettlementGroupID),
+                ProductGroupID = VALUES (ProductGroupID)"""
+        mysqlDB.execute(sql=sql)
 
     # 读取处理GJSHQ文件
     def __t_MarketData(self, mysqlDB, dbf):
@@ -137,19 +222,18 @@ class trans_futureinfo:
                                         CurrDelta,UpdateTime,UpdateMillisec,InstrumentID
                                    )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
                                    ON DUPLICATE KEY UPDATE  
-                                        OpenPrice = VALUES(OpenPrice),
-                                        HighestPrice = VALUES(HighestPrice),
-                                        LowestPrice = VALUES(LowestPrice),
-                                        Volume = VALUES(Volume),
-                                        Turnover = VALUES(Turnover),
-                                        ClosePrice = VALUES(ClosePrice),
-                                        SettlementPrice = VALUES(SettlementPrice)"""
+                                        PreSettlementPrice = VALUES(PreSettlementPrice),
+                                        PreClosePrice = VALUES(PreClosePrice),
+                                        UpdateTime = VALUES(UpdateTime),
+                                        UpdateMillisec = VALUES(UpdateMillisec)"""
         sql_insert_params = []
         for hq in dbf:
-            sql_insert_params.append((self.TradingDay, self.self_conf[hq['JYSC'].encode('UTF-8')],
-                                      None, None, None, 0, hq['KPJ'], hq['ZGJ'], hq['ZDJ'], hq['CJL'],
-                                      hq['CJJE'], None, hq['SPJ'], hq['JQPJJ'], None, None, None, None, None, None,
-                                      hq['HYDM']))
+            sql_insert_params.append((self.TradingDay, self.self_conf[hq['JYSC'].encode('UTF-8')], None, hq['JQPJJ'],
+                                      hq['SPJ'], '0', None,
+                                      None, None, None, None,
+                                      None, None, None,
+                                      None, None, None,
+                                      None, "15:15:00", "100", hq['HYDM']))
         mysqlDB.executemany(sql_insert_gjshq, sql_insert_params)
         self.logger.info("写入t_MarketData完成")
 

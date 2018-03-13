@@ -260,7 +260,7 @@ class exchange_stock_csv:
                                        "OTCLastPrice", "OTCVolume", "OTCInterestChange",),
                               sql="""SELECT t1.TradingDay,'SG01' AS SettlementGroupID,'1' AS SettlementID,
                                             LastPrice,PreSettlementPrice,PreClosePrice,PreOpenInterest,OpenPrice,
-                                            HighestPrice,LowestPrice,Volume,Turnover,OpenInterest,ClosePrice,
+                                            HighestPrice,LowestPrice,'0' AS Volume,'0' AS Turnover,OpenInterest,ClosePrice,
                                             SettlementPrice,UpperLimitPrice,LowerLimitPrice,PreDelta,CurrDelta,
                                             UpdateTime,UpdateMillisec,InstrumentID,
                                             '' AS OTCLastPrice,'' AS OTCVolume,'' AS OTCInterestChange

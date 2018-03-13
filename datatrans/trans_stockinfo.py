@@ -266,7 +266,7 @@ class trans_stockinfo:
                                       None, None, None, None,
                                       None, None, None,
                                       None, None, None,
-                                      None, "08:30:00", "-1", stock[0]))
+                                      None, "15:15:00", "100", stock[0]))
         mysqlDB.executemany(sql_insert_market, sql_insert_params)
         self.logger.info("写入t_MarketData完成")
 

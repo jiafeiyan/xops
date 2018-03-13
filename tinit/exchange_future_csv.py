@@ -130,11 +130,8 @@ class exchange_future_csv:
                                               FROM sync.t_ClearingTradingPart WHERE TradeSystemID=%s""",
                                        quoting=True),
             t_ClientProductRight=dict(columns=("SettlementGroupID", "ProductID", "ClientID", "TradingRight"),
-                                      sql="""SELECT 'SG01' AS SettlementGroupID,ProductID,
-                                                    '00000000' AS ClientID,'0' AS TradingRight 
-                                                FROM sync.t_instrument 
-                                                WHERE TradeSystemID = %s
-                                                GROUP BY ProductID""",
+                                      sql="""SELECT 'SG01' AS SettlementGroupID,ProductID,ClientID,TradingRight
+                                                         FROM sync.t_ClientProductRight WHERE TradeSystemID=%s""",
                                       quoting=True),
             t_CurrInstrumentProperty=dict(columns=("SettlementGroupID", "CreateDate", "OpenDate", "ExpireDate",
                                                    "StartDelivDate", "EndDelivDate", "BasisPrice",
@@ -175,12 +172,7 @@ class exchange_future_csv:
                           sql="""SELECT MarketID,MarketName FROM sync.t_Market WHERE TradeSystemID=%s""",
                           quoting=True),
             t_MarketProduct=dict(columns=("MarketID", "ProductID"),
-                                 sql="""SELECT t1.MarketID,t.ProductID 
-                                        FROM sync.t_instrument t, sync.t_market t1 
-                                        WHERE t.TradeSystemID = t1.TradeSystemID 
-                                        AND t.SettlementGroupID = t1.SettlementGroupID 
-                                        AND t.TradeSystemID = %s 
-                                        GROUP BY t.ProductID, t1.MarketID""",
+                                 sql="""SELECT MarketID,ProductID FROM sync.t_MarketProduct WHERE TradeSystemID=%s""",
                                  quoting=True),
             t_MarketProductGroup=dict(columns=("MarketID", "ProductGroupID"),
                                       sql="""SELECT MarketID,ProductGroupID FROM sync.t_MarketProductGroup WHERE TradeSystemID=%s""",
@@ -188,21 +180,15 @@ class exchange_future_csv:
             t_Participant=dict(columns=("ParticipantID", "ParticipantName", "ParticipantAbbr", "MemberType",
                                         "IsActive"),
                                sql="""SELECT ParticipantID,ParticipantName,ParticipantAbbr,MemberType,IsActive
-                                      FROM sync.t_Participant WHERE TradeSystemID=%s""",
+                                                  FROM sync.t_Participant WHERE TradeSystemID=%s""",
                                quoting=True),
             t_PartProductRight=dict(columns=("SettlementGroupID", "ProductID", "ParticipantID", "TradingRight"),
-                                    sql="""SELECT 'SG01' AS SettlementGroupID,ProductID,
-                                                  '00000000' AS ParticipantID,'0' AS TradingRight 
-                                                FROM sync.t_instrument 
-                                                WHERE TradeSystemID = %s 
-                                                GROUP BY ProductID""",
+                                    sql="""SELECT 'SG01' AS SettlementGroupID,ProductID,ParticipantID,TradingRight
+                                                          FROM sync.t_PartProductRight WHERE TradeSystemID=%s""",
                                     quoting=True),
             t_PartProductRole=dict(columns=("SettlementGroupID", "ParticipantID", "ProductID", "TradingRole"),
-                                   sql="""SELECT 'SG01' AS SettlementGroupID,'00000000' AS ParticipantID,
-                                                ProductID,'1' AS TradingRole 
-                                            FROM sync.t_instrument 
-                                            WHERE TradeSystemID = '0002' 
-                                            GROUP BY ProductID""",
+                                   sql="""SELECT 'SG01' AS SettlementGroupID,ParticipantID,ProductID,TradingRole
+                                                          FROM sync.t_PartProductRole WHERE TradeSystemID=%s""",
                                    quoting=True),
             t_PartRoleAccount=dict(columns=("TradingDay", "SettlementGroupID", "SettlementID",
                                             "ParticipantID", "TradingRole", "AccountID"),
@@ -270,7 +256,7 @@ class exchange_future_csv:
                                        "OTCLastPrice", "OTCVolume", "OTCInterestChange",),
                               sql="""SELECT t1.TradingDay,'SG01' AS SettlementGroupID,'1' AS SettlementID,
                                             LastPrice,PreSettlementPrice,PreClosePrice,PreOpenInterest,OpenPrice,
-                                            HighestPrice,LowestPrice,Volume,Turnover,OpenInterest,ClosePrice,
+                                            HighestPrice,LowestPrice,'0' AS Volume,'0' AS Turnover,OpenInterest,ClosePrice,
                                             SettlementPrice,UpperLimitPrice,LowerLimitPrice,PreDelta,CurrDelta,
                                             UpdateTime,UpdateMillisec,InstrumentID,
                                             '' AS OTCLastPrice,'' AS OTCVolume,'' AS OTCInterestChange
@@ -286,10 +272,8 @@ class exchange_future_csv:
                                           FROM sync.t_MarketDataTopic WHERE TradeSystemID=%s""",
                                    quoting=True),
             t_MdPubStatus=dict(columns=("ProductID", "InstrumentStatus", "MdPubStatus"),
-                               sql="""SELECT ProductID,'3' AS InstrumentStatus,'0' AS MdPubStatus 
-                                      FROM sync.t_instrument 
-                                      WHERE TradeSystemID = %s 
-                                      GROUP BY ProductID""",
+                               sql="""SELECT ProductID,InstrumentStatus,MdPubStatus
+                                                      FROM sync.t_MdPubStatus WHERE TradeSystemID=%s""",
                                quoting=True),
             t_PartClient=dict(columns=("ClientID", "ParticipantID"),
                               sql="""SELECT ClientID,ParticipantID FROM sync.t_PartClient WHERE TradeSystemID=%s""",
