@@ -130,3 +130,111 @@ def join_activity(mysql_conn, parameters):
     mysql_conn.commit()
 
     return result
+
+
+def query_activity_ranking(mysql_conn, parameters):
+    activity_id = parameters.get("activity")
+    investor_id = parameters.get("investor")
+    query_type = parameters.get("type")
+    query_count = parameters.get("count")
+
+    code = "0"
+    response = {"activity": activity_id, "investor": investor_id, "type": query_type, "count": query_count}
+    result = {"kind": "joinActivity", "code": code, "response": response}
+
+    if activity_id is None:
+        code = "-1"
+        error = "请输入赛事编号"
+    elif len(activity_id) != 4:
+        code = "-1"
+        error = "赛事代码应为4位"
+
+    if query_type not in ['00', '01', '99']:
+        code = "-1"
+        error = "查询类型仅支持00、01、99"
+
+    if query_type == '99' and activity_id is None:
+        code = "-1"
+        error = "请输入投资者代码"
+
+    if query_count is None or query_count > 30:
+        query_count = 30
+
+    if mysql_conn is None or not mysql_conn.is_connected():
+        code = "-1"
+        error = "系统内部错误"
+
+    if code == "-1":
+        response.update({"error": error})
+        result.update({"code": code, "response": response})
+
+        return result
+
+    mysql_conn.set_charset_collation('utf8')
+
+    cursor = mysql_conn.cursor()
+
+    if investor_id is not None:
+        sql = '''SELECT investorid FROM siminfo.t_investor WHERE investorid =  %s'''
+        cursor.execute(sql, (investor_id,))
+        row = cursor.fetchone()
+
+        if row is None:
+            code = "-1"
+            error = "投资者尚未开户"
+
+            response.update({"error": error})
+            result.update({"code": code, "response": response})
+
+            return result
+
+    rows = None
+    if query_type == '99' and investor_id is not None:
+        sql = """SELECT t.investorid, t1.investorname, t.initialasset, t.preasset, t.currentasset, ROUND(t.totalreturnrate, 4), ROUND(t.returnrateof1day, 4), t.ranking
+                            FROM (SELECT (@i:=@i+1) AS ranking, t.* FROM siminfo.t_activityinvestorevaluation t,(SELECT @i:=0) AS it WHERE t.activityid = %s ORDER BY t.totalreturnrate DESC) t, siminfo.t_investor t1
+                            WHERE t.investorid = t1.investorid AND t.investorid = %s"""
+        cursor.execute(sql, (activity_id, investor_id,))
+        rows = cursor.fetchall()
+
+    if query_type == '00':
+        if investor_id is not None:
+            sql = """SELECT t.investorid, t1.investorname, t.initialasset, t.preasset, t.currentasset, ROUND(t.totalreturnrate, 4), ROUND(t.returnrateof1day, 4), t.ranking
+                                FROM (SELECT (@i:=@i+1) AS ranking, t.* FROM siminfo.t_activityinvestorevaluation t,(SELECT @i:=0) AS it WHERE t.activityid = %s 
+                                              ORDER BY t.totalreturnrate DESC) t, siminfo.t_investor t1
+                                WHERE t.investorid = t1.investorid AND (t.ranking <= %s OR t.investorid = %s)"""
+            cursor.execute(sql, (activity_id, query_count, investor_id))
+            rows = cursor.fetchall()
+        else:
+            sql = """SELECT t.investorid, t1.investorname, t.initialasset, t.preasset, t.currentasset, ROUND(t.totalreturnrate, 4), ROUND(t.returnrateof1day, 4), t.ranking
+                                FROM (SELECT (@i:=@i+1) AS ranking, t.* FROM siminfo.t_activityinvestorevaluation t,(SELECT @i:=0) AS it WHERE t.activityid = %s 
+                                              ORDER BY t.totalreturnrate DESC) t, siminfo.t_investor t1
+                                WHERE t.investorid = t1.investorid AND t.ranking <= %s"""
+            cursor.execute(sql, (activity_id, query_count))
+            rows = cursor.fetchall()
+
+    if query_type == '01':
+        if investor_id is not None:
+            sql = """SELECT t.investorid, t1.investorname, t.initialasset, t.preasset, t.currentasset, ROUND(t.totalreturnrate, 4), ROUND(t.returnrateof1day, 4), t.ranking
+                                FROM (SELECT (@i:=@i+1) AS ranking, t.* FROM siminfo.t_activityinvestorevaluation t,(SELECT @i:=0) AS it WHERE t.activityid = %s 
+                                              ORDER BY t.returnrateof1day DESC) t, siminfo.t_investor t1
+                                WHERE t.investorid = t1.investorid AND (t.ranking <= %s OR t.investorid = %s)"""
+            cursor.execute(sql, (activity_id, query_count, investor_id))
+            rows = cursor.fetchall()
+        else:
+            sql = """SELECT t.investorid, t1.investorname, t.initialasset, t.preasset, t.currentasset, ROUND(t.totalreturnrate, 4), ROUND(t.returnrateof1day, 4), t.ranking
+                                FROM (SELECT (@i:=@i+1) AS ranking, t.* FROM siminfo.t_activityinvestorevaluation t,(SELECT @i:=0) AS it WHERE t.activityid = %s 
+                                              ORDER BY t.returnrateof1day DESC) t, siminfo.t_investor t1
+                                WHERE t.investorid = t1.investorid AND t.ranking <= %s"""
+            cursor.execute(sql, (activity_id, query_count))
+            rows = cursor.fetchall()
+
+    data = []
+    if rows is not None:
+        for row in rows:
+            data.append({"investorId": str(row[0]),"investorName": str(row[1]),"initialAsset": str(row[2]),"preAsset": str(row[3]),
+                                    "currentAsset": str(row[4]),"totalReturnRate": str(row[5]),"returnRateOf1Day": str(row[6]),"ranking": str(int(row[7]))})
+
+    response.update({"data": data})
+    result.update({"code": code, "response": response})
+
+    return result

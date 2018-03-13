@@ -8,7 +8,7 @@ import tornado.web
 import tornado.log
 
 from account_handler import open_account
-from activity_handler import join_activity
+from activity_handler import join_activity, query_activity_ranking
 
 from utils import Configuration, mysql, parse_conf_args, log
 
@@ -79,7 +79,43 @@ class JoinActivityHandler(tornado.web.RequestHandler):
         self.set_header("Content-Type", "text/json;charset=UTF-8")
         self.write(result_json)
 
-        self.logger.info("openAccount end [ result= %s ]", result_json)
+        self.logger.info("joinActivity end [ result= %s ]", result_json)
+
+
+class QueryActivityRankingHandler(tornado.web.RequestHandler):
+    def initialize(self, database, logger):
+        self.database = database
+        self.logger = logger
+
+    def get(self):
+        return self.do_service()
+
+    def post(self):
+        return self.do_service()
+
+    def do_service(self):
+        activity_id = self.get_argument("activity", None)
+        investor_id = self.get_argument("investor", None)
+        query_type = self.get_argument("type", "00")
+        query_count = int(self.get_argument("count", "0"))
+
+        self.logger.info("queryActivityRanking begin [ activity=%s, id=%s, type=%s, count=%d ]", activity_id, investor_id, query_type, query_count)
+
+        result = {"kind": "queryActivityRanking", "code": "-1", "response": {"activity": activity_id, "investor": investor_id, "type": query_type, "count": query_count, "error": "系统内部错误"}}
+
+        conn = self.database.get_cnx()
+        try:
+            result = query_activity_ranking(conn, {"activity": activity_id, "investor": investor_id, "type": query_type, "count": query_count})
+        except:
+            self.logger.error(sys.exc_info()[0])
+        finally:
+            conn.close()
+
+        result_json = json.dumps(result, encoding="UTF-8", ensure_ascii=False)
+        self.set_header("Content-Type", "text/json;charset=UTF-8")
+        self.write(result_json)
+
+        self.logger.info("queryActivityRanking end [ result= %s ]", result_json)
 
 
 def start_http_server(context, conf):
@@ -90,6 +126,7 @@ def start_http_server(context, conf):
     app = tornado.web.Application([
         (r"/openAccount", OpenAccountHandler, dict(database=mysql_pool, logger=logger)),
         (r"/joinActivity", JoinActivityHandler, dict(database=mysql_pool, logger=logger)),
+        (r"/queryActivityRanking", QueryActivityRankingHandler, dict(database=mysql_pool, logger=logger)),
     ])
     app.listen(conf["port"])
 
