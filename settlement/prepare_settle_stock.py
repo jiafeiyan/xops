@@ -256,7 +256,7 @@ def prepare_settle_stock(context, conf):
 
 
 def main():
-    base_dir, config_names, config_files = parse_conf_args(__file__, config_names=["hosts:hosts", "mysql"])
+    base_dir, config_names, config_files, add_ons = parse_conf_args(__file__, config_names=["hosts:hosts", "mysql"])
 
     context, conf = Configuration.load(base_dir=base_dir, config_names=config_names, config_files=config_files)
 

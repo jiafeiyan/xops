@@ -197,7 +197,7 @@ class broker_stock_csv:
 
 
 if __name__ == '__main__':
-    base_dir, config_names, config_files = parse_conf_args(__file__, config_names=["mysql", "log", "csv"])
+    base_dir, config_names, config_files, add_ons = parse_conf_args(__file__, config_names=["mysql", "log", "csv"])
     context, conf = Configuration.load(base_dir=base_dir, config_names=config_names, config_files=config_files)
     # 启动脚本
     broker_stock_csv(context=context, configs=conf)

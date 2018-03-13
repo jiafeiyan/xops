@@ -61,7 +61,7 @@ def gen_activity(context, conf):
 
 def main():
 
-    base_dir, config_names, config_files = parse_conf_args(__file__, config_names=["mysql"])
+    base_dir, config_names, config_files, add_ons = parse_conf_args(__file__, config_names=["mysql"])
 
     context, conf = Configuration.load(base_dir=base_dir, config_names=config_names, config_files=config_files)
 
