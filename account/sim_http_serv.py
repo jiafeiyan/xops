@@ -99,7 +99,7 @@ class QueryActivityRankingHandler(tornado.web.RequestHandler):
         query_type = self.get_argument("type", "00")
         query_count = int(self.get_argument("count", "0"))
 
-        self.logger.info("queryActivityRanking begin [ activity=%s, id=%s, type=%s, count=%d ]", activity_id, investor_id, query_type, query_count)
+        self.logger.info("queryActivityRanking begin [ activity=%s, investor=%s, type=%s, count=%d ]", activity_id, investor_id, query_type, query_count)
 
         result = {"kind": "queryActivityRanking", "code": "-1", "response": {"activity": activity_id, "investor": investor_id, "type": query_type, "count": query_count, "error": "系统内部错误"}}
 

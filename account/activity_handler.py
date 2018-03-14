@@ -140,7 +140,7 @@ def query_activity_ranking(mysql_conn, parameters):
 
     code = "0"
     response = {"activity": activity_id, "investor": investor_id, "type": query_type, "count": query_count}
-    result = {"kind": "joinActivity", "code": code, "response": response}
+    result = {"kind": "queryActivityRanking", "code": code, "response": response}
 
     if activity_id is None:
         code = "-1"
@@ -174,7 +174,7 @@ def query_activity_ranking(mysql_conn, parameters):
 
     cursor = mysql_conn.cursor()
 
-    if investor_id is not None:
+    if investor_id is not None and investor_id != "":
         sql = '''SELECT investorid FROM siminfo.t_investor WHERE investorid =  %s'''
         cursor.execute(sql, (investor_id,))
         row = cursor.fetchone()
