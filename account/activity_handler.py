@@ -157,7 +157,7 @@ def query_activity_ranking(mysql_conn, parameters):
         code = "-1"
         error = "请输入投资者代码"
 
-    if query_count is None or query_count > 30:
+    if query_count is None:
         query_count = 30
 
     if mysql_conn is None or not mysql_conn.is_connected():
@@ -201,15 +201,15 @@ def query_activity_ranking(mysql_conn, parameters):
             sql = """SELECT t.investorid, t1.investorname, t.initialasset, t.preasset, t.currentasset, ROUND(t.totalreturnrate, 4), ROUND(t.returnrateof1day, 4), t.ranking
                                 FROM (SELECT (@i:=@i+1) AS ranking, t.* FROM siminfo.t_activityinvestorevaluation t,(SELECT @i:=0) AS it WHERE t.activityid = %s 
                                               ORDER BY t.totalreturnrate DESC) t, siminfo.t_investor t1
-                                WHERE t.investorid = t1.investorid AND (t.ranking <= %s OR t.investorid = %s)"""
-            cursor.execute(sql, (activity_id, query_count, investor_id))
+                                WHERE t.investorid = t1.investorid AND (t.ranking <= %s OR %s = '0' OR t.investorid = %s)"""
+            cursor.execute(sql, (activity_id, query_count, query_count, investor_id))
             rows = cursor.fetchall()
         else:
             sql = """SELECT t.investorid, t1.investorname, t.initialasset, t.preasset, t.currentasset, ROUND(t.totalreturnrate, 4), ROUND(t.returnrateof1day, 4), t.ranking
                                 FROM (SELECT (@i:=@i+1) AS ranking, t.* FROM siminfo.t_activityinvestorevaluation t,(SELECT @i:=0) AS it WHERE t.activityid = %s 
                                               ORDER BY t.totalreturnrate DESC) t, siminfo.t_investor t1
-                                WHERE t.investorid = t1.investorid AND t.ranking <= %s"""
-            cursor.execute(sql, (activity_id, query_count))
+                                WHERE t.investorid = t1.investorid AND (t.ranking <= %s OR %s = '0')"""
+            cursor.execute(sql, (activity_id, query_count, query_count))
             rows = cursor.fetchall()
 
     if query_type == '01':
@@ -217,15 +217,15 @@ def query_activity_ranking(mysql_conn, parameters):
             sql = """SELECT t.investorid, t1.investorname, t.initialasset, t.preasset, t.currentasset, ROUND(t.totalreturnrate, 4), ROUND(t.returnrateof1day, 4), t.ranking
                                 FROM (SELECT (@i:=@i+1) AS ranking, t.* FROM siminfo.t_activityinvestorevaluation t,(SELECT @i:=0) AS it WHERE t.activityid = %s 
                                               ORDER BY t.returnrateof1day DESC) t, siminfo.t_investor t1
-                                WHERE t.investorid = t1.investorid AND (t.ranking <= %s OR t.investorid = %s)"""
-            cursor.execute(sql, (activity_id, query_count, investor_id))
+                                WHERE t.investorid = t1.investorid AND (t.ranking <= %s OR %s = '0' OR t.investorid = %s)"""
+            cursor.execute(sql, (activity_id, query_count, query_count, investor_id))
             rows = cursor.fetchall()
         else:
             sql = """SELECT t.investorid, t1.investorname, t.initialasset, t.preasset, t.currentasset, ROUND(t.totalreturnrate, 4), ROUND(t.returnrateof1day, 4), t.ranking
                                 FROM (SELECT (@i:=@i+1) AS ranking, t.* FROM siminfo.t_activityinvestorevaluation t,(SELECT @i:=0) AS it WHERE t.activityid = %s 
                                               ORDER BY t.returnrateof1day DESC) t, siminfo.t_investor t1
-                                WHERE t.investorid = t1.investorid AND t.ranking <= %s"""
-            cursor.execute(sql, (activity_id, query_count))
+                                WHERE t.investorid = t1.investorid AND (t.ranking <= %s OR %s = '0')"""
+            cursor.execute(sql, (activity_id, query_count, query_count))
             rows = cursor.fetchall()
 
     data = []
