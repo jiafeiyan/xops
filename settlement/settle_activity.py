@@ -19,7 +19,7 @@ def settle_activity(context, conf):
         cursor = mysql_conn.cursor()
 
         # 结算正在进行的赛事数据
-        sql = """SELECT * FROM siminfo.t_activity WHERE activitystatus = '1'"""
+        sql = """SELECT * FROM siminfo.t_activity"""
         cursor.execute(sql)
         rows = cursor.fetchall()
 
@@ -50,6 +50,14 @@ def settle_activity(context, conf):
                                       END 
                                     WHERE activitystatus = '0'"""
             cursor.execute(sql, (current_trading_day, current_trading_day))
+
+            sql = """SELECT activitystatus FROM siminfo.t_activity WHERE activityid = %s"""
+            cursor.execute(sql, (activity_id,))
+            row = cursor.fetchone()
+
+            if "0" == str(row[0]):
+                continue
+
             # 赛事新参与投资者数据重置
             logger.info("[reset new activity investor data]......")
             sql = """UPDATE siminfo.t_investorfund t1, siminfo.t_activityinvestor t2
