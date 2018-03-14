@@ -96,8 +96,8 @@ class trans_futureinfo:
             # 判断行业类型是否为CP,如果是为期权，其余为期货
             ProductClass = '1'
             OptionsType = '0'
-            ProductID = str.upper(str(future['JYPZ']))
-            ProductGroupID = str.upper(str(future['JYPZ']))
+            ProductID = str(future['JYPZ'])
+            ProductGroupID = str(future['JYPZ'])
             # 获取结算组ID
             settlement = self.self_conf[future['JYSC'].encode('UTF-8')]
             if str(future['HYLX']) == 'C' or str(future['HYLX']) == 'P':
@@ -279,7 +279,7 @@ class trans_futureinfo:
                                1 if not property[ProductID] else property[ProductID][1],
                                1000000 if not property[ProductID] else property[ProductID][2],
                                1 if not property[ProductID] else property[ProductID][3],
-                               0.01 if not property[ProductID] else property[ProductID][4],
+                               1 if not property[ProductID] else property[ProductID][4],
                                0, future['ZQDM'], 1))
         mysqlDB.executemany(sql_Property, sql_params)
         self.logger.info("写入t_InstrumentProperty完成")
