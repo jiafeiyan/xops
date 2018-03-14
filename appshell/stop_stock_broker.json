@@ -1,4 +1,4 @@
 {
-  "host" : "stock_broker_1_119",
+  "host" : "stock_broker",
   "command" : "${HOME}/run/stop.sh"
 }

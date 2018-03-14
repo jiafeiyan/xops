@@ -15,12 +15,12 @@ if [ $? != 0 ]; then
 fi
 
 echo "starting settle_stock..."
-python ${SIM_PLATFORM_HOME}/settlement/settle_stock.py -conf ${SIM_PLATFORM_HOME}/appshell/settle_stock_sse.json
+python ${SIM_PLATFORM_HOME}/settlement/settle_stock.py -conf ${SIM_PLATFORM_HOME}/settlement/settle_stock_sse.json
 if [ $? != 0 ]; then
         echo "settle_stock sse error..."
         exit 1
 fi
-python ${SIM_PLATFORM_HOME}/settlement/settle_stock.py -conf ${SIM_PLATFORM_HOME}/appshell/settle_stock_szse.json
+python ${SIM_PLATFORM_HOME}/settlement/settle_stock.py -conf ${SIM_PLATFORM_HOME}/settlement/settle_stock_szse.json
 if [ $? != 0 ]; then
         echo "settle_stock szse error..."
         exit 1
@@ -37,5 +37,26 @@ echo "starting publish_stock_exchange..."
 python ${SIM_PLATFORM_HOME}/settlement/publish_stock_exchange.py
 if [ $? != 0 ]; then
         echo "publish_stock_exchange error..."
+        exit 1
+fi
+
+echo "starting settle_activity..."
+python ${SIM_PLATFORM_HOME}/settlement/settle_activity.py
+if [ $? != 0 ]; then
+        echo "settle_activity error..."
+        exit 1
+fi
+
+echo "starting snap_activity_data..."
+python ${SIM_PLATFORM_HOME}/settlement/snap_activity_data.py
+if [ $? != 0 ]; then
+        echo "snap_activity_data error..."
+        exit 1
+fi
+
+echo "starting snap_settle_data..."
+python ${SIM_PLATFORM_HOME}/settlement/snap_settle_data.py
+if [ $? != 0 ]; then
+        echo "snap_settle_data error..."
         exit 1
 fi

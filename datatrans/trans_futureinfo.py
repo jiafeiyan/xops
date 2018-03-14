@@ -292,23 +292,52 @@ class trans_futureinfo:
                                     InstrumentStatus,DayOffset,InstrumentID
                                 ) VALUES (%s,%s,%s,%s,%s,%s,%s)
                                 ON DUPLICATE KEY UPDATE 
+                                  SettlementGroupID=VALUES(SettlementGroupID),
+                                  TradingSegmentSN=VALUES(TradingSegmentSN),
                                   TradingSegmentName=VALUES(TradingSegmentName),
                                   StartTime=VALUES(StartTime),
                                   InstrumentStatus=VALUES(InstrumentStatus),
-                                  DayOffset=VALUES(DayOffset)"""
+                                  DayOffset=VALUES (DayOffset),
+                                  InstrumentID=VALUES (InstrumentID)"""
         sql_insert_params = []
-        SegmentAttr = self.__loadJSON(tableName='t_TradingSegmentAttr')
-        if SegmentAttr is None:
+        #  加载交易时间段数据
+        segment_attr = self.__loadJSON(tableName='t_TradingSegmentAttr')
+        if segment_attr is None:
+            self.logger.error("t_TradingSegmentAttr不存在")
             return
         for future in dbf:
+            # 获取结算组ID
             SGID = self.self_conf[future['JYSC'].encode('UTF-8')]
-            if SGID in SegmentAttr:
-                for attr in SegmentAttr[SGID]:
-                    sql_insert_params.append((
-                        SGID, attr[1], attr[2], attr[3], attr[4], '0', future['ZQDM']
-                    ))
+            # 判断结算组是否存在
+            if SGID in segment_attr:
+                attr = segment_attr[SGID]
+                product = future['JYPZ']
+                params = self.__get_segment_attr(attr=attr, product=product, instrument=future['ZQDM'])
+                sql_insert_params += params
         mysqlDB.executemany(sql_insert_segment, sql_insert_params)
         self.logger.info("写入t_TradingSegmentAttr完成")
+
+    # 通过产品代码生成目标合约的交易时间段
+    def __get_segment_attr(self, attr, product, instrument):
+        future = attr['future']
+        all_trading_time = attr['tradingTime']
+        exist_trading_time = []
+        # 获取当前模版存在的产品代码
+        for segment in future:
+            if product in future[segment]:
+                exist_trading_time.append(segment)
+        # 如果模版里面没有该产品，则取该结算组白天交易时间段
+        params = []
+        if len(exist_trading_time) == 0:
+            for segment in all_trading_time["day"]:
+                params.append((segment[0], segment[1], segment[2], segment[3], segment[4], segment[5], instrument))
+        else:
+            segment_list = []
+            for exist in exist_trading_time:
+                segment_list += all_trading_time[exist]
+            for segment in segment_list:
+                params.append((segment[0], segment[1], segment[2], segment[3], segment[4], segment[5], instrument))
+        return params
 
     # 写入t_MarginRate
     def __t_MarginRate(self, mysqlDB, dbf):
@@ -354,11 +383,24 @@ class trans_futureinfo:
         for future in dbf:
             SGID = self.self_conf[future['JYSC'].encode('UTF-8')]
             if SGID in template:
-                sql_insert_params.append((SGID, template[SGID][1], template[SGID][2], template[SGID][3],
-                                          template[SGID][4], template[SGID][5], future['ZQDM'],
-                                          template[SGID][9], template[SGID][10]))
+                attr = template[SGID]
+                product = future['JYPZ']
+                sql_insert_params.append(self.__get_margin_rate_detail(attr=attr, product=product, instrument=future['ZQDM']))
         mysqlDB.executemany(sql_insert_detail, sql_insert_params)
         self.logger.info("写入t_MarginRateDetail完成")
+
+    # 通过产品代码生成目标合约的保证金率
+    def __get_margin_rate_detail(self, attr, product, instrument):
+        template = attr["template"]
+        margin_ratio = attr["marginRatio"]
+        # 判断产品代码是否存在于模版
+        if product in margin_ratio.keys():
+            params = (template[0], template[1], template[2], template[3], margin_ratio[product][0],
+                      margin_ratio[product][1], instrument, template[9], template[10])
+        else:
+            params = (template[0], template[1], template[2], template[3], template[4], template[5], instrument,
+                      template[9], template[10])
+        return params
 
     # 写入t_PriceBanding
     def __t_PriceBanding(self, mysqlDB, dbf):

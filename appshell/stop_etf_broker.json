@@ -1,4 +1,4 @@
 {
-  "host" : "etf_broker_1_119",
+  "host" : "etf_broker",
   "command" : "${HOME}/run/stop.sh"
 }
