@@ -19,6 +19,6 @@
         "type": "put",
         "target" : "${HOME}/run/mdreceiver/bin",
         "items": ["${SIM_PLATFORM_HOME}/csvfiles/exchange/0001/md"]
-      },
+      }
     ]
 }
