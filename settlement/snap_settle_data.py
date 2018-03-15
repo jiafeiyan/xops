@@ -43,6 +43,16 @@ def snap_data(context, conf):
                             SELECT %s,BrokerSystemID,InvestorID,PreBalance,CurrMargin,CloseProfit,Premium,Deposit,Withdraw,Balance,Available,PreMargin,FuturesMargin,OptionsMargin,PositionProfit,Profit,Interest,Fee,TotalCollateral,CollateralForMargin,PreAccmulateInterest,AccumulateInterest,AccumulateFee,ForzenDeposit,AccountStatus,PreStockValue,StockValue
                             FROM siminfo.t_investorfund WHERE BrokerSystemID = %s"""
         cursor.execute(sql, (current_trading_day, broker_system_id,))
+        logger.info("[snap order]......")
+        sql = """INSERT INTO snap.t_s_order(TradingDay,SettlementGroupID,SettlementID,OrderSysID,ParticipantID,ClientID,UserID,InstrumentID,OrderPriceType,Direction,CombOffsetFlag,CombHedgeFlag,LimitPrice,VolumeTotalOriginal,TimeCondition,GTDDate,VolumeCondition,MinVolume,ContingentCondition,StopPrice,ForceCloseReason,OrderLocalID,IsAutoSuspend,OrderSource,OrderStatus,OrderType,VolumeTraded,VolumeTotal,InsertDate,InsertTime,ActiveTime,SuspendTime,UpdateTime,CancelTime,ActiveUserID,Priority,TimeSortID,ClearingPartID,BusinessUnit)
+                            SELECT TradingDay,SettlementGroupID,SettlementID,OrderSysID,ParticipantID,ClientID,UserID,InstrumentID,OrderPriceType,Direction,CombOffsetFlag,CombHedgeFlag,LimitPrice,VolumeTotalOriginal,TimeCondition,GTDDate,VolumeCondition,MinVolume,ContingentCondition,StopPrice,ForceCloseReason,OrderLocalID,IsAutoSuspend,OrderSource,OrderStatus,OrderType,VolumeTraded,VolumeTotal,InsertDate,InsertTime,ActiveTime,SuspendTime,UpdateTime,CancelTime,ActiveUserID,Priority,TimeSortID,ClearingPartID,BusinessUnit
+                            FROM dbclear.t_order WHERE tradingday = %s AND settlementgroupid in (SELECT settlementgroupid FROM siminfo.t_brokersystemsettlementgroup where brokersystemid = %s)"""
+        cursor.execute(sql, (current_trading_day, broker_system_id,))
+        logger.info("[snap trade]......")
+        sql = """INSERT INTO snap.t_s_trade(TradingDay,SettlementGroupID,SettlementID,TradeID,Direction,OrderSysID,ParticipantID,ClientID,TradingRole,AccountID,InstrumentID,OffsetFlag,HedgeFlag,Price,Volume,TradeTime,TradeType,PriceSource,UserID,OrderLocalID,ClearingPartID,BusinessUnit)
+                            SELECT TradingDay,SettlementGroupID,SettlementID,TradeID,Direction,OrderSysID,ParticipantID,ClientID,TradingRole,AccountID,InstrumentID,OffsetFlag,HedgeFlag,Price,Volume,TradeTime,TradeType,PriceSource,UserID,OrderLocalID,ClearingPartID,BusinessUnit
+                            FROM dbclear.t_trade WHERE tradingday = %s AND settlementgroupid in (SELECT settlementgroupid FROM siminfo.t_brokersystemsettlementgroup where brokersystemid = %s)"""
+        cursor.execute(sql, (current_trading_day, broker_system_id,))
 
         mysql_conn.commit()
     except Exception as e:
@@ -55,7 +65,7 @@ def snap_data(context, conf):
 
 
 def main():
-    base_dir, config_names, config_files, add_ons = parse_conf_args(__file__, config_names=["mysql"])
+    base_dir, config_names, config_files = parse_conf_args(__file__, config_names=["mysql"])
 
     context, conf = Configuration.load(base_dir=base_dir, config_names=config_names, config_files=config_files)
 

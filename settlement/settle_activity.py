@@ -120,7 +120,7 @@ def settle_activity(context, conf):
             # 更新投资者赛事活动评估信息
             logger.info("[calculate investor activity evaluation]......")
             sql = """UPDATE siminfo.t_activityinvestorevaluation t1
-                                            SET t1.preasset = t1.currentasset
+                                            SET t1.preasset = t1.currentasset, t1.preranking = t1.ranking, t1.ranking = 0, t1.rankingstatus = '0'
                                             WHERE t1.activityid = %s"""
             cursor.execute(sql, (activity_id,))
             sql = """UPDATE siminfo.t_activityinvestorevaluation t1,(
@@ -136,6 +136,21 @@ def settle_activity(context, conf):
                                             SET t1.totalreturnrate = IF(t1.initialasset =0 , 0, round((t1.currentasset - t1.initialasset) / t1.initialasset, 4)), 
                                                   t1.returnrateof1day = IF(t1.preasset = 0, 0, round((t1.currentasset - t1.preasset) / t1.preasset, 4))
                                             WHERE t1.activityid = %s"""
+            cursor.execute(sql, (activity_id,))
+
+            # 根据是否真实开户设置rankingstatus，真实开户置为1，否则置为0
+            sql = """UPDATE siminfo.t_activityinvestorevaluation t, (SELECT activityid, investorid FROM siminfo.t_activityrankableinvestor WHERE activityid = %s) t1
+                                        SET t.rankingstatus = 1
+                                        WHERE t.activityid = %s AND t.activityid = t1.activityid AND t.investorid = t1.investorid"""
+            cursor.execute(sql, (activity_id,activity_id,))
+
+            # 设置总收益率排名
+            sql = """UPDATE siminfo.t_activityinvestorevaluation t, 
+                                    (SELECT t.activityid, t.investorid, t.newranking FROM (SELECT t.activityid, t.investorid, (@i:=@i+1) AS newranking FROM siminfo.t_activityinvestorevaluation t,(SELECT @i:=0) AS it 
+                                        WHERE t.activityid = %s AND t.rankingstatus = '1' 
+                                        ORDER BY t.totalreturnrate DESC, t.currentasset DESC, t.returnrateof1day DESC, t.investorid) t) t1
+                                    SET t.ranking = t1.newranking 
+                                    WHERE t.activityid = t1.activityid AND t.investorid = t1.investorid"""
             cursor.execute(sql, (activity_id,))
 
             # 赛事结束状态设置

@@ -1,0 +1,9 @@
+{
+    "baseDataHome" : "${SIM_PLATFORM_HOME}/settlement_data",
+    "Syncs": [
+      {
+        "host": "stock_broker",
+        "items": ["${HOME}/run/dbsync/dump/t_User.csv"]
+      }
+    ]
+}

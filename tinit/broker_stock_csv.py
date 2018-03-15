@@ -145,8 +145,9 @@ class broker_stock_csv:
                                "ZipCode", "OpenDate", "CloseDate"),
                       sql="""SELECT DISTINCT t.InvestorID AS UserID,t.InvestorName AS UserName,'2' AS UserType,
                                     '0001' AS DepartmentID,t. PASSWORD AS UserPassword,'3' AS LoginLimit,
-                                    '3' AS PasswordFailLimit,'1' AS STATUS,'' AS Contacter,'' AS Fax,'' AS Telephone,
-                                    '' AS Email,'' AS Address,'' AS ZipCode,'' AS OpenDate,'' AS CloseDate
+                                    '3' AS PasswordFailLimit,if(t.InvestorStatus='3','3','1') AS STATUS,
+                                    '' AS Contacter,'' AS Fax,'' AS Telephone, '' AS Email,'' AS Address,
+                                    '' AS ZipCode,'' AS OpenDate,'' AS CloseDate
                                 FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1,
                                      siminfo.t_BrokerSystemSettlementGroup t2
                                 WHERE t.InvestorID = t1.InvestorID
