@@ -5,10 +5,10 @@ cd ${SIM_PLATFORM_HOME}/crontab
 # 获取系统时间
 now_date=`date +%Y%m%d`
 
-echo "${now_date} crontab_settlement start..." | tee -a crontab.log
+echo "${now_date} crontab_close_stock.sh start..." | tee -a crontab.log
 
 # 判断是否交易日
-trading_day=`source ${SIM_PLATFORM_HOME}/appshell/get_stock_tradingday.sh`
+trading_day=`sh ${SIM_PLATFORM_HOME}/appshell/get_stock_tradingday.sh`
 
 if [ "${trading_day}" != "${now_date}" ]; then
     echo "${now_date}属于非交易日..." | tee -a crontab.log
@@ -16,6 +16,6 @@ if [ "${trading_day}" != "${now_date}" ]; then
 fi
 
 # settlement_stock.sh
-source ${SIM_PLATFORM_HOME}/appshell/close_exchange.sh >> crontab.log
+sh ${SIM_PLATFORM_HOME}/appshell/close_exchange.sh >> crontab.log
 
-echo "${now_date} crontab_settlement finished..." | tee -a crontab.log
+echo "${now_date} crontab_close_stock.sh finished..." | tee -a crontab.log
