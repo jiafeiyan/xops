@@ -355,7 +355,7 @@ class trans_stockinfo:
                     InstrumentID=VALUES(InstrumentID),InstrumentName=VALUES(InstrumentName),
                     DeliveryYear=VALUES(DeliveryYear),DeliveryMonth=VALUES(DeliveryMonth),
                     AdvanceMonth=VALUES(AdvanceMonth)"""
-        mysqlDB.execute(sql, ("SG01", "ZQ_SH", "ZQ", "ZQ_SH", "3", "1", None, "0", "1", "1.000", "510050", "50ETF",
+        mysqlDB.execute(sql, ("SG07", "ZQ_SH", "ZQ", "ZQ_SH", "3", "1", None, "0", "1", "1.000", "510050", "50ETF",
                               2099, 12, 012))
         sql = """INSERT INTO siminfo.t_instrumentproperty ( SettlementGroupID, CreateDate, OpenDate, ExpireDate, 
                           StartDelivDate, EndDelivDate, BasisPrice, MaxMarketOrderVolume, MinMarketOrderVolume, 
@@ -371,7 +371,7 @@ class trans_stockinfo:
                     MinLimitOrderVolume=VALUES(MinLimitOrderVolume),PriceTick=VALUES(PriceTick),
                     AllowDelivPersonOpen=VALUES(AllowDelivPersonOpen),InstrumentID=VALUES(InstrumentID),
                     InstLifePhase=VALUES(InstLifePhase)"""
-        mysqlDB.execute(sql, ("SG01", "19881228", "19910129", "99991219", "99991219", "99991219", "0.000000",
+        mysqlDB.execute(sql, ("SG07", "19881228", "19910129", "99991219", "99991219", "99991219", "0.000000",
                               "1000000", "100", "1000000", "100", "0.001000", "0", "510050", "1"))
         sql = """INSERT INTO siminfo.t_marketdata (TradingDay,SettlementGroupID,LastPrice,PreSettlementPrice,
                             PreClosePrice,PreOpenInterest,OpenPrice,HighestPrice,LowestPrice,Volume,Turnover,
@@ -390,7 +390,7 @@ class trans_stockinfo:
                     PreDelta=VALUES(PreDelta),CurrDelta=VALUES(CurrDelta),
                     UpdateTime=VALUES(UpdateTime),UpdateMillisec=VALUES(UpdateMillisec),
                     InstrumentID =VALUES(InstrumentID)"""
-        mysqlDB.execute(sql, ("20180313", "SG01", None, "2.905", "2.905", "0.000", None, None, None, "0", "0", None,
+        mysqlDB.execute(sql, ("20180313", "SG07", None, "2.905", "2.905", "0.000", None, None, None, "0", "0", None,
                               None, None, None, None, None, None, "09:32:19", "529", "510050"))
         # 300ETF
         self.logger.info("初始化300ETF")
@@ -407,7 +407,7 @@ class trans_stockinfo:
                         InstrumentID=VALUES(InstrumentID),InstrumentName=VALUES(InstrumentName),
                         DeliveryYear=VALUES(DeliveryYear),DeliveryMonth=VALUES(DeliveryMonth),
                         AdvanceMonth=VALUES(AdvanceMonth)"""
-        mysqlDB.execute(sql, ("SG01", "ZQ_SH", "ZQ", "ZQ_SH", "3", "1", None, "0", "1", "1.000", "510300", "300ETF",
+        mysqlDB.execute(sql, ("SG07", "ZQ_SH", "ZQ", "ZQ_SH", "3", "1", None, "0", "1", "1.000", "510300", "300ETF",
                               2099, 12, 012))
         sql = """INSERT INTO siminfo.t_instrumentproperty ( SettlementGroupID, CreateDate, OpenDate, ExpireDate, 
                                  StartDelivDate, EndDelivDate, BasisPrice, MaxMarketOrderVolume, MinMarketOrderVolume, 
@@ -423,7 +423,7 @@ class trans_stockinfo:
                     MinLimitOrderVolume=VALUES(MinLimitOrderVolume),PriceTick=VALUES(PriceTick),
                     AllowDelivPersonOpen=VALUES(AllowDelivPersonOpen),InstrumentID=VALUES(InstrumentID),
                     InstLifePhase=VALUES(InstLifePhase)"""
-        mysqlDB.execute(sql, ("SG01", "19881228", "19910129", "99991219", "99991219", "99991219", "0.000000",
+        mysqlDB.execute(sql, ("SG07", "19881228", "19910129", "99991219", "99991219", "99991219", "0.000000",
                               "1000000", "100", "1000000", "100", "0.001000", "0", "510300", "1"))
         sql = """INSERT INTO siminfo.t_marketdata (TradingDay,SettlementGroupID,LastPrice,PreSettlementPrice,
                                    PreClosePrice,PreOpenInterest,OpenPrice,HighestPrice,LowestPrice,Volume,Turnover,
@@ -442,7 +442,7 @@ class trans_stockinfo:
                     PreDelta=VALUES(PreDelta),CurrDelta=VALUES(CurrDelta),
                     UpdateTime=VALUES(UpdateTime),UpdateMillisec=VALUES(UpdateMillisec),
                     InstrumentID =VALUES(InstrumentID)"""
-        mysqlDB.execute(sql, ("20180313", "SG01", None, "4.123", "4.123", "0.000", None, None, None, "0", "0", None,
+        mysqlDB.execute(sql, ("20180313", "SG07", None, "4.123", "4.123", "0.000", None, None, None, "0", "0", None,
                               None, None, None, None, None, None, "09:32:19", "529", "510300"))
 
 if __name__ == '__main__':

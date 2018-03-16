@@ -109,6 +109,8 @@ class exchange_stock_csv:
         self.__generate_marketdata("sse", mysqlDB)
         # ================szse.txt===================
         self.__generate_marketdata("szse", mysqlDB)
+        # ================szse.txt===================
+        self.__generate_marketdata("sse_etf", mysqlDB)
 
     def __data_to_csv(self, table_name, mysqlDB):
         table_sqls = dict(
@@ -313,13 +315,17 @@ class exchange_stock_csv:
         self.__produce_csv(table_name, table_sqls[table_name], csv_data)
 
     def __generate_marketdata(self, exchange, mysqlDB):
-        sql = """SELECT t.InstrumentID 
-                  FROM sync.t_instrument t,
-                       sync.t_settlementgroup t1 
-                  WHERE t.SettlementGroupID = t1.SettlementGroupID 
-                  AND t1.ExchangeID = UPPER(%s)"""
+        if exchange == 'sse':
+            sgid = 'SG01'
+        elif exchange == 'szse':
+            sgid = 'SG02'
+        elif exchange == 'sse_etf':
+            sgid = 'SG07'
+        sql = """SELECT InstrumentID 
+                  FROM sync.t_instrument
+                  WHERE SettlementGroupID = %s"""
         # 查询股票数据
-        txt_data = mysqlDB.select(sql, (exchange,))
+        txt_data = mysqlDB.select(sql, (sgid,))
         self.__produce_txt(exchange, txt_data)
 
     # 生成csv文件
