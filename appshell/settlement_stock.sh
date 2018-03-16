@@ -14,6 +14,13 @@ if [ $? != 0 ]; then
         exit 1
 fi
 
+echo "starting snap_settle_data..."
+python ${SIM_PLATFORM_HOME}/settlement/snap_settle_data.py
+if [ $? != 0 ]; then
+        echo "snap_settle_data error..."
+        exit 1
+fi
+
 echo "starting settle_stock..."
 python ${SIM_PLATFORM_HOME}/settlement/settle_stock.py -conf ${SIM_PLATFORM_HOME}/settlement/settle_stock_sse.json
 if [ $? != 0 ]; then
@@ -54,9 +61,9 @@ if [ $? != 0 ]; then
         exit 1
 fi
 
-echo "starting snap_settle_data..."
-python ${SIM_PLATFORM_HOME}/settlement/snap_settle_data.py
+echo "starting snap_initial_data..."
+python ${SIM_PLATFORM_HOME}/settlement/snap_initial_data.py
 if [ $? != 0 ]; then
-        echo "snap_settle_data error..."
+        echo "snap_initial_data error..."
         exit 1
 fi

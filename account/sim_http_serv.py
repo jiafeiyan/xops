@@ -8,7 +8,7 @@ import tornado.web
 import tornado.log
 
 from account_handler import open_account
-from activity_handler import join_activity, query_activity_ranking
+from activity_handler import join_activity, query_activity_ranking, query_activity_joinstatus
 
 from utils import Configuration, mysql, parse_conf_args, log
 
@@ -118,6 +118,40 @@ class QueryActivityRankingHandler(tornado.web.RequestHandler):
         self.logger.info("queryActivityRanking end [ result= %s ]", result_json)
 
 
+class QueryActivityJoinStatusHandler(tornado.web.RequestHandler):
+    def initialize(self, database, logger):
+        self.database = database
+        self.logger = logger
+
+    def get(self):
+        return self.do_service()
+
+    def post(self):
+        return self.do_service()
+
+    def do_service(self):
+        activity_id = self.get_argument("activity", None)
+        open_id = self.get_argument("id", None)
+
+        self.logger.info("queryActivityJoinStatus begin [ activity=%s, id=%s]", activity_id, open_id)
+
+        result = {"kind": "queryActivityJoinStatus", "code": "-1", "response": {"activity": activity_id, "id": open_id, "error": "系统内部错误"}}
+
+        conn = self.database.get_cnx()
+        try:
+            result = query_activity_joinstatus(conn, {"activity": activity_id, "id": open_id})
+        except:
+            self.logger.error(sys.exc_info()[0])
+        finally:
+            conn.close()
+
+        result_json = json.dumps(result, encoding="UTF-8", ensure_ascii=False)
+        self.set_header("Content-Type", "text/json;charset=UTF-8")
+        self.write(result_json)
+
+        self.logger.info("queryActivityJoinStatus end [ result= %s ]", result_json)
+
+
 def start_http_server(context, conf):
     logger = log.get_logger(category="HttpServer")
 
@@ -127,6 +161,7 @@ def start_http_server(context, conf):
         (r"/openAccount", OpenAccountHandler, dict(database=mysql_pool, logger=logger)),
         (r"/joinActivity", JoinActivityHandler, dict(database=mysql_pool, logger=logger)),
         (r"/queryActivityRanking", QueryActivityRankingHandler, dict(database=mysql_pool, logger=logger)),
+        (r"/queryActivityJoinStatus", QueryActivityJoinStatusHandler, dict(database=mysql_pool, logger=logger)),
     ])
     app.listen(conf["port"])
 
