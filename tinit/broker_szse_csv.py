@@ -54,7 +54,7 @@ class broker_szse_csv:
                                          "AskPrice5", "AskVolume5", "UpdateTime", "UpdateMillisec"),
                                 sql="""SELECT t.TradingDay AS TradingDay,t.InstrumentID AS SecurityID,
                                             '2' AS ExchangeID,t2.InstrumentName AS SecurityName,
-                                            t.PreClosePrice AS PreClosePrice,t.OpenPrice AS OpenPrice,
+                                            t.PreSettlementPrice AS PreClosePrice,t.OpenPrice AS OpenPrice,
                                             '0' AS Volume,'0' AS Turnover,'0' AS TradingCount,
                                             t.LastPrice AS LastPrice,t.HighestPrice AS HighestPrice,
                                             t.LowestPrice AS LowestPrice,'0' AS BidPrice1,'0' AS AskPrice1,

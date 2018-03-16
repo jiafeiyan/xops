@@ -68,7 +68,6 @@ echo "lower_case_table_names=1"  >> /etc/my.cnf
 # 重启服务
 /etc/init.d/mysqld restart
 
-cd ${basedir}/mysql/bin
 # 设置开机自启
 chkconfig --level 35 mysqld on
 

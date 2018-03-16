@@ -11,7 +11,7 @@ echo "${now_date} crontab_tinit_stock.sh start..." | tee -a crontab.log
 trading_day=`sh ${SIM_PLATFORM_HOME}/appshell/get_stock_tradingday.sh`
 
 if [ "${trading_day}" != "${now_date}" ]; then
-    echo "${now_date}属于非交易日..." | tee -a crontab.log
+    echo "当前日期[${now_date}]非当前交易日[${trading_day}]..." | tee -a crontab.log
     exit 1
 fi
 
