@@ -9,11 +9,11 @@ from utils import log, mysql, Configuration, parse_conf_args, process_assert
 
 def snap_data(context, conf):
     result_code = 0
-    logger = log.get_logger(category="SnapData")
+    logger = log.get_logger(category="SnapSettleData")
 
     broker_system_id = conf.get("brokerSystemId")
 
-    logger.info("[snap data %s] begin" % (json.dumps(conf, encoding="UTF-8", ensure_ascii=False)))
+    logger.info("[snap settle data %s] begin" % (json.dumps(conf, encoding="UTF-8", ensure_ascii=False)))
     mysql_pool = mysql(configs=context.get("mysql").get(conf.get("mysqlId")))
     mysql_conn = mysql_pool.get_cnx()
     mysql_conn.set_charset_collation('utf8')
@@ -38,11 +38,6 @@ def snap_data(context, conf):
         current_trading_day = str(row[0])
         logger.info("[get current trading day] current_trading_day = %s" % (current_trading_day))
 
-        logger.info("[snap investor fund]......")
-        sql = """INSERT INTO snap.t_s_investorfund(TradingDay,BrokerSystemID,InvestorID,PreBalance,CurrMargin,CloseProfit,Premium,Deposit,Withdraw,Balance,Available,PreMargin,FuturesMargin,OptionsMargin,PositionProfit,Profit,Interest,Fee,TotalCollateral,CollateralForMargin,PreAccmulateInterest,AccumulateInterest,AccumulateFee,ForzenDeposit,AccountStatus,PreStockValue,StockValue)
-                            SELECT %s,BrokerSystemID,InvestorID,PreBalance,CurrMargin,CloseProfit,Premium,Deposit,Withdraw,Balance,Available,PreMargin,FuturesMargin,OptionsMargin,PositionProfit,Profit,Interest,Fee,TotalCollateral,CollateralForMargin,PreAccmulateInterest,AccumulateInterest,AccumulateFee,ForzenDeposit,AccountStatus,PreStockValue,StockValue
-                            FROM siminfo.t_investorfund WHERE BrokerSystemID = %s"""
-        cursor.execute(sql, (current_trading_day, broker_system_id,))
         logger.info("[snap order]......")
         sql = """INSERT INTO snap.t_s_order(TradingDay,SettlementGroupID,SettlementID,OrderSysID,ParticipantID,ClientID,UserID,InstrumentID,OrderPriceType,Direction,CombOffsetFlag,CombHedgeFlag,LimitPrice,VolumeTotalOriginal,TimeCondition,GTDDate,VolumeCondition,MinVolume,ContingentCondition,StopPrice,ForceCloseReason,OrderLocalID,IsAutoSuspend,OrderSource,OrderStatus,OrderType,VolumeTraded,VolumeTotal,InsertDate,InsertTime,ActiveTime,SuspendTime,UpdateTime,CancelTime,ActiveUserID,Priority,TimeSortID,ClearingPartID,BusinessUnit)
                             SELECT TradingDay,SettlementGroupID,SettlementID,OrderSysID,ParticipantID,ClientID,UserID,InstrumentID,OrderPriceType,Direction,CombOffsetFlag,CombHedgeFlag,LimitPrice,VolumeTotalOriginal,TimeCondition,GTDDate,VolumeCondition,MinVolume,ContingentCondition,StopPrice,ForceCloseReason,OrderLocalID,IsAutoSuspend,OrderSource,OrderStatus,OrderType,VolumeTraded,VolumeTotal,InsertDate,InsertTime,ActiveTime,SuspendTime,UpdateTime,CancelTime,ActiveUserID,Priority,TimeSortID,ClearingPartID,BusinessUnit
@@ -56,16 +51,16 @@ def snap_data(context, conf):
 
         mysql_conn.commit()
     except Exception as e:
-        logger.error("[snap data] Error: %s" % (e))
+        logger.error("[snap settle data] Error: %s" % (e))
         result_code = -1
     finally:
         mysql_conn.close()
-    logger.info("[snap data] end")
+    logger.info("[snap settle data] end")
     return result_code
 
 
 def main():
-    base_dir, config_names, config_files = parse_conf_args(__file__, config_names=["mysql"])
+    base_dir, config_names, config_files, add_ons = parse_conf_args(__file__, config_names=["mysql"])
 
     context, conf = Configuration.load(base_dir=base_dir, config_names=config_names, config_files=config_files)
 

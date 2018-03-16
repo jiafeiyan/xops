@@ -1,20 +1,5 @@
 # -*- coding: UTF-8 -*-
-"""
-缺少
-t_clientdelivfee
-t_ClientPositionProfit
-t_delivinstrument
-t_ClientProfit
-t_clientPositionProfit
-t_partfund
-t_clientprofit
-t_partdelivposition
-t_clientdelivposition
 
-
-没有初始化t_delivfeeratedetail
-
-"""
 import json
 
 from utils import Configuration, mysql, log, parse_conf_args, process_assert
@@ -63,6 +48,7 @@ def settle_future(context, conf):
                       AND t1.settlementid = %s for update"""
         cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id))
         row = cursor.fetchone()
+        row = ['0', '0', '0', '0']
         if row is None:
             logger.error("[settle future] Error: There is no data for %s-%s." % (settlement_group_id, settlement_id))
             result_code = -1
@@ -109,7 +95,7 @@ def settle_future(context, conf):
 
             # 计算盈亏
             logger.info("[Calculate ClientProfit] is processing......")
-            sql = """insert into dbclear.t_ClientProfit(TradingDay, SettlementGroupID, SettlementID, ParticipantID, ClientID, AccountID, InstrumentID, TradeID, Direction, OffsetFlag, TradePrice, Volume, Profit)
+            sql = """insert into dbclear.t_clienttradeprofit(TradingDay, SettlementGroupID, SettlementID, ParticipantID, ClientID, AccountID, InstrumentID, TradeID, Direction, OffsetFlag, Price, Volume, Profit)
                        select t1.tradingday,
                        t1.settlementgroupid,
                        t1.settlementid,
@@ -120,7 +106,7 @@ def settle_future(context, conf):
                        t1.tradeid,
                        t1.direction,
                        t1.offsetflag,
-                       t1.price as tradeprice,
+                       t1.price,
                        t1.volume,
                        case
                          when t1.offsetflag = '0' or t1.offsetflag = '1' or
@@ -169,7 +155,7 @@ def settle_future(context, conf):
                     '--' as tradeid,
                     if(t1.posidirection='2', '0', '1') as direction,
                     '5'as offsetflag,
-                    t2.settlementprice as tradeprice,
+                    t2.settlementprice as price,
                     t1.ydposition as volume,
                     round(t4.volumemultiple * if(t1.posidirection='2',
                         (t2.settlementprice - t2.presettlementprice) * t1.ydposition,
@@ -207,21 +193,7 @@ def settle_future(context, conf):
                     from siminfo.t_instrumentproperty t
                     where t.settlementgroupid = %s and t.startdelivdate <= %s"""
             cursor.execute(sql, (current_trading_day, settlement_id, settlement_group_id, next_trading_day))
-            # 2）插入到t_partdelivposition
-            sql = """insert into dbclear.t_partdelivposition(TradingDay,SettlementGroupID,SettlementID,HedgeFlag,PosiDirection,
-                    YdPosition,Position,LongFrozen,ShortFrozen,YdLongFrozen,YdShortFrozen,InstrumentID,ParticipantID,TradingRole
-                    )select TradingDay,SettlementGroupID,SettlementID,HedgeFlag,PosiDirection,YdPosition,Position,
-                    LongFrozen,ShortFrozen,YdLongFrozen,YdShortFrozen,InstrumentID,ParticipantID,TradingRole from dbclear.t_partposition 
-                     where tradingday = %s and settlementgroupid = %s and settlementid = %s
-                       and instrumentid in
-                           (select t.instrumentid
-                              from dbclear.t_delivinstrument t
-                             where t.tradingday = %s
-                                and t.settlementgroupid = %s
-                                and t.settlementid = %s)"""
-            cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id,
-                                 current_trading_day, settlement_group_id, settlement_id))
-            # 3）插入到t_clientdelivposition
+            # 2）插入到t_clientdelivposition
             sql = """insert into dbclear.t_clientdelivposition(TradingDay,SettlementGroupID,SettlementID,HedgeFlag,
                       PosiDirection,YdPosition,Position,LongFrozen,ShortFrozen,YdLongFrozen,YdShortFrozen,
                       BuyTradeVolume,SellTradeVolume,PositionCost,YdPositionCost,UseMargin,FrozenMargin,
@@ -241,7 +213,7 @@ def settle_future(context, conf):
                                 and t.settlementid = %s)"""
             cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id,
                                  current_trading_day, settlement_group_id, settlement_id))
-            # 4）删除t_partposition持仓数据
+            # 3）删除t_partposition持仓数据
             sql = """delete from dbclear.t_partposition 
                          where tradingday = %s
                            and settlementgroupid = %s
@@ -254,7 +226,7 @@ def settle_future(context, conf):
                                     and t.settlementid = %s)"""
             cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id,
                                  current_trading_day, settlement_group_id, settlement_id))
-            # 5) 删除t_clientposition
+            # 4) 删除t_clientposition
             sql = """delete from dbclear.t_clientposition
                          where tradingday = %s
                            and settlementgroupid = %s
@@ -272,7 +244,7 @@ def settle_future(context, conf):
             sql = "delete from dbclear.t_clientdelivfee where settlementgroupid = %s and settlementid = %s"
             cursor.execute(sql, (settlement_group_id, settlement_id))
             # 插入t_clientdelivfee表中
-            sql = """insert into dbclear.t_clientdelivfee(TradingDay,SettlementGroupID,SettlementID,ParticipantID,ClientID,AccountID,ProductGroupID,ProductID,UnderlyingInstrID,InstrumentID,Position,DelivPrice,DelivFeeRatio,ValueMode,DelivFee
+            sql = """insert into dbclear.t_clientdelivfee(TradingDay,SettlementGroupID,SettlementID,ParticipantID,ClientID,AccountID,ProductGroupID,ProductID,UnderlyingInstrID,InstrumentID,Position,Price,DelivFeeRatio,ValueMode,DelivFee
                         )select t1.tradingday,
                                t1.settlementgroupid,
                                t1.settlementid,
@@ -284,7 +256,7 @@ def settle_future(context, conf):
                                t3.underlyinginstrid,
                                t1.instrumentid,
                                t1.position,
-                               t4.settlementprice as delivprcie,
+                               t4.settlementprice as Price,
                                t2.delivfeeratio,
                                t2.valuemode,
                                round(if(t2.valuemode='2',
@@ -337,7 +309,7 @@ def settle_future(context, conf):
                         and t1.settlementid = %s"""
             cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id,
                                  current_trading_day, settlement_group_id, settlement_id))
-            sql = """insert into dbclear.t_clientdelivfee(TradingDay,SettlementGroupID,SettlementID,ParticipantID,ClientID,AccountID,ProductGroupID,ProductID,UnderlyingInstrID,InstrumentID,Position,DelivPrice,DelivFeeRatio,ValueMode,DelivFee
+            sql = """insert into dbclear.t_clientdelivfee(TradingDay,SettlementGroupID,SettlementID,ParticipantID,ClientID,AccountID,ProductGroupID,ProductID,UnderlyingInstrID,InstrumentID,Position,Price,DelivFeeRatio,ValueMode,DelivFee
                                   )select t1.tradingday,
                                            t1.settlementgroupid,
                                            t1.settlementid,
@@ -349,7 +321,7 @@ def settle_future(context, conf):
                                            t3.underlyinginstrid,
                                            t1.instrumentid,
                                            t1.position,
-                                           t4.settlementprice as delivprcie,
+                                           t4.settlementprice as Price,
                                            t2.delivfeeratio,
                                            t2.valuemode,
                                            round(if(t2.valuemode='2',
@@ -404,7 +376,7 @@ def settle_future(context, conf):
                                 delivfee = VALUES(delivfee)"""
             cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id,
                                  current_trading_day, settlement_group_id, settlement_id))
-            sql = """insert into dbclear.t_clientdelivfee(TradingDay,SettlementGroupID,SettlementID,ParticipantID,ClientID,AccountID,ProductGroupID,ProductID,UnderlyingInstrID,InstrumentID,Position,DelivPrice,DelivFeeRatio,ValueMode,DelivFee
+            sql = """insert into dbclear.t_clientdelivfee(TradingDay,SettlementGroupID,SettlementID,ParticipantID,ClientID,AccountID,ProductGroupID,ProductID,UnderlyingInstrID,InstrumentID,Position,Price,DelivFeeRatio,ValueMode,DelivFee
                                   )select t1.tradingday,
                                            t1.settlementgroupid,
                                            t1.settlementid,
@@ -416,7 +388,7 @@ def settle_future(context, conf):
                                            t3.underlyinginstrid,
                                            t1.instrumentid,
                                            t1.position,
-                                           t4.settlementprice as delivprcie,
+                                           t4.settlementprice as prcie,
                                            t2.delivfeeratio,
                                            t2.valuemode,
                                            round(if(t2.valuemode='2',
@@ -843,19 +815,9 @@ def settle_future(context, conf):
             # 4）更新profit
             sql = """insert into dbclear.t_clientfund (TradingDay,SettlementGroupID,SettlementID,ParticipantID,ClientID,AccountID,TransFee,DelivFee,PositionMargin,Profit,available,StockValue)
                     (select t.tradingday,t.settlementgroupid,t.settlementid,t.participantid,t.clientid,t.accountid,0,0,0,sum(t.profit) as profit,0,0
-                    from dbclear.t_clientprofit t where t.tradingday = %s and t.settlementgroupid = %s and t.settlementid = %s
+                    from dbclear.t_clienttradeprofit t where t.tradingday = %s and t.settlementgroupid = %s and t.settlementid = %s
                     group by t.tradingday,t.settlementgroupid,t.settlementid,t.participantid,t.clientid,t.accountid)
                     ON DUPLICATE KEY UPDATE dbclear.t_clientfund.profit = values(profit)"""
-            cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id))
-            # 会员资金
-            logger.info("[Calculate PartFund] is processing......")
-            sql = "delete from dbclear.t_partfund where settlementgroupid = %s and settlementid = %s"
-            cursor.execute(sql, (settlement_group_id, settlement_id))
-            # 写入t_partfund表中
-            sql = """insert into dbclear.t_partfund(TradingDay, SettlementGroupID, SettlementID, ParticipantID, AccountID, TransFee, DelivFee, PositionMargin, Profit)
-                    select t.tradingday,t.settlementgroupid,t.settlementid,t.participantid,t.accountid,sum(transfee) as transfee,sum(delivfee) as delivfee,sum(positionmargin) as positionmargin,sum(profit) as profit
-                    from dbclear.t_clientfund t where t.tradingday = %s and t.settlementgroupid = %s and t.settlementid = %s
-                    group by t.tradingday,t.settlementgroupid,t.settlementid,t.participantid,t.accountid"""
             cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id))
             # 更新结算状态
             logger.info("[update settlement status] is processing......")
