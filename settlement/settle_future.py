@@ -213,20 +213,7 @@ def settle_future(context, conf):
                                 and t.settlementid = %s)"""
             cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id,
                                  current_trading_day, settlement_group_id, settlement_id))
-            # 3）删除t_partposition持仓数据
-            sql = """delete from dbclear.t_partposition 
-                         where tradingday = %s
-                           and settlementgroupid = %s
-                           and settlementid = %s
-                           and instrumentid in
-                               (select t.instrumentid
-                                  from dbclear.t_delivinstrument t
-                                 where t.tradingday = %s
-                                    and t.settlementgroupid = %s
-                                    and t.settlementid = %s)"""
-            cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id,
-                                 current_trading_day, settlement_group_id, settlement_id))
-            # 4) 删除t_clientposition
+            # 3) 删除t_clientposition
             sql = """delete from dbclear.t_clientposition
                          where tradingday = %s
                            and settlementgroupid = %s
