@@ -46,7 +46,8 @@ def publish_future(context, conf):
 
         # 投资者资金预处理
         sql = """UPDATE siminfo.t_investorfund t1
-                                     SET t1.prebalance = t1.balance, t1.prestockvalue = t1.stockvalue, t1.stockvalue = 0
+                                     SET t1.prebalance = t1.balance, t1.prestockvalue = t1.stockvalue, t1.stockvalue = 0,
+                                     t1.currmargin = 0, t1.fee = 0
                                    WHERE t1.brokersystemid = %s"""
         cursor.execute(sql, (broker_system_id,))
 
@@ -198,7 +199,8 @@ def publish_future(context, conf):
                                     ) t2 
                                     SET t1.balance = t1.available + t2.available - t2.transfee - t2.DelivFee + t2.profit - t2.positionmargin,
                                     t1.available = t1.available + t2.available - t2.transfee -t2.DelivFee + t2.profit - t2.positionmargin,
-                                    t1.fee = t2.transfee
+                                    t1.fee = t1.fee + t2.transfee,
+                                    t1.currmargin = t1.currmargin + t2.positionmargin
                                 WHERE
                                     t1.brokersystemid = t2.brokersystemid 
                                     AND t1.investorid = t2.investorid"""

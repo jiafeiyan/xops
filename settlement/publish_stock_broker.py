@@ -48,7 +48,8 @@ def publish_stock(context, conf):
         # 投资者资金预处理
         logger.info("[reset investor fund]......")
         sql = """UPDATE siminfo.t_investorfund t1
-                              SET t1.prebalance = t1.balance, t1.prestockvalue = t1.stockvalue, t1.stockvalue = 0
+                              SET t1.prebalance = t1.balance, t1.prestockvalue = t1.stockvalue, t1.stockvalue = 0,
+                                  t1.fee = 0
                             WHERE t1.brokersystemid = %s"""
         cursor.execute(sql, (broker_system_id, ))
 
@@ -129,7 +130,7 @@ def publish_stock(context, conf):
                 sql = """UPDATE siminfo.t_investorfund t1,(
                                     SELECT t3.brokersystemid, t1.investorid, t2.available, t2.transfee, t2.positionmargin, t2.profit, t2.stockvalue FROM siminfo.t_investorclient t1, siminfo.t_clientfund t2, siminfo.t_brokersystemsettlementgroup t3
                                     WHERE t1.settlementgroupid = t2.settlementgroupid AND t1.settlementgroupid = t3.settlementgroupid AND t1.clientid = t2.clientid AND t2.tradingday = %s AND t1.settlementgroupid = %s AND t2.settlementid = %s) t2
-                                    SET t1.balance = t1.available + t2.available - t2.transfee + t2.profit - t2.positionmargin, t1.available = t1.available + t2.available - t2.transfee + t2.profit - t2.positionmargin, t1.fee = t2.transfee, t1.stockvalue = t1.stockvalue + t2.stockvalue
+                                    SET t1.balance = t1.available + t2.available - t2.transfee + t2.profit - t2.positionmargin, t1.available = t1.available + t2.available - t2.transfee + t2.profit - t2.positionmargin, t1.fee = t1.fee + t2.transfee, t1.stockvalue = t1.stockvalue + t2.stockvalue
                                     WHERE t1.brokersystemid = t2.brokersystemid and t1.investorid = t2.investorid"""
                 cursor.execute(sql, (next_trading_day, settlement_group_id, settlement_id))
 

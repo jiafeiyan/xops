@@ -54,8 +54,9 @@ def sync_rankable_activity_investors(context, conf):
         mysql_conn.commit()
 
     except Exception as e:
-        logger.error("[sync activity rankable investors with %s] Error: %s" % (json.dumps(conf, encoding="UTF-8", ensure_ascii=False), e))
+        logger.error("[sync activity rankable investors] Error: %s" % e)
     finally:
+        oracle_cursor.close()
         oracle_conn.close()
         mysql_conn.close()
 

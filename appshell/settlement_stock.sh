@@ -47,6 +47,9 @@ if [ $? != 0 ]; then
         exit 1
 fi
 
+echo "starting sync_activity_rankable_investor..."
+python ${SIM_PLATFORM_HOME}/settlement/sync_activity_rankable_investor.py
+
 echo "starting settle_activity..."
 python ${SIM_PLATFORM_HOME}/settlement/settle_activity.py
 if [ $? != 0 ]; then
