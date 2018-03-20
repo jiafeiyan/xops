@@ -1,0 +1,10 @@
+{
+    "mysqlId": "simplatform_base",
+    "baseDataHome" : "${HOME}/sim_data",
+    "Syncs": [
+      {
+        "host": "etf_broker",
+        "items": ["${HOME}/ExchFile/sse/"]
+      }
+    ]
+}
