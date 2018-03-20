@@ -17,7 +17,7 @@ fi
 echo "starting snap_settle_data..."
 python ${SIM_PLATFORM_HOME}/settlement/snap_settle_data.py -conf ${SIM_PLATFORM_HOME}/settlement/snap_settle_data_future.json
 if [ $? != 0 ]; then
-        echo "snap_settle_data error..."
+        echo "snap_settle_data future error..."
         exit 1
 fi
 
@@ -58,8 +58,8 @@ if [ $? != 0 ]; then
 fi
 
 echo "starting snap_initial_data..."
-python ${SIM_PLATFORM_HOME}/settlement/snap_initial_data.py
+python ${SIM_PLATFORM_HOME}/settlement/snap_initial_data.py -conf ${SIM_PLATFORM_HOME}/settlement/snap_initial_data_future.json
 if [ $? != 0 ]; then
-        echo "snap_initial_data error..."
+        echo "snap_initial_data future error..."
         exit 1
 fi

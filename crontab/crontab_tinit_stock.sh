@@ -1,4 +1,4 @@
-#!sh
+#!/bin/sh
 source ${HOME}/.bash_profile
 cd ${SIM_PLATFORM_HOME}/crontab
 

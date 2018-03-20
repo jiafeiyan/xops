@@ -3,7 +3,7 @@
 echo "starting sync_dump_csvs..."
 python ${SIM_PLATFORM_HOME}/settlement/sync_dump_csvs.py -conf ${SIM_PLATFORM_HOME}/settlement/sync_dump_csvs_stock.json
 if [ $? != 0 ]; then
-        echo "sync_dump_csvs error..."
+        echo "sync_dump_csvs stock error..."
         exit 1
 fi
 
@@ -17,7 +17,7 @@ fi
 echo "starting snap_settle_data..."
 python ${SIM_PLATFORM_HOME}/settlement/snap_settle_data.py -conf ${SIM_PLATFORM_HOME}/settlement/snap_settle_data_stock.json
 if [ $? != 0 ]; then
-        echo "snap_settle_data error..."
+        echo "snap_settle_data stock error..."
         exit 1
 fi
 
@@ -48,7 +48,7 @@ if [ $? != 0 ]; then
 fi
 
 echo "starting sync_activity_rankable_investor..."
-python ${SIM_PLATFORM_HOME}/settlement/sync_activity_rankable_investor.py
+python ${SIM_PLATFORM_HOME}/account/sync_activity_rankable_investor.py
 
 echo "starting settle_activity..."
 python ${SIM_PLATFORM_HOME}/settlement/settle_activity.py
@@ -65,8 +65,8 @@ if [ $? != 0 ]; then
 fi
 
 echo "starting snap_initial_data..."
-python ${SIM_PLATFORM_HOME}/settlement/snap_initial_data.py
+python ${SIM_PLATFORM_HOME}/settlement/snap_initial_data.py -conf ${SIM_PLATFORM_HOME}/settlement/snap_initial_data_stock.json
 if [ $? != 0 ]; then
-        echo "snap_initial_data error..."
+        echo "snap_initial_data stock error..."
         exit 1
 fi
