@@ -1,7 +1,7 @@
 #!/bin/sh
 
 echo "starting sync_dump_csvs..."
-python ${SIM_PLATFORM_HOME}/settlement/sync_dump_csvs.py
+python ${SIM_PLATFORM_HOME}/settlement/sync_dump_csvs.py -conf ${SIM_PLATFORM_HOME}/settlement/sync_dump_csvs_stock.json
 if [ $? != 0 ]; then
         echo "sync_dump_csvs error..."
         exit 1
@@ -15,7 +15,7 @@ if [ $? != 0 ]; then
 fi
 
 echo "starting snap_settle_data..."
-python ${SIM_PLATFORM_HOME}/settlement/snap_settle_data.py
+python ${SIM_PLATFORM_HOME}/settlement/snap_settle_data.py -conf ${SIM_PLATFORM_HOME}/settlement/snap_settle_data_stock.json
 if [ $? != 0 ]; then
         echo "snap_settle_data error..."
         exit 1

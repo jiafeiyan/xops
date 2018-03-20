@@ -1,0 +1,15 @@
+{
+    "tradeSystemId" : "0001",
+    "settlementId" : "1",
+    "baseDataHome" : "${SIM_PLATFORM_HOME}/settlement_data",
+    "Syncs": [
+      {
+        "host": "stock_exchange",
+        "items": ["${HOME}/run/tkernel1/dump/ClientPosition.csv",
+                  "${HOME}/run/tkernel1/dump/MarketData.csv",
+                  "${HOME}/run/tkernel1/dump/PartPosition.csv",
+                  "${HOME}/run/tkernel1/dump/Order.csv",
+                  "${HOME}/run/tkernel1/dump/Trade.csv"]
+      }
+    ]
+}
