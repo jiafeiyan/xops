@@ -3,7 +3,7 @@
     "baseDataHome" : "${HOME}/sim_data",
     "Syncs": [
       {
-        "host": "etf_broker",
+        "host": "etf_data",
         "items": ["${HOME}/ExchFile/sse/"]
       }
     ]

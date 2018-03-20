@@ -51,19 +51,23 @@ sh ${SIM_PLATFORM_HOME}/appshell/toSyncAll.sh >> crontab.log
 echo "start stock_csv_all ... "
 sh ${SIM_PLATFORM_HOME}/appshell/stock_csv_all.sh >> crontab.log
 
-# 10) tinit.sh
+# 10) etf_csv_all.sh
+echo "start stock_csv_all ... "
+sh ${SIM_PLATFORM_HOME}/appshell/etf_csv_all.sh >> crontab.log
+
+# 11) tinit.sh
 echo "start tinit.sh ... "
 sh ${SIM_PLATFORM_HOME}/appshell/tinit.sh >> crontab.log
 
-# 11) start stock exchange
+# 12) start stock exchange
 echo "start start_stock_exchange.sh ... "
 sh ${SIM_PLATFORM_HOME}/appshell/start_stock_exchange.sh >> crontab.log
 
-# 12) start stock broker
+# 13) start stock broker
 echo "start start_stock_broker.sh ... "
 sh ${SIM_PLATFORM_HOME}/appshell/start_stock_broker.sh >> crontab.log
 
-# 12) start etf broker
+# 14) start etf broker
 echo "start start_etf_broker.sh ... "
 sh ${SIM_PLATFORM_HOME}/appshell/start_etf_broker.sh >> crontab.log
 

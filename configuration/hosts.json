@@ -9,6 +9,11 @@
         "user" : "otrade1",
         "password" : "111111"
     },
+    "etf_data" : {
+        "host" : "127.0.0.1",
+        "user" : "otrade1",
+        "password" : "111111"
+    },
     "stock_broker" : {
         "host" : "127.0.0.1",
         "user" : "strade1",
