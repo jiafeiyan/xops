@@ -46,7 +46,7 @@ class exchange_future_csv:
         self.__data_to_csv("t_InvestorDepartmentFlat", mysqlDB)
         self.__data_to_csv("t_InvestorPassword", mysqlDB)
         self.__data_to_csv("t_LinkMan", mysqlDB)
-        self.__data_to_csv("t_MDInstrument", mysqlDB)
+        # self.__data_to_csv("t_MDInstrument", mysqlDB)
         self.__data_to_csv("t_ProductGroup", mysqlDB)
         self.__data_to_csv("t_IndexPrice", mysqlDB)
         # self.__data_to_csv("t_InstrumentMarginRate", mysqlDB)
