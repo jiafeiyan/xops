@@ -3,6 +3,7 @@
 import os
 import datetime
 import json
+import codecs
 
 from utils import log
 from utils import parse_conf_args
@@ -324,7 +325,7 @@ class trans_etfinfo:
             self.logger.error("%s%s" % (etf, " is not exists"))
             return None
         # 读取txt文件
-        etf_file = open(etf)
+        etf_file = codecs.open(etf, encoding='gb231')
         return self.__txt_to_etf(etf_file)
 
     def __txt_to_etf(self, txt):
