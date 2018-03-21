@@ -325,7 +325,7 @@ class trans_etfinfo:
             self.logger.error("%s%s" % (etf, " is not exists"))
             return None
         # 读取txt文件
-        etf_file = codecs.open(etf, encoding='gb231')
+        etf_file = codecs.open(etf, encoding='gb2312')
         return self.__txt_to_etf(etf_file)
 
     def __txt_to_etf(self, txt):
