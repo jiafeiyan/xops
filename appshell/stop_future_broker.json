@@ -1,4 +1,4 @@
 {
   "host" : "future_broker",
-  "command" : "${HOME}/run/stop.sh"
+  "command" : "source ${HOME}/.bash_profile && ecall.sh stopservice"
 }

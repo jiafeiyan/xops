@@ -1,4 +1,4 @@
 {
   "host" : "future_broker",
-  "command" : "${HOME}/run/start.sh"
+  "command" : "source ${HOME}/.bash_profile && ecall.sh startservice"
 }

@@ -237,7 +237,7 @@ def publish_future(context, conf):
                                 InstrumentID 
                                 FROM dbclear.t_marketdata t 
                                 WHERE t.tradingday = %s AND t.settlementgroupid = %s AND t.settlementid = %s"""
-
+                cursor.execute(sql, (next_trading_day, current_trading_day, settlement_group_id, settlement_id))
                 # 更新结算状态
                 logger.info("[update %s settlement status]......" % settlement_group_id)
                 sql = """UPDATE dbclear.t_settlement SET settlementstatus = '2' 
