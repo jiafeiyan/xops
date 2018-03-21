@@ -4,7 +4,6 @@ import os
 import datetime
 import json
 import csv
-import copy
 
 from itertools import islice
 from utils import parse_conf_args
