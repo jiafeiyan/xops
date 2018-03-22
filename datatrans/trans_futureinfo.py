@@ -45,26 +45,26 @@ class trans_futureinfo:
         mysqlDB = self.mysqlDB
         if csvs[0] is not None:
             # ===========处理instrument.csv写入t_Instrument表==============
-            self.__t_Instrument(mysqlDB=mysqlDB, csv_file=self.__check_file("instrument"))
+            self.__t_Instrument(mysqlDB=mysqlDB, csv_file=csvs[0])
 
             # ===========处理instrument.csv写入t_TradingSegmentAttr表==============
-            self.__t_TradingSegmentAttr(mysqlDB=mysqlDB, csv_file=self.__check_file("instrument"))
+            self.__t_TradingSegmentAttr(mysqlDB=mysqlDB, csv_file=csvs[0])
 
             # ===========处理instrument.csv写入t_MarginRate表==============
-            self.__t_MarginRate(mysqlDB=mysqlDB, csv_file=self.__check_file("instrument"))
+            self.__t_MarginRate(mysqlDB=mysqlDB, csv_file=csvs[0])
 
             # ===========处理instrument.csv写入t_MarginRateDetail表==============
-            self.__t_MarginRateDetail(mysqlDB=mysqlDB, csv_file=self.__check_file("instrument"))
+            self.__t_MarginRateDetail(mysqlDB=mysqlDB, csv_file=csvs[0])
 
             # ===========处理instrument.csv写入t_PriceBanding表==============
-            self.__t_PriceBanding(mysqlDB=mysqlDB, csv_file=self.__check_file("instrument"))
+            self.__t_PriceBanding(mysqlDB=mysqlDB, csv_file=csvs[0])
 
             # ===========判断并写入t_InstrumentProperty表==============
-            self.__t_InstrumentProperty(mysqlDB=mysqlDB, csv_file=self.__check_file("instrument"))
+            self.__t_InstrumentProperty(mysqlDB=mysqlDB, csv_file=csvs[0])
 
         if csvs[2] is not None:
             # ===========写入t_MarketData表 ==============
-            self.__t_MarketData(mysqlDB=mysqlDB, csv_file=self.__check_file("depthmarketdata"))
+            self.__t_MarketData(mysqlDB=mysqlDB, csv_file=csvs[2])
 
     def __t_Instrument(self, mysqlDB, csv_file):
         mysql_conn = mysqlDB.get_cnx()
@@ -84,30 +84,19 @@ class trans_futureinfo:
                                                DeliveryYear,DeliveryMonth,AdvanceMonth
                                            )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
             sql_insert_params = []
-            for index, future in enumerate(csv_file):
-                if index == 0:
-                    field_len = len(future)
-                    continue
-                SGID = self.exchange_conf[future[1]]
-                ProductID = future[4].split(" ")[0]
+            for future in islice(csv_file, 1, None):
+                SGID = self.exchange_conf[future["ExchangeID"]]
+                ProductID = future["ProductID"].split(" ")[0]
 
-                # csv会把最后两个空值清除
-                def __add_list():
-                    if len(future) < field_len:
-                        future.append(0)
-                        return __add_list()
-                    else:
-                        return
-
-                __add_list()
                 sql_insert_params.append((SGID, ProductID,
                                           ProductID, ProductID,
-                                          future[5], "2",
-                                          future[27], future[28],
-                                          future[12], future[29],
-                                          future[0],
-                                          future[2].decode(encoding='gbk', errors='ignore').encode(encoding='utf8'),
-                                          future[6], future[7], "012"))
+                                          future["ProductClass"], "2",
+                                          future["StrikePrice"], future["PositionType"],
+                                          future["VolumeMultiple"],
+                                          "0" if future["UnderlyingMultiple"] is None else future["UnderlyingMultiple"],
+                                          future["InstrumentID"],
+                                          future["InstrumentName"].decode(encoding='gbk', errors='ignore').encode(encoding='utf8'),
+                                          future["DeliveryYear"], future["DeliveryMonth"], "012"))
             cursor.executemany(sql_insert_futures, sql_insert_params)
             mysql_conn.commit()
         finally:
@@ -218,11 +207,13 @@ class trans_futureinfo:
                 self.logger.error("t_TradingSegmentAttr不存在")
                 return
             for future in islice(csv_file, 1, None):
-                SGID = self.exchange_conf[future[1]]
+                SGID = self.exchange_conf[future["ExchangeID"]]
 
                 # 判断结算组是否存在
                 if SGID in segment_attr:
-                    params = self.__get_segment_attr(attr=segment_attr[SGID], product=future[4], instrument=future[0])
+                    params = self.__get_segment_attr(attr=segment_attr[SGID],
+                                                     product=future["ProductID"],
+                                                     instrument=future["InstrumentID"])
                     sql_insert_params += params
             cursor.executemany(sql_insert_segment, sql_insert_params)
             mysql_conn.commit()
@@ -271,15 +262,12 @@ class trans_futureinfo:
                                                  MarginCalcID,
                                                  InstrumentID,
                                                  ParticipantID
-                                             ) VALUES (%s,%s,%s,%s) 
-                                            ON DUPLICATE KEY UPDATE 
-                                              MarginCalcID=VALUES(MarginCalcID),
-                                              ParticipantID=VALUES(ParticipantID)"""
+                                             ) VALUES (%s,%s,%s,%s)"""
             sql_insert_params = []
             for future in islice(csv_file, 1, None):
-                SGID = self.exchange_conf[future[1]]
+                SGID = self.exchange_conf[future["ExchangeID"]]
                 if SGID in template:
-                    sql_insert_params.append((SGID, template[SGID][1], future[1], template[SGID][3]))
+                    sql_insert_params.append((SGID, template[SGID][1], future["InstrumentID"], template[SGID][3]))
             cursor.executemany(sql_insert_rate, sql_insert_params)
             mysql_conn.commit()
         finally:
@@ -306,10 +294,12 @@ class trans_futureinfo:
                                     ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
             sql_insert_params = []
             for future in islice(csv_file, 1, None):
-                SGID = self.exchange_conf[future[1]]
+                SGID = self.exchange_conf[future["ExchangeID"]]
                 if SGID in template:
                     sql_insert_params.append(
-                        self.__get_margin_rate_detail(attr=template[SGID], product=future[4], instrument=future[0]))
+                        self.__get_margin_rate_detail(attr=template[SGID],
+                                                      product=future["ProductID"],
+                                                      instrument=future["InstrumentID"]))
             cursor.executemany(sql_insert_detail, sql_insert_params)
             mysql_conn.commit()
         finally:
@@ -348,10 +338,10 @@ class trans_futureinfo:
                             ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)"""
             sql_insert_params = []
             for future in islice(csv_file, 1, None):
-                SGID = self.exchange_conf[future[1]]
+                SGID = self.exchange_conf[future["ExchangeID"]]
                 if SGID in template:
                     sql_insert_params.append((SGID, template[SGID][1], template[SGID][2], template[SGID][3],
-                                              template[SGID][4], template[SGID][5], future[0],
+                                              template[SGID][4], template[SGID][5], future["InstrumentID"],
                                               template[SGID][7]))
             cursor.executemany(sql_insert_price, sql_insert_params)
             mysql_conn.commit()
@@ -378,16 +368,16 @@ class trans_futureinfo:
                              )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
             sql_params = []
             for future in islice(csv_file, 1, None):
-                SGID = self.exchange_conf[future[1]]
-                ProductID = future[4]
-                sql_params.append((SGID, future[14], future[15], future[16], future[17],
-                                   future[18], 0,
-                                   1000000 if ProductID not in property else property[ProductID][0],
-                                   1 if ProductID not in property else property[ProductID][1],
-                                   1000000 if ProductID not in property else property[ProductID][2],
-                                   1 if ProductID not in property else property[ProductID][3],
-                                   1 if ProductID not in property else property[ProductID][4],
-                                   0, future[0], 1))
+                SGID = self.exchange_conf[future["ExchangeID"]]
+                ProductID = future["ProductID"]
+                sql_params.append((SGID, future["CreateDate"], future["OpenDate"], future["ExpireDate"],
+                                   future["StartDelivDate"], future["EndDelivDate"], 0,
+                                   future["MaxMarketOrderVolume"],
+                                   future["MinMarketOrderVolume"],
+                                   future["MaxLimitOrderVolume"],
+                                   future["MinLimitOrderVolume"],
+                                   future["PriceTick"],
+                                   0, future["InstrumentID"], 1))
             cursor.executemany(sql_Property, sql_params)
             mysql_conn.commit()
         finally:
@@ -413,12 +403,12 @@ class trans_futureinfo:
             for future in islice(csv_file, 1, None):
                 SGID = self.exchange_conf[future[2]]
                 sql_params.append(
-                    (future[0], SGID, None, future[5],
-                     future[6], future[7], None,
+                    (future["TradingDay"], SGID, None, future["PreClosePrice"],
+                     future["PreOpenInterest"], future["OpenPrice"], None,
                      None, None, None, None,
                      None, None, None,
-                     None, None, future[18],
-                     None, "15:15:00", "100", future[1]))
+                     None, None, future["PreDelta"],
+                     None, "15:15:00", "100", future["InstrumentID"]))
             cursor.executemany(sql_insert, sql_params)
             mysql_conn.commit()
         finally:
@@ -462,7 +452,7 @@ class trans_futureinfo:
             return self.__loadCSV(depthmarketdata)
 
     def __loadCSV(self, csv_file):
-        return csv.reader(open(csv_file))
+        return [row for row in csv.DictReader(open(csv_file))]
 
     # 主要读取template数据
     def __loadJSON(self, tableName):
