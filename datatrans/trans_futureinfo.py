@@ -3,14 +3,10 @@
 import os
 import datetime
 import json
+import csv
 
-
-from utils import parse_conf_args
-from utils import Configuration
-from utils import path
-from utils import mysql
-from utils import log
-from dbfread import DBF
+from itertools import islice
+from utils import parse_conf_args, Configuration, path, mysql, log
 
 
 class trans_futureinfo:
@@ -24,297 +20,214 @@ class trans_futureinfo:
         self.mysqlDB = mysql(configs=context.get("mysql")[configs.get("mysqlId")])
         # 初始化模板路径
         self.initTemplate = context.get("init")[configs.get("initId")]
-        self.futures_filename = "PAR_FUTURES"
-        self.gjshq_filename = "GJSHQ"
-        # 结算组ID和交易所对应关系
-        self.self_conf = {
-            "上海期货交易所": "SG03",
-            "大连商品交易所": "SG04",
-            "郑州商品交易所": "SG05",
-            "中国金融期货交易所": "SG06",
-            "上海黄金交易所": "SG97"
-        }
+        self.file_instrument = "instrument.csv"
+        self.file_product = "product.csv"
+        self.file_marketdata = "depthmarketdata.csv"
+        # 交易所和结算组对应关系
+        self.exchange_conf = self.__get_exchange()
         self.__transform()
 
+    # 通过交易所查询结算组代码
+    def __get_exchange(self):
+        sql = """select ExchangeID, t.SettlementGroupID from siminfo.t_settlementgroup t, siminfo.t_tradesystemsettlementgroup t1
+                  where t.SettlementGroupID = t1.SettlementGroupID and t1.TradeSystemID = %s"""
+        res = self.mysqlDB.select(sql, ('0002',))
+        exchange_conf = dict()
+        for row in res:
+            exchange_conf.update({str(row[0]): str(row[1])})
+        return exchange_conf
+
     def __transform(self):
-        # 读取dbf文件
-        dbfs = self.__check_file()
-        if dbfs is None:
+        # 读取csv文件
+        csvs = self.__check_file()
+        if csvs is None:
             return
-
         mysqlDB = self.mysqlDB
+        if csvs[0] is not None:
+            # ===========处理instrument.csv写入t_Instrument表==============
+            self.__t_Instrument(mysqlDB=mysqlDB, csv_file=self.__check_file("instrument"))
 
-        if dbfs[0] is not None:
-            # ===========处理futures_dbf写入t_Instrument表==============
-            self.__t_Instrument(mysqlDB=mysqlDB, dbf=dbfs[0])
+            # ===========处理instrument.csv写入t_TradingSegmentAttr表==============
+            self.__t_TradingSegmentAttr(mysqlDB=mysqlDB, csv_file=self.__check_file("instrument"))
 
-            # ===========处理futures_dbf写入t_TradingSegmentAttr表==============
-            self.__t_TradingSegmentAttr(mysqlDB=mysqlDB, dbf=dbfs[0])
+            # ===========处理instrument.csv写入t_MarginRate表==============
+            self.__t_MarginRate(mysqlDB=mysqlDB, csv_file=self.__check_file("instrument"))
 
-            # ===========处理futures_dbf写入t_MarginRate表==============
-            self.__t_MarginRate(mysqlDB=mysqlDB, dbf=dbfs[0])
+            # ===========处理instrument.csv写入t_MarginRateDetail表==============
+            self.__t_MarginRateDetail(mysqlDB=mysqlDB, csv_file=self.__check_file("instrument"))
 
-            # ===========处理futures_dbf写入t_MarginRateDetail表==============
-            self.__t_MarginRateDetail(mysqlDB=mysqlDB, dbf=dbfs[0])
-
-            # ===========处理futures_dbf写入t_PriceBanding表==============
-            self.__t_PriceBanding(mysqlDB=mysqlDB, dbf=dbfs[0])
+            # ===========处理instrument.csv写入t_PriceBanding表==============
+            self.__t_PriceBanding(mysqlDB=mysqlDB, csv_file=self.__check_file("instrument"))
 
             # ===========判断并写入t_InstrumentProperty表==============
-            self.__t_InstrumentProperty(mysqlDB=mysqlDB, dbf=dbfs[0])
+            self.__t_InstrumentProperty(mysqlDB=mysqlDB, csv_file=self.__check_file("instrument"))
 
-        if dbfs[1] is not None:
-            # ===========处理gjshq_dbf写入t_MarketData表 ==============
-            self.__t_MarketData(mysqlDB=mysqlDB, dbf=dbfs[1])
+        if csvs[2] is not None:
+            # ===========写入t_MarketData表 ==============
+            self.__t_MarketData(mysqlDB=mysqlDB, csv_file=self.__check_file("depthmarketdata"))
 
-    # 读取处理PAR_FUTURES文件
-    def __t_Instrument(self, mysqlDB, dbf):
-        sql_insert_futures = """INSERT INTO siminfo.t_Instrument (
-                                   SettlementGroupID,ProductID,
-                                   ProductGroupID,UnderlyingInstrID,
-                                   ProductClass,PositionType,
-                                   StrikePrice,OptionsType,
-                                   VolumeMultiple,UnderlyingMultiple,
-                                   InstrumentID,InstrumentName,
-                                   DeliveryYear,DeliveryMonth,AdvanceMonth
-                               )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
-                                ON DUPLICATE KEY UPDATE
-                                ProductID = VALUES (ProductID),
-                                ProductGroupID = VALUES (ProductGroupID),
-                                UnderlyingInstrID = VALUES (UnderlyingInstrID),
-                                ProductClass = VALUES (ProductClass),
-                                PositionType = VALUES (PositionType),
-                                StrikePrice = VALUES (StrikePrice),
-                                VolumeMultiple = VALUES (VolumeMultiple),
-                                UnderlyingMultiple = VALUES (UnderlyingMultiple),
-                                InstrumentName = VALUES (InstrumentName),
-                                DeliveryYear = VALUES (DeliveryYear),
-                                DeliveryMonth = VALUES (DeliveryMonth),
-                                AdvanceMonth = VALUES (AdvanceMonth)"""
-        sql_insert_params = []
-        for future in dbf:
-            # 判断行业类型是否为CP,如果是为期权，其余为期货
-            ProductClass = '1'
-            OptionsType = '0'
-            ProductID = str(future['JYPZ'])
-            ProductGroupID = str(future['JYPZ'])
-            # 获取结算组ID
-            settlement = self.self_conf[future['JYSC'].encode('UTF-8')]
-            if str(future['HYLX']) == 'C' or str(future['HYLX']) == 'P':
-                ProductClass = '2'
-                if str(future['HYLX']) == 'C':
-                    OptionsType = '1'
-                elif str(future['HYLX']) == 'P':
-                    OptionsType = '2'
+    def __t_Instrument(self, mysqlDB, csv_file):
+        mysql_conn = mysqlDB.get_cnx()
+        mysql_conn.start_transaction()
+        try:
+            cursor = mysql_conn.cursor()
+            # 删除期货交易所下所有数据
+            cursor.execute("delete from siminfo.t_Instrument where SettlementGroupID in "
+                           + str(tuple([str(i) for i in self.exchange_conf.values()])))
+            sql_insert_futures = """INSERT INTO siminfo.t_Instrument(
+                                               SettlementGroupID,ProductID,
+                                               ProductGroupID,UnderlyingInstrID,
+                                               ProductClass,PositionType,
+                                               StrikePrice,OptionsType,
+                                               VolumeMultiple,UnderlyingMultiple,
+                                               InstrumentID,InstrumentName,
+                                               DeliveryYear,DeliveryMonth,AdvanceMonth
+                                           )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
+            sql_insert_params = []
+            for index, future in enumerate(csv_file):
+                if index == 0:
+                    field_len = len(future)
+                    continue
+                SGID = self.exchange_conf[future[1]]
+                ProductID = future[4].split(" ")[0]
 
-                if settlement == 'SG03':
-                    ProductID = ProductID + '_O'
-                if settlement == 'SG04':
-                    ProductID = ProductID + '_O'
-                if settlement == 'SG05':
-                    if str(future['HYLX']) == 'C':
-                        ProductID = ProductID + '_C'
-                    elif str(future['HYLX']) == 'P':
-                        ProductID = ProductID + '_P'
-                if settlement == 'SG06':
-                    ProductID = ProductID + 'O'
-            sql_insert_params.append((settlement, ProductID, ProductGroupID, ProductID, ProductClass,
-                                      "2", None, OptionsType,
-                                      future['JYDW'], 1, future['ZQDM'], future['ZQMC'],
-                                      9999 if not future['DQRQ'] else int(str(future['DQRQ'])[0:4]),
-                                      12 if not future['DQRQ'] else int(str(future['DQRQ'])[4:6]), "012"))
-        mysqlDB.executemany(sql_insert_futures, sql_insert_params)
+                # csv会把最后两个空值清除
+                def __add_list():
+                    if len(future) < field_len:
+                        future.append(0)
+                        return __add_list()
+                    else:
+                        return
+
+                __add_list()
+                sql_insert_params.append((SGID, ProductID,
+                                          ProductID, ProductID,
+                                          future[5], "2",
+                                          future[27], future[28],
+                                          future[12], future[29],
+                                          future[0],
+                                          future[2].decode(encoding='gbk', errors='ignore').encode(encoding='utf8'),
+                                          future[6], future[7], "012"))
+            cursor.executemany(sql_insert_futures, sql_insert_params)
+            mysql_conn.commit()
+        finally:
+            mysql_conn.close()
         self.logger.info("写入t_Instrument完成")
         # 导入完成后写入产品表
         self.__init_product()
 
     def __init_product(self):
-        mysqlDB = self.mysqlDB
-        # t_ClientProductRight
-        self.logger.info("产品类型导入t_ClientProductRight")
-        sql = """INSERT into siminfo.t_ClientProductRight(
-                SELECT SettlementGroupID,ProductID,'00000000' AS ClientID,'0' AS TradingRight 
-                FROM siminfo.t_instrument 
-                WHERE SettlementGroupID in ('SG03','SG04','SG05','SG06')
-                GROUP BY SettlementGroupID,ProductID)
-                ON DUPLICATE KEY UPDATE
-                SettlementGroupID = VALUES (SettlementGroupID),
-                ProductID = VALUES (ProductID)"""
-        mysqlDB.execute(sql=sql)
-        # t_MarketProduct
-        self.logger.info("产品类型导入t_MarketProduct")
-        sql = """INSERT into siminfo.t_MarketProduct(
-                SELECT t.SettlementGroupID, t1.MarketID, t.ProductID 
-                FROM siminfo.t_instrument t,siminfo.t_market t1 
-                WHERE t.SettlementGroupID = t1.SettlementGroupID 
-                    AND t.SettlementGroupID IN ( 'SG03', 'SG04', 'SG05', 'SG06' ) 
-                GROUP BY t.SettlementGroupID,t.ProductID,t1.MarketID)
-                ON DUPLICATE KEY UPDATE
-                SettlementGroupID = VALUES (SettlementGroupID),
-                MarketID = VALUES (MarketID),
-                ProductID = VALUES (ProductID)"""
-        mysqlDB.execute(sql=sql)
-        # t_MdPubStatus
-        self.logger.info("产品类型导入t_MdPubStatus")
-        sql = """INSERT into siminfo.t_MdPubStatus(
-                SELECT SettlementGroupID,ProductID,'3' AS InstrumentStatus,'0' AS MdPubStatus 
-                FROM siminfo.t_instrument 
-                WHERE SettlementGroupID IN ('SG03','SG04','SG05','SG06')
-                GROUP BY SettlementGroupID,ProductID)
-                ON DUPLICATE KEY UPDATE
-                SettlementGroupID = VALUES (SettlementGroupID),
-                ProductID = VALUES (ProductID)"""
-        mysqlDB.execute(sql=sql)
-        # t_PartProductRight
-        self.logger.info("产品类型导入t_PartProductRight")
-        sql = """INSERT INTO siminfo.t_PartProductRight(
-                SELECT SettlementGroupID,ProductID,'00000000' AS ParticipantID,'0' AS TradingRight 
-                FROM siminfo.t_instrument 
-                WHERE SettlementGroupID IN ('SG03','SG04','SG05','SG06')
-                GROUP BY SettlementGroupID,ProductID)
-                ON DUPLICATE KEY UPDATE
-                SettlementGroupID = VALUES (SettlementGroupID),
-                ProductID = VALUES (ProductID)"""
-        mysqlDB.execute(sql=sql)
-        # t_PartProductRole
-        self.logger.info("产品类型导入t_PartProductRole")
-        sql = """INSERT INTO siminfo.t_PartProductRole(
-                SELECT SettlementGroupID,'00000000' AS ParticipantID,ProductID,'1' AS TradingRole 
-                FROM siminfo.t_instrument 
-                WHERE SettlementGroupID IN ('SG03','SG04','SG05','SG06')
-                GROUP BY SettlementGroupID,ProductID)
-                ON DUPLICATE KEY UPDATE
-                SettlementGroupID = VALUES (SettlementGroupID),
-                ProductID = VALUES (ProductID)"""
-        mysqlDB.execute(sql=sql)
-        # t_Product
-        self.logger.info("产品类型导入t_Product")
-        sql = """INSERT INTO siminfo.t_Product(
-                SELECT SettlementGroupID, ProductID, ProductGroupID, '' AS ProductName,'' AS ProductClass 
-                FROM siminfo.t_instrument 
-                WHERE SettlementGroupID IN ('SG03','SG04','SG05','SG06')
-                GROUP BY SettlementGroupID,ProductID,ProductGroupID)
-                ON DUPLICATE KEY UPDATE
-                SettlementGroupID = VALUES (SettlementGroupID),
-                ProductID = VALUES (ProductID),
-                ProductGroupID = VALUES (ProductGroupID)"""
-        mysqlDB.execute(sql=sql)
-        # t_ProductGroup
-        self.logger.info("产品类型导入t_ProductGroup")
-        sql = """INSERT INTO siminfo.t_ProductGroup(
-                SELECT SettlementGroupID,ProductGroupID,'' AS ProductGroupName,ProductGroupID as CommodityID
-                FROM siminfo.t_instrument 
-                WHERE SettlementGroupID IN ('SG03','SG04','SG05','SG06')
-                GROUP BY SettlementGroupID,ProductGroupID,ProductGroupID)
-                ON DUPLICATE KEY UPDATE
-                SettlementGroupID = VALUES (SettlementGroupID),
-                ProductGroupID = VALUES (ProductGroupID)"""
-        mysqlDB.execute(sql=sql)
+        mysql_conn = self.mysqlDB.get_cnx()
+        mysql_conn.start_transaction()
+        try:
+            cursor = mysql_conn.cursor()
+            cursor.execute("delete from siminfo.t_ClientProductRight where SettlementGroupID in "
+                           + str(tuple([str(i) for i in self.exchange_conf.values()])))
+            cursor.execute("delete from siminfo.t_MarketProduct where SettlementGroupID in "
+                           + str(tuple([str(i) for i in self.exchange_conf.values()])))
+            cursor.execute("delete from siminfo.t_MdPubStatus where SettlementGroupID in "
+                           + str(tuple([str(i) for i in self.exchange_conf.values()])))
+            cursor.execute("delete from siminfo.t_PartProductRight where SettlementGroupID in "
+                           + str(tuple([str(i) for i in self.exchange_conf.values()])))
+            cursor.execute("delete from siminfo.t_PartProductRole where SettlementGroupID in "
+                           + str(tuple([str(i) for i in self.exchange_conf.values()])))
+            cursor.execute("delete from siminfo.t_Product where SettlementGroupID in "
+                           + str(tuple([str(i) for i in self.exchange_conf.values()])))
+            cursor.execute("delete from siminfo.t_ProductGroup where SettlementGroupID in "
+                           + str(tuple([str(i) for i in self.exchange_conf.values()])))
+            # t_ClientProductRight
+            self.logger.info("产品类型导入t_ClientProductRight")
+            cursor.execute("")
+            sql = """INSERT into siminfo.t_ClientProductRight(
+                           SELECT SettlementGroupID,ProductID,'00000000' AS ClientID,'0' AS TradingRight 
+                           FROM siminfo.t_instrument 
+                           WHERE SettlementGroupID in """ + str(tuple([str(i) for i in self.exchange_conf.values()])) + """
+                           GROUP BY SettlementGroupID,ProductID)"""
+            cursor.execute(sql)
+            # t_MarketProduct
+            self.logger.info("产品类型导入t_MarketProduct")
+            sql = """INSERT into siminfo.t_MarketProduct(
+                           SELECT t.SettlementGroupID, t1.MarketID, t.ProductID 
+                           FROM siminfo.t_instrument t,siminfo.t_market t1 
+                           WHERE t.SettlementGroupID = t1.SettlementGroupID 
+                               AND t.SettlementGroupID in """ + str(
+                tuple([str(i) for i in self.exchange_conf.values()])) + """
+                           GROUP BY t.SettlementGroupID,t.ProductID,t1.MarketID)"""
+            cursor.execute(sql)
+            # t_MdPubStatus
+            self.logger.info("产品类型导入t_MdPubStatus")
+            sql = """INSERT into siminfo.t_MdPubStatus(
+                           SELECT SettlementGroupID,ProductID,'3' AS InstrumentStatus,'0' AS MdPubStatus 
+                           FROM siminfo.t_instrument 
+                           WHERE SettlementGroupID in """ + str(tuple([str(i) for i in self.exchange_conf.values()])) + """
+                           GROUP BY SettlementGroupID,ProductID)"""
+            cursor.execute(sql)
+            # t_PartProductRight
+            self.logger.info("产品类型导入t_PartProductRight")
+            sql = """INSERT INTO siminfo.t_PartProductRight(
+                           SELECT SettlementGroupID,ProductID,'00000000' AS ParticipantID,'0' AS TradingRight 
+                           FROM siminfo.t_instrument 
+                           WHERE SettlementGroupID in """ + str(tuple([str(i) for i in self.exchange_conf.values()])) + """
+                           GROUP BY SettlementGroupID,ProductID)"""
+            cursor.execute(sql)
+            # t_PartProductRole
+            self.logger.info("产品类型导入t_PartProductRole")
+            sql = """INSERT INTO siminfo.t_PartProductRole(
+                           SELECT SettlementGroupID,'00000000' AS ParticipantID,ProductID,'1' AS TradingRole 
+                           FROM siminfo.t_instrument 
+                           WHERE SettlementGroupID in """ + str(tuple([str(i) for i in self.exchange_conf.values()])) + """
+                           GROUP BY SettlementGroupID,ProductID)"""
+            cursor.execute(sql)
+            # t_Product
+            self.logger.info("产品类型导入t_Product")
+            sql = """INSERT INTO siminfo.t_Product(
+                           SELECT SettlementGroupID, ProductID, ProductGroupID, '' AS ProductName,'' AS ProductClass 
+                           FROM siminfo.t_instrument 
+                           WHERE SettlementGroupID in """ + str(tuple([str(i) for i in self.exchange_conf.values()])) + """
+                           GROUP BY SettlementGroupID,ProductID,ProductGroupID)"""
+            cursor.execute(sql)
+            # t_ProductGroup
+            self.logger.info("产品类型导入t_ProductGroup")
+            sql = """INSERT INTO siminfo.t_ProductGroup(
+                           SELECT SettlementGroupID,ProductGroupID,'' AS ProductGroupName,ProductGroupID as CommodityID
+                           FROM siminfo.t_instrument 
+                           WHERE SettlementGroupID in """ + str(tuple([str(i) for i in self.exchange_conf.values()])) + """
+                           GROUP BY SettlementGroupID,ProductGroupID,ProductGroupID)"""
+            cursor.execute(sql)
+            mysql_conn.commit()
+        finally:
+            mysql_conn.close()
 
-    # 读取处理GJSHQ文件
-    def __t_MarketData(self, mysqlDB, dbf):
-        sql_insert_gjshq = """INSERT INTO siminfo.t_MarketData (
-                                        TradingDay,SettlementGroupID,LastPrice,PreSettlementPrice,
-                                        PreClosePrice,PreOpenInterest,OpenPrice,
-                                        HighestPrice,LowestPrice,Volume,Turnover,
-                                        OpenInterest,ClosePrice,SettlementPrice,
-                                        UpperLimitPrice,LowerLimitPrice,PreDelta,
-                                        CurrDelta,UpdateTime,UpdateMillisec,InstrumentID
-                                   )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
-                                   ON DUPLICATE KEY UPDATE  
-                                        PreSettlementPrice = VALUES(PreSettlementPrice),
-                                        PreClosePrice = VALUES(PreClosePrice),
-                                        UpdateTime = VALUES(UpdateTime),
-                                        UpdateMillisec = VALUES(UpdateMillisec)"""
-        sql_insert_params = []
-        for hq in dbf:
-            sql_insert_params.append((self.TradingDay, self.self_conf[hq['JYSC'].encode('UTF-8')], None, hq['JQPJJ'],
-                                      hq['SPJ'], '0', None,
-                                      None, None, None, None,
-                                      None, None, None,
-                                      None, None, None,
-                                      None, "15:15:00", "100", hq['HYDM']))
-        mysqlDB.executemany(sql_insert_gjshq, sql_insert_params)
-        self.logger.info("写入t_MarketData完成")
+    def __t_TradingSegmentAttr(self, mysqlDB, csv_file):
+        mysql_conn = mysqlDB.get_cnx()
+        mysql_conn.start_transaction()
+        try:
+            cursor = mysql_conn.cursor()
+            # 删除期货交易所下所有数据
+            cursor.execute("delete from siminfo.t_TradingSegmentAttr where SettlementGroupID in  " + str(
+                tuple([str(i) for i in self.exchange_conf.values()])))
+            sql_insert_segment = """INSERT INTO siminfo.t_TradingSegmentAttr (
+                                                SettlementGroupID,TradingSegmentSN,
+                                                TradingSegmentName,StartTime,
+                                                InstrumentStatus,DayOffset,InstrumentID
+                                            ) VALUES (%s,%s,%s,%s,%s,%s,%s)"""
+            sql_insert_params = []
+            #  加载交易时间段数据
+            segment_attr = self.__loadJSON(tableName='t_TradingSegmentAttr')
+            if segment_attr is None:
+                self.logger.error("t_TradingSegmentAttr不存在")
+                return
+            for future in islice(csv_file, 1, None):
+                SGID = self.exchange_conf[future[1]]
 
-    # 写入t_InstrumentProperty
-    def __t_InstrumentProperty(self, mysqlDB, dbf):
-        property = self.__loadJSON("t_InstrumentProperty")
-        sql_Property = """INSERT INTO siminfo.t_InstrumentProperty (
-                                         SettlementGroupID,CreateDate,OpenDate,ExpireDate,StartDelivDate,
-                                         EndDelivDate,BasisPrice,MaxMarketOrderVolume,MinMarketOrderVolume,
-                                         MaxLimitOrderVolume,MinLimitOrderVolume,PriceTick,
-                                         AllowDelivPersonOpen,InstrumentID,InstLifePhase
-                                         )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
-                                       ON DUPLICATE KEY UPDATE 
-                                          CreateDate=VALUES(CreateDate),OpenDate=VALUES(OpenDate),
-                                          ExpireDate=VALUES(ExpireDate),StartDelivDate=VALUES(StartDelivDate),
-                                          EndDelivDate=VALUES(EndDelivDate),
-                                          MaxMarketOrderVolume=VALUES(MaxMarketOrderVolume),
-                                          MinMarketOrderVolume=VALUES(MinMarketOrderVolume),
-                                          MaxLimitOrderVolume=VALUES(MaxLimitOrderVolume),
-                                          MinLimitOrderVolume=VALUES(MinLimitOrderVolume),
-                                          PriceTick=VALUES(PriceTick)"""
-        sql_params = []
-        for future in dbf:
-            ProductID = str.upper(str(future['JYPZ']))
-            settlement = self.self_conf[future['JYSC'].encode('UTF-8')]
-            if str(future['HYLX']) == 'C' or str(future['HYLX']) == 'P':
-                if settlement == 'SG03':
-                    ProductID = ProductID + '_O'
-                if settlement == 'SG04':
-                    ProductID = ProductID + '_O'
-                if settlement == 'SG05':
-                    if str(future['HYLX']) == 'C':
-                        ProductID = ProductID + '_C'
-                    elif str(future['HYLX']) == 'P':
-                        ProductID = ProductID + '_P'
-                if settlement == 'SG06':
-                    ProductID = ProductID + 'O'
-            sql_params.append((settlement, future['SSRQ'], future['SSRQ'],
-                               '99991219' if not future['DQRQ'] else future['DQRQ'],
-                               '99991219' if not future['DQRQ'] else future['DQRQ'],
-                               '99991219' if not future['DQRQ'] else future['DQRQ'], 0,
-                               1000000 if not property[ProductID] else property[ProductID][0],
-                               1 if not property[ProductID] else property[ProductID][1],
-                               1000000 if not property[ProductID] else property[ProductID][2],
-                               1 if not property[ProductID] else property[ProductID][3],
-                               1 if not property[ProductID] else property[ProductID][4],
-                               0, future['ZQDM'], 1))
-        mysqlDB.executemany(sql_Property, sql_params)
-        self.logger.info("写入t_InstrumentProperty完成")
-
-    # 写入t_TradingSegmentAttr
-    def __t_TradingSegmentAttr(self, mysqlDB, dbf):
-        sql_insert_segment = """INSERT INTO siminfo.t_TradingSegmentAttr (
-                                    SettlementGroupID,TradingSegmentSN,
-                                    TradingSegmentName,StartTime,
-                                    InstrumentStatus,DayOffset,InstrumentID
-                                ) VALUES (%s,%s,%s,%s,%s,%s,%s)
-                                ON DUPLICATE KEY UPDATE 
-                                  SettlementGroupID=VALUES(SettlementGroupID),
-                                  TradingSegmentSN=VALUES(TradingSegmentSN),
-                                  TradingSegmentName=VALUES(TradingSegmentName),
-                                  StartTime=VALUES(StartTime),
-                                  InstrumentStatus=VALUES(InstrumentStatus),
-                                  DayOffset=VALUES (DayOffset),
-                                  InstrumentID=VALUES (InstrumentID)"""
-        sql_insert_params = []
-        #  加载交易时间段数据
-        segment_attr = self.__loadJSON(tableName='t_TradingSegmentAttr')
-        if segment_attr is None:
-            self.logger.error("t_TradingSegmentAttr不存在")
-            return
-        for future in dbf:
-            # 获取结算组ID
-            SGID = self.self_conf[future['JYSC'].encode('UTF-8')]
-            # 判断结算组是否存在
-            if SGID in segment_attr:
-                attr = segment_attr[SGID]
-                product = future['JYPZ']
-                params = self.__get_segment_attr(attr=attr, product=product, instrument=future['ZQDM'])
-                sql_insert_params += params
-        mysqlDB.executemany(sql_insert_segment, sql_insert_params)
+                # 判断结算组是否存在
+                if SGID in segment_attr:
+                    params = self.__get_segment_attr(attr=segment_attr[SGID], product=future[4], instrument=future[0])
+                    sql_insert_params += params
+            cursor.executemany(sql_insert_segment, sql_insert_params)
+            mysql_conn.commit()
+        finally:
+            mysql_conn.close()
         self.logger.info("写入t_TradingSegmentAttr完成")
 
     # 通过产品代码生成目标合约的交易时间段
@@ -339,54 +252,68 @@ class trans_futureinfo:
                 params.append((segment[0], segment[1], segment[2], segment[3], segment[4], segment[5], instrument))
         return params
 
-    # 写入t_MarginRate
-    def __t_MarginRate(self, mysqlDB, dbf):
-        # 获取模板文件
-        template = self.__loadJSON(tableName='t_MarginRate')
-        if template is None:
-            self.logger.error("t_MarginRate template is None")
-            return
-        # 不存在插入记录
-        sql_insert_rate = """INSERT INTO siminfo.t_MarginRate (
-                                       SettlementGroupID,
-                                       MarginCalcID,
-                                       InstrumentID,
-                                       ParticipantID
-                                   ) VALUES (%s,%s,%s,%s) 
-                                  ON DUPLICATE KEY UPDATE 
-                                    MarginCalcID=VALUES(MarginCalcID),
-                                    ParticipantID=VALUES(ParticipantID)"""
-        sql_insert_params = []
-        for future in dbf:
-            SGID = self.self_conf[future['JYSC'].encode('UTF-8')]
-            if SGID in template:
-                sql_insert_params.append((SGID, template[SGID][1], future['ZQDM'], template[SGID][3]))
-        mysqlDB.executemany(sql_insert_rate, sql_insert_params)
+    def __t_MarginRate(self, mysqlDB, csv_file):
+        mysql_conn = mysqlDB.get_cnx()
+        mysql_conn.start_transaction()
+        try:
+            # 获取模板文件
+            template = self.__loadJSON(tableName='t_MarginRate')
+            if template is None:
+                self.logger.error("t_MarginRate template is None")
+                return
+            cursor = mysql_conn.cursor()
+            # 删除期货交易所下所有数据
+            cursor.execute("delete from siminfo.t_MarginRate where SettlementGroupID in "
+                           + str(tuple([str(i) for i in self.exchange_conf.values()])))
+
+            sql_insert_rate = """INSERT INTO siminfo.t_MarginRate (
+                                                 SettlementGroupID,
+                                                 MarginCalcID,
+                                                 InstrumentID,
+                                                 ParticipantID
+                                             ) VALUES (%s,%s,%s,%s) 
+                                            ON DUPLICATE KEY UPDATE 
+                                              MarginCalcID=VALUES(MarginCalcID),
+                                              ParticipantID=VALUES(ParticipantID)"""
+            sql_insert_params = []
+            for future in islice(csv_file, 1, None):
+                SGID = self.exchange_conf[future[1]]
+                if SGID in template:
+                    sql_insert_params.append((SGID, template[SGID][1], future[1], template[SGID][3]))
+            cursor.executemany(sql_insert_rate, sql_insert_params)
+            mysql_conn.commit()
+        finally:
+            mysql_conn.close()
         self.logger.info("写入t_MarginRate完成")
 
-    # 写入t_MarginRateDetail
-    def __t_MarginRateDetail(self, mysqlDB, dbf):
-        # 获取模板文件
-        template = self.__loadJSON(tableName='t_MarginRateDetail')
-        if template is None:
-            self.logger.error("t_MarginRateDetail template is None")
-            return
-        sql_insert_detail = """INSERT INTO siminfo.t_MarginRateDetail (
+    def __t_MarginRateDetail(self, mysqlDB, csv_file):
+        mysql_conn = mysqlDB.get_cnx()
+        mysql_conn.start_transaction()
+        try:
+            # 获取模板文件
+            template = self.__loadJSON(tableName='t_MarginRateDetail')
+            if template is None:
+                self.logger.error("t_MarginRateDetail template is None")
+                return
+            cursor = mysql_conn.cursor()
+            # 删除期货交易所下所有数据
+            cursor.execute("delete from siminfo.t_MarginRateDetail where SettlementGroupID in "
+                           + str(tuple([str(i) for i in self.exchange_conf.values()])))
+            sql_insert_detail = """INSERT INTO siminfo.t_MarginRateDetail (
                                         SettlementGroupID,TradingRole,HedgeFlag,
                                         ValueMode,LongMarginRatio,ShortMarginRatio,
                                         InstrumentID,ParticipantID,ClientID
-                                    ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)
-                                     ON DUPLICATE KEY UPDATE
-                                    ValueMode=VALUES(ValueMode),LongMarginRatio=VALUES(LongMarginRatio),
-                                    ShortMarginRatio=VALUES(ShortMarginRatio)"""
-        sql_insert_params = []
-        for future in dbf:
-            SGID = self.self_conf[future['JYSC'].encode('UTF-8')]
-            if SGID in template:
-                attr = template[SGID]
-                product = future['JYPZ']
-                sql_insert_params.append(self.__get_margin_rate_detail(attr=attr, product=product, instrument=future['ZQDM']))
-        mysqlDB.executemany(sql_insert_detail, sql_insert_params)
+                                    ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
+            sql_insert_params = []
+            for future in islice(csv_file, 1, None):
+                SGID = self.exchange_conf[future[1]]
+                if SGID in template:
+                    sql_insert_params.append(
+                        self.__get_margin_rate_detail(attr=template[SGID], product=future[4], instrument=future[0]))
+            cursor.executemany(sql_insert_detail, sql_insert_params)
+            mysql_conn.commit()
+        finally:
+            mysql_conn.close()
         self.logger.info("写入t_MarginRateDetail完成")
 
     # 通过产品代码生成目标合约的保证金率
@@ -402,32 +329,103 @@ class trans_futureinfo:
                       template[9], template[10])
         return params
 
-    # 写入t_PriceBanding
-    def __t_PriceBanding(self, mysqlDB, dbf):
-        # 获取模板文件
-        template = self.__loadJSON(tableName='t_PriceBanding')
-        if template is None:
-            self.logger.error("t_PriceBanding template is None")
-            return
-        sql_insert_price = """INSERT INTO siminfo.t_PriceBanding (
+    def __t_PriceBanding(self, mysqlDB, csv_file):
+        mysql_conn = mysqlDB.get_cnx()
+        mysql_conn.start_transaction()
+        try:
+            # 获取模板文件
+            template = self.__loadJSON(tableName='t_PriceBanding')
+            if template is None:
+                self.logger.error("t_PriceBanding template is None")
+                return
+            cursor = mysql_conn.cursor()
+            # 删除期货交易所下所有数据
+            cursor.execute("delete from siminfo.t_PriceBanding where SettlementGroupID in "
+                           + str(tuple([str(i) for i in self.exchange_conf.values()])))
+            sql_insert_price = """INSERT INTO siminfo.t_PriceBanding (
                                 SettlementGroupID,PriceLimitType,ValueMode,RoundingMode,
                                 UpperValue,LowerValue,InstrumentID,TradingSegmentSN
-                            ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s) 
-                            ON DUPLICATE KEY UPDATE
-                            PriceLimitType=VALUES(PriceLimitType),ValueMode=VALUES(ValueMode),
-                            RoundingMode=VALUES(RoundingMode),UpperValue=VALUES(UpperValue),
-                            LowerValue=VALUES(LowerValue)"""
-        sql_insert_params = []
-        for future in dbf:
-            SGID = self.self_conf[future['JYSC'].encode('UTF-8')]
-            if SGID in template:
-                sql_insert_params.append((SGID, template[SGID][1], template[SGID][2], template[SGID][3],
-                                          template[SGID][4], template[SGID][5], future['ZQDM'],
-                                          template[SGID][7]))
-        mysqlDB.executemany(sql_insert_price, sql_insert_params)
+                            ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)"""
+            sql_insert_params = []
+            for future in islice(csv_file, 1, None):
+                SGID = self.exchange_conf[future[1]]
+                if SGID in template:
+                    sql_insert_params.append((SGID, template[SGID][1], template[SGID][2], template[SGID][3],
+                                              template[SGID][4], template[SGID][5], future[0],
+                                              template[SGID][7]))
+            cursor.executemany(sql_insert_price, sql_insert_params)
+            mysql_conn.commit()
+        finally:
+            mysql_conn.close()
         self.logger.info("写入t_PriceBanding完成")
 
-    def __check_file(self):
+    def __t_InstrumentProperty(self, mysqlDB, csv_file):
+        mysql_conn = mysqlDB.get_cnx()
+        mysql_conn.start_transaction()
+        try:
+            property = self.__loadJSON(tableName='t_InstrumentProperty')
+            if property is None:
+                self.logger.error("t_InstrumentProperty template is None")
+                return
+            cursor = mysql_conn.cursor()
+            cursor.execute("delete from siminfo.t_InstrumentProperty where SettlementGroupID in "
+                           + str(tuple([str(i) for i in self.exchange_conf.values()])))
+            sql_Property = """INSERT INTO siminfo.t_InstrumentProperty (
+                             SettlementGroupID,CreateDate,OpenDate,ExpireDate,StartDelivDate,
+                             EndDelivDate,BasisPrice,MaxMarketOrderVolume,MinMarketOrderVolume,
+                             MaxLimitOrderVolume,MinLimitOrderVolume,PriceTick,
+                             AllowDelivPersonOpen,InstrumentID,InstLifePhase
+                             )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
+            sql_params = []
+            for future in islice(csv_file, 1, None):
+                SGID = self.exchange_conf[future[1]]
+                ProductID = future[4]
+                sql_params.append((SGID, future[14], future[15], future[16], future[17],
+                                   future[18], 0,
+                                   1000000 if ProductID not in property else property[ProductID][0],
+                                   1 if ProductID not in property else property[ProductID][1],
+                                   1000000 if ProductID not in property else property[ProductID][2],
+                                   1 if ProductID not in property else property[ProductID][3],
+                                   1 if ProductID not in property else property[ProductID][4],
+                                   0, future[0], 1))
+            cursor.executemany(sql_Property, sql_params)
+            mysql_conn.commit()
+        finally:
+            mysql_conn.close()
+        self.logger.info("写入t_InstrumentProperty完成")
+
+    def __t_MarketData(self, mysqlDB, csv_file):
+        mysql_conn = mysqlDB.get_cnx()
+        mysql_conn.start_transaction()
+        try:
+            cursor = mysql_conn.cursor()
+            cursor.execute("delete from siminfo.t_MarketData where SettlementGroupID in "
+                           + str(tuple([str(i) for i in self.exchange_conf.values()])))
+            sql_insert = """INSERT INTO siminfo.t_MarketData (
+                                    TradingDay,SettlementGroupID,LastPrice,PreSettlementPrice,
+                                    PreClosePrice,PreOpenInterest,OpenPrice,
+                                    HighestPrice,LowestPrice,Volume,Turnover,
+                                    OpenInterest,ClosePrice,SettlementPrice,
+                                    UpperLimitPrice,LowerLimitPrice,PreDelta,
+                                    CurrDelta,UpdateTime,UpdateMillisec,InstrumentID
+                               )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
+            sql_params = []
+            for future in islice(csv_file, 1, None):
+                SGID = self.exchange_conf[future[2]]
+                sql_params.append(
+                    (future[0], SGID, None, future[5],
+                     future[6], future[7], None,
+                     None, None, None, None,
+                     None, None, None,
+                     None, None, future[18],
+                     None, "15:15:00", "100", future[1]))
+            cursor.executemany(sql_insert, sql_params)
+            mysql_conn.commit()
+        finally:
+            mysql_conn.close()
+        self.logger.info("写入t_MarketData完成")
+
+    def __check_file(self, file_name=None):
         env_dist = os.environ
         # 判断环境变量是否存在HOME配置
         if 'HOME' not in env_dist:
@@ -438,34 +436,33 @@ class trans_futureinfo:
         now = datetime.datetime.now().strftime("%Y%m%d")
         self.TradingDay = now
         catalog = '%s%s%s%s%s' % (catalog, os.path.sep, 'sim_data', os.path.sep, now)
-        par_futures = '%s%s%s%s%s' % (catalog, os.path.sep, self.futures_filename, now, '.dbf')
-        gjshq = '%s%s%s%s%s' % (catalog, os.path.sep, self.gjshq_filename, now, '.dbf')
+        instrument = '%s%s%s' % (catalog, os.path.sep, self.file_instrument)
+        product = '%s%s%s' % (catalog, os.path.sep, self.file_product)
+        depthmarketdata = '%s%s%s' % (catalog, os.path.sep, self.file_marketdata)
+        # 判断instrument.csv文件是否存在，不存在设置为空
+        if not os.path.exists(instrument):
+            self.logger.error("%s%s" % (instrument, " is not exists"))
+            instrument = None
+        # 判断product.csv文件是否存在，不存在设置为空
+        if not os.path.exists(product):
+            self.logger.error("%s%s" % (product, " is not exists"))
+            product = None
+        # 判断depthmarketdata.csv文件是否存在，不存在设置为空
+        if not os.path.exists(product):
+            self.logger.error("%s%s" % (depthmarketdata, " is not exists"))
+            product = None
+        # 读取CSV文件
+        if file_name is None:
+            return self.__loadCSV(instrument), self.__loadCSV(product), self.__loadCSV(depthmarketdata)
+        elif file_name == 'instrument':
+            return self.__loadCSV(instrument)
+        elif file_name == 'property':
+            return self.__loadCSV(product)
+        elif file_name == 'depthmarketdata':
+            return self.__loadCSV(depthmarketdata)
 
-        # 判断par_futuresYYYYMMDD.dbf文件是否存在，不存在设置为空
-        if not os.path.exists(par_futures):
-            self.logger.error("%s%s" % (par_futures, " is not exists"))
-            par_futures = None
-        # 判断gjshqYYYYMMDD.dbf文件是否存在，不存在设置为空
-        if not os.path.exists(gjshq):
-            self.logger.error("%s%s" % (gjshq, " is not exists"))
-            gjshq = None
-        # 读取DBF文件
-        return self.__loadDBF(futures=par_futures, gjshq=gjshq)
-
-    def __loadDBF(self, **par):
-        dbf_1 = None
-        dbf_2 = None
-        # 加载 par_futures 数据
-        if par['futures'] is not None:
-            future = DBF(filename=par['futures'], encoding='GBK')
-            future.load()
-            dbf_1 = future.records
-        # 加载 gjshq 数据
-        if par['gjshq'] is not None:
-            info = DBF(filename=par['gjshq'], encoding='GBK')
-            info.load()
-            dbf_2 = info.records
-        return dbf_1, dbf_2
+    def __loadCSV(self, csv_file):
+        return csv.reader(open(csv_file))
 
     # 主要读取template数据
     def __loadJSON(self, tableName):

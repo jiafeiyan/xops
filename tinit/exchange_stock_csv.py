@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+并rokercsvexchangestockcsv# -*- coding: UTF-8 -*-
 
 """
 生成CSV文件
@@ -261,8 +261,8 @@ class exchange_stock_csv:
                                        "PreDelta", "CurrDelta", "UpdateTime", "UpdateMillisec", "InstrumentID",
                                        "OTCLastPrice", "OTCVolume", "OTCInterestChange",),
                               sql="""SELECT t1.TradingDay,'SG01' AS SettlementGroupID,'1' AS SettlementID,
-                                            LastPrice,PreSettlementPrice,PreSettlementPrice as PreClosePrice,PreOpenInterest,OpenPrice,
-                                            HighestPrice,LowestPrice,'0' AS Volume,'0' AS Turnover,OpenInterest,ClosePrice,
+                                            LastPrice,PreSettlementPrice,PreSettlementPrice as PreClosePrice,PreOpenInterest,'0' as OpenPrice,
+                                            '0' as HighestPrice,'0' as LowestPrice,'0' AS Volume,'0' AS Turnover,OpenInterest,'0' as ClosePrice,
                                             SettlementPrice,UpperLimitPrice,LowerLimitPrice,PreDelta,CurrDelta,
                                             UpdateTime,UpdateMillisec,InstrumentID,
                                             '' AS OTCLastPrice,'' AS OTCVolume,'' AS OTCInterestChange
