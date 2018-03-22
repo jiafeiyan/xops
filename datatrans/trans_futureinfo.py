@@ -85,9 +85,10 @@ class trans_futureinfo:
                                            )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
             sql_insert_params = []
             for future in islice(csv_file, 1, None):
+                if "&" in future["ProductID"]:
+                    continue
                 SGID = self.exchange_conf[future["ExchangeID"]]
-                ProductID = future["ProductID"].split(" ")[0]
-
+                ProductID = future["ProductID"]
                 sql_insert_params.append((SGID, ProductID,
                                           ProductID, ProductID,
                                           future["ProductClass"], "2",
@@ -207,6 +208,8 @@ class trans_futureinfo:
                 self.logger.error("t_TradingSegmentAttr不存在")
                 return
             for future in islice(csv_file, 1, None):
+                if "&" in future["ProductID"]:
+                    continue
                 SGID = self.exchange_conf[future["ExchangeID"]]
 
                 # 判断结算组是否存在
@@ -265,6 +268,8 @@ class trans_futureinfo:
                                              ) VALUES (%s,%s,%s,%s)"""
             sql_insert_params = []
             for future in islice(csv_file, 1, None):
+                if "&" in future["ProductID"]:
+                    continue
                 SGID = self.exchange_conf[future["ExchangeID"]]
                 if SGID in template:
                     sql_insert_params.append((SGID, template[SGID][1], future["InstrumentID"], template[SGID][3]))
@@ -294,6 +299,8 @@ class trans_futureinfo:
                                     ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
             sql_insert_params = []
             for future in islice(csv_file, 1, None):
+                if "&" in future["ProductID"]:
+                    continue
                 SGID = self.exchange_conf[future["ExchangeID"]]
                 if SGID in template:
                     sql_insert_params.append(
@@ -338,6 +345,8 @@ class trans_futureinfo:
                             ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)"""
             sql_insert_params = []
             for future in islice(csv_file, 1, None):
+                if "&" in future["ProductID"]:
+                    continue
                 SGID = self.exchange_conf[future["ExchangeID"]]
                 if SGID in template:
                     sql_insert_params.append((SGID, template[SGID][1], template[SGID][2], template[SGID][3],
@@ -368,6 +377,8 @@ class trans_futureinfo:
                              )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
             sql_params = []
             for future in islice(csv_file, 1, None):
+                if "&" in future["ProductID"]:
+                    continue
                 SGID = self.exchange_conf[future["ExchangeID"]]
                 ProductID = future["ProductID"]
                 sql_params.append((SGID, future["CreateDate"], future["OpenDate"], future["ExpireDate"],
@@ -401,6 +412,8 @@ class trans_futureinfo:
                                )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
             sql_params = []
             for future in islice(csv_file, 1, None):
+                if "&" in future["ProductID"]:
+                    continue
                 SGID = self.exchange_conf[future[2]]
                 sql_params.append(
                     (future["TradingDay"], SGID, None, future["PreClosePrice"],
