@@ -412,12 +412,10 @@ class trans_futureinfo:
                                )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
             sql_params = []
             for future in islice(csv_file, 1, None):
-                if "&" in future["ProductID"]:
-                    continue
-                SGID = self.exchange_conf[future[2]]
+                SGID = self.exchange_conf[future["ExchangeID"]]
                 sql_params.append(
-                    (future["TradingDay"], SGID, None, future["PreClosePrice"],
-                     future["PreOpenInterest"], future["OpenPrice"], None,
+                    (self.TradingDay, SGID, None, future["PreSettlementPrice"], future["PreClosePrice"],
+                     future["PreOpenInterest"], None, 
                      None, None, None, None,
                      None, None, None,
                      None, None, future["PreDelta"],
