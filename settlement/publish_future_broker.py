@@ -90,7 +90,7 @@ def publish_future(context, conf):
                                     SettlementGroupID,
                                     SettlementID,
                                     HedgeFlag,
-                                    '3',
+                                    PosiDirection,
                                     Position,
                                     0,
                                     0,
