@@ -37,6 +37,9 @@ drop table IF EXISTS snap.t_S_Participant;
 -- 删除客户表
 drop table IF EXISTS snap.t_S_Client;
 
+-- 删除客户合约持仓表
+drop table IF EXISTS snap.t_S_ClientPosition;
+
 -- 删除会员客户关系表
 drop table IF EXISTS snap.t_S_PartClient;
 

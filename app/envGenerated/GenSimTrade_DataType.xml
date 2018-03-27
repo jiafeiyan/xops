@@ -15,6 +15,7 @@
 	<Int typename="SettlePriceSeconds" length="8" label="结算取样时间"/>
 	<Int typename="AutoIncrementID" length="10" label="自增ID"/>
 	<Int typename="DayOffset" length="4" label="日期偏移量"/>
+	<Int typename="Ranking" length="10" label="排名"/>
 	<VString typename="ParticipantID" length="10" label="会员代码"/>
 	<VString typename="ParticipantName" length="50" label="会员名称"/>
 	<VString typename="ParticipantAbbr" length="8" label="会员简称"/>
@@ -275,6 +276,10 @@
 	<EnumChar typename="JoinStatus" label="参与状态" prefix="JS">
 		<enum name="JS0" value="0" label="待重置"/>
 		<enum name="JS1" value="1" label="已参与"/>
+	</EnumChar>
+	<EnumChar typename="RankingStatus" label="排名状态" prefix="RS">
+		<enum name="RS0" value="0" label="不参与排名"/>
+		<enum name="RS1" value="1" label="参与排名"/>
 	</EnumChar>
 	<RangeInt typename="Year" length="4" from="1900" to="2100" label="年份"/>
 	<RangeInt typename="Month" length="2" from="1" to="12" label="月份"/>

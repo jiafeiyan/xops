@@ -135,12 +135,25 @@ create table siminfo.t_ActivitySettlementGroup
 create table siminfo.t_ActivityInvestor
 (
 	ID    bigInt(10)  auto_increment    not null COMMENT '自增ID'
-	,ActivityID   varchar(8) binary  not null COMMENT '结算组代码'
+	,ActivityID   varchar(8) binary  not null COMMENT '赛事活动代码'
 	,InvestorID   varchar(10) binary  not null COMMENT '投资者代码'
 	,JoinDate   varchar(8) binary   COMMENT '参与日期'
 	,JoinStatus   char(1) binary   default '0'  COMMENT '参与状态'
 	  ,PRIMARY KEY (ID,ActivityID,InvestorID)
 ) COMMENT='赛事活动投资者关系';
+
+
+
+-- ******************************
+-- 创建赛事活动可排名投资者表
+-- ******************************
+create table siminfo.t_ActivityRankableInvestor
+(
+	ActivityID   varchar(8) binary  not null COMMENT '赛事活动代码'
+	,InvestorID   varchar(10) binary   default '0' not null COMMENT '投资者代码'
+	,OpenID   varchar(20) binary   COMMENT '投资者开户使用的身份认证代码'
+	  ,PRIMARY KEY (ActivityID,InvestorID,OpenID)
+) COMMENT='赛事活动可排名投资者';
 
 
 
@@ -290,6 +303,9 @@ create table siminfo.t_ActivityInvestorEvaluation
 	,CurrentAsset 	   decimal(19,3)   not null COMMENT '当前资产'
 	,TotalReturnRate 	   decimal(22,6)   not null COMMENT '总收益率'
 	,ReturnRateOf1Day 	   decimal(22,6)   not null COMMENT '日收益率'
+	,RankingStatus   char(1) binary   default '0' not null COMMENT '是否参与排名'
+	,PreRanking    bigInt(10)     default '0' not null COMMENT '总收益率昨排名'
+	,Ranking    bigInt(10)     default '0' not null COMMENT '总收益率排名'
 	  ,PRIMARY KEY (ActivityID,InvestorID)
 ) COMMENT='投资者赛事评估信息';
 

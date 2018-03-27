@@ -246,7 +246,7 @@
 	</Entity>
 	<Entity name="ActivityInvestor" title="赛事活动投资者关系" description="赛事活动投资者关系">
 		<Field name="ID" type="AutoIncrementID" notnull="yes" label="自增ID" description="自增ID" iskey="yes"/>
-		<Field name="ActivityID" type="SettlementGroupID" notnull="yes" label="结算组代码" description="结算组代码，唯一标识一个结算组" iskey="yes"/>
+		<Field name="ActivityID" type="ActivityID" notnull="yes" label="赛事活动代码" description="赛事活动代码，唯一标识一个赛事活动" iskey="yes"/>
 		<Field name="InvestorID" type="InvestorID" notnull="yes" label="投资者代码" description="投资者代码" iskey="yes"/>
 		<Field name="JoinDate" type="Date" notnull="no" label="参与日期" description="参与日期"/>
 		<Field name="JoinStatus" type="JoinStatus" notnull="no" default="0" label="参与状态" description="参与状态"/>
@@ -263,10 +263,18 @@
 		<Field name="CurrentAsset" type="Money" notnull="yes" label="当前资产" description="当前资产"/>
 		<Field name="TotalReturnRate" type="Ratio" notnull="yes" label="总收益率" description="总收益率"/>
 		<Field name="ReturnRateOf1Day" type="Ratio" notnull="yes" label="日收益率" description="日收益率"/>
+		<Field name="RankingStatus" type="RankingStatus" default="0" notnull="yes" label="是否参与排名" description="是否参与排名"/>
+		<Field name="PreRanking" type="Ranking" default="0" notnull="yes" label="总收益率昨排名" description="总收益率昨排名"/>
+		<Field name="Ranking" type="Ranking" default="0" notnull="yes" label="总收益率排名" description="总收益率排名"/>
 	</Entity>
 	<Entity name="ActivityInvestorEvaluation_Snap" title="投资者赛事评估信息" description="投资者赛事评估信息">
 		<Ref entity="TradingDayRef"/>
 		<Ref entity="ActivityInvestorEvaluation"/>
+	</Entity>
+	<Entity name="ActivityRankableInvestor" title="赛事活动可排名投资者" description="赛事活动可排名投资者">
+		<Field name="ActivityID" type="ActivityID" notnull="yes" label="赛事活动代码" description="赛事活动代码，唯一标识一个赛事活动" iskey="yes"/>
+		<Field name="InvestorID" type="InvestorID" default="0" notnull="yes" label="投资者代码" description="投资者代码" iskey="yes"/>
+		<Field name="OpenID" type="OpenID" notnull="no" iskey="yes" label="投资者开户使用的身份认证代码" description="投资者开户使用的身份认证代码，现为手机号"/>
 	</Entity>
 	<Entity name="User" title="交易用户" description="交易用户">
 		<Ref entity="SettlementGroupRef"/>
@@ -411,6 +419,10 @@
 		<Field name="DeliveryYear" type="Year" notnull="yes" label="交割年份" description="该合约规定进行实物交割的年份"/>
 		<Field name="DeliveryMonth" type="Month" notnull="yes" label="交割月" description="该合约规定进行实物交割的月份"/>
 		<Field name="AdvanceMonth" type="AdvanceMonth" notnull="yes" label="提前月份" description="提前月份"/>
+	</Entity>
+	<Entity name="DelivInstrument" title="交割合约" description="交割合约">
+		<Ref entity="SettlementGroupSettlementRef"/>
+		<Field name="InstrumentID" type="InstrumentID" notnull="yes" label="合约代码" description="合约在系统中的编号" iskey="yes"/>
 	</Entity>
 	<Entity name="Instrument_Sync" title="交易合约" description="某一特定种类（即期货、期权或期货期权）的一个衍生品种">
 		<Ref entity="TradeSystemRef"/>
@@ -830,6 +842,9 @@
 	<Entity name="ClientPosition_Snap" title="客户合约持仓" description="说明客户当前持仓信息">
 		<Ref entity="ClientPosition"/>
 	</Entity>
+	<Entity name="ClientDelivPosition" title="客户合约交割持仓" description="说明客户当前交割持仓信息">
+		<Ref entity="ClientPosition"/>
+	</Entity>
 	<Entity name="ClientPositionForSecurityProfit" title="客户分红股票持仓" description="客户分红股票持仓">
 		<Field name="DJDate" type="Date" notnull="yes" iskey="yes" label="登记日期" description="登记日期"/>
 		<Field name="SettlementGroupID" type="SettlementGroupID" notnull="yes" label="结算组代码" description="一个结算组的编号" iskey="yes"/>
@@ -1039,6 +1054,24 @@
 		<Field name="MinCloseFee" type="Money" default="0" notnull="yes" label="最低平仓费用" description="最低平仓费用"/>
 		<Field name="MaxOpenFee" type="Money" default="0" notnull="yes" label="最高开仓费用" description="最高开仓费用"/>
 		<Field name="MaxCloseFee" type="Money" default="0" notnull="yes" label="最高平仓费用" description="最高平仓费用"/>
+	</Entity>
+	<Entity name="ClientDelivFee" title="客户合约交割手续费" description="客户合约交割手续费">
+		<Ref entity="SettlementGroupSettlementRef"/>
+		<Field name="InstrumentID" type="InstrumentID" notnull="yes" label="合约代码" description="合约的编号" iskey="yes"/>
+		<Field name="ParticipantID" type="ParticipantID" notnull="yes" label="会员代码" description="会员代码" iskey="yes"/>
+		<Field name="ClientID" type="ClientID" notnull="yes" label="客户代码" description="客户代码" iskey="yes"/>
+		<Field name="AccountID" type="AccountID" notnull="yes" label="资金帐号" description="内部资金帐号的标识" iskey="yes"/>
+		<Field name="ProductGroupID" type="ProductGroupID" notnull="yes" label="产品组代码" description="一个产品组的编号" iskey="yes"/>
+		<Field name="ProductID" type="ProductID" notnull="yes" label="产品代码" description="交易品种在系统中的编号" iskey="yes"/>
+		<Field name="UnderlyingInstrID" type="InstrumentID" label="基础商品代码" description="基础商品在系统中的编号，仅对衍生品的衍生品有效"/>
+		<Field name="Position" type="Volume" notnull="yes" label="交割持仓量" description="交割持仓量"/>
+		<Field name="ValueMode" type="ValueMode" notnull="yes" label="取值方式" description="百分比或绝对值"/>
+		<Field name="DelivFeeRatio" type="Ratio" notnull="yes" label="交割手续费率" description="交割手续费率"/>
+		<Field name="MinFee" type="Money" notnull="yes" label="最低费用" description="最低费用"/>
+		<Field name="MaxFee" type="Money" notnull="yes" label="最高费用" description="最高费用"/>
+		<Field name="Price" type="Price" notnull="yes" label="交割价格" description="交割价格"/>
+		<Field name="DelivFee" type="Money" notnull="yes" label="交割手续费" description="交割手续费"/>
+		<Field name="Tax" type="Money" notnull="yes" default="0" label="税费等" description="税费等"/>
 	</Entity>
 	<Entity name="ClientFund_SimInfo" title="客户资金" description="客户资金">
 		<Ref entity="SettlementGroupRef"/>

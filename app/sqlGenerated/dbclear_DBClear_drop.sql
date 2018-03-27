@@ -19,6 +19,15 @@ drop table IF EXISTS dbclear.t_Trade;
 -- 删除报单表
 drop table IF EXISTS dbclear.t_Order;
 
+-- 删除客户合约交割持仓表
+drop table IF EXISTS dbclear.t_ClientDelivPosition;
+
+-- 删除客户交割手续费表
+drop table IF EXISTS dbclear.t_ClientDelivFee;
+
+-- 删除交割合约表
+drop table IF EXISTS dbclear.t_DelivInstrument;
+
 -- 删除客户合约持仓保证金表
 drop table IF EXISTS dbclear.t_ClientPositionMargin;
 

@@ -217,6 +217,81 @@ create table dbclear.t_Order
 
 
 -- ******************************
+-- 创建客户合约交割持仓表
+-- ******************************
+create table dbclear.t_ClientDelivPosition
+(
+	TradingDay   varchar(8) binary  not null COMMENT '交易日'
+	,SettlementGroupID   varchar(8) binary  not null COMMENT '结算组代码'
+	,SettlementID   INTEGER   not null COMMENT '结算编号'
+	,HedgeFlag   char(1) binary  not null COMMENT '投机套保标志'
+	,PosiDirection   char(1) binary  not null COMMENT '持仓多空方向'
+	,YdPosition    bigInt(10)    not null COMMENT '上日持仓'
+	,Position    bigInt(10)    not null COMMENT '今日持仓'
+	,LongFrozen    bigInt(10)    not null COMMENT '多头冻结'
+	,ShortFrozen    bigInt(10)    not null COMMENT '空头冻结'
+	,YdLongFrozen    bigInt(10)    not null COMMENT '昨日多头冻结'
+	,YdShortFrozen    bigInt(10)    not null COMMENT '昨日空头冻结'
+	,BuyTradeVolume    bigInt(10)    not null COMMENT '当日买成交量'
+	,SellTradeVolume    bigInt(10)    not null COMMENT '当日卖成交量'
+	,PositionCost 	   decimal(19,3)   not null COMMENT '持仓成本'
+	,YdPositionCost 	   decimal(19,3)   not null COMMENT '昨日持仓成本'
+	,UseMargin 	   decimal(19,3)   not null COMMENT '占用的保证金'
+	,FrozenMargin 	   decimal(19,3)   not null COMMENT '冻结的保证金'
+	,LongFrozenMargin 	   decimal(19,3)   not null COMMENT '多头冻结的保证金'
+	,ShortFrozenMargin 	   decimal(19,3)   not null COMMENT '空头冻结的保证金'
+	,FrozenPremium 	   decimal(19,3)   not null COMMENT '冻结的权利金'
+	,InstrumentID   varchar(30) binary  not null COMMENT '合约代码'
+	,ParticipantID   varchar(10) binary  not null COMMENT '会员代码'
+	,ClientID   varchar(10) binary  not null COMMENT '客户代码'
+	  ,PRIMARY KEY (TradingDay,SettlementGroupID,SettlementID,HedgeFlag,PosiDirection,InstrumentID,ParticipantID,ClientID)
+) COMMENT='客户合约交割持仓';
+
+
+
+-- ******************************
+-- 创建客户交割手续费表
+-- ******************************
+create table dbclear.t_ClientDelivFee
+(
+	TradingDay   varchar(8) binary  not null COMMENT '交易日'
+	,SettlementGroupID   varchar(8) binary  not null COMMENT '结算组代码'
+	,SettlementID   INTEGER   not null COMMENT '结算编号'
+	,InstrumentID   varchar(30) binary  not null COMMENT '合约代码'
+	,ParticipantID   varchar(10) binary  not null COMMENT '会员代码'
+	,ClientID   varchar(10) binary  not null COMMENT '客户代码'
+	,AccountID   varchar(12) binary  not null COMMENT '资金帐号'
+	,ProductGroupID   varchar(8) binary  not null COMMENT '产品组代码'
+	,ProductID   varchar(8) binary  not null COMMENT '产品代码'
+	,UnderlyingInstrID   varchar(30) binary   COMMENT '基础商品代码'
+	,Position    bigInt(10)    not null COMMENT '交割持仓量'
+	,ValueMode   char(1) binary  not null COMMENT '取值方式'
+	,DelivFeeRatio 	   decimal(22,6)   not null COMMENT '交割手续费率'
+	,MinFee 	   decimal(19,3)   not null COMMENT '最低费用'
+	,MaxFee 	   decimal(19,3)   not null COMMENT '最高费用'
+	,Price 	   decimal(16,6)   not null COMMENT '交割价格'
+	,DelivFee 	   decimal(19,3)   not null COMMENT '交割手续费'
+	,Tax 	   decimal(19,3)    default '0' not null COMMENT '税费等'
+	  ,PRIMARY KEY (TradingDay,SettlementGroupID,SettlementID,InstrumentID,ParticipantID,ClientID,AccountID,ProductGroupID,ProductID)
+) COMMENT='客户交割手续费';
+
+
+
+-- ******************************
+-- 创建交割合约表
+-- ******************************
+create table dbclear.t_DelivInstrument
+(
+	TradingDay   varchar(8) binary  not null COMMENT '交易日'
+	,SettlementGroupID   varchar(8) binary  not null COMMENT '结算组代码'
+	,SettlementID   INTEGER   not null COMMENT '结算编号'
+	,InstrumentID   varchar(30) binary  not null COMMENT '合约代码'
+	  ,PRIMARY KEY (TradingDay,SettlementGroupID,SettlementID,InstrumentID)
+) COMMENT='交割合约';
+
+
+
+-- ******************************
 -- 创建客户合约持仓保证金表
 -- ******************************
 create table dbclear.t_ClientPositionMargin

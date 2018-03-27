@@ -389,7 +389,7 @@ class broker_etf_csv:
                                                 "RatioByPar", "FeePerOrder", "FeeMin", "FeeMax", "FeeByVolume"),
                                        sql="""SELECT "0001" AS DepartmentID,t.InvestorID,"1" AS ExchangeID,
                                                     "d" AS ProductID,"0" AS SecurityType,"00000000" AS SecurityID,
-                                                    "A" AS BusinessClass,"1" AS BrokerageType,"0" AS RatioByAmt,
+                                                    "A" AS BusinessClass,"0" AS BrokerageType,"0" AS RatioByAmt,
                                                     "0" AS RatioByPar,"0" AS FeePerOrder,"5" AS FeeMin,
                                                     "100000000" AS FeeMax,"10" AS FeeByVolume
                                                 FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1
@@ -397,7 +397,7 @@ class broker_etf_csv:
                                                 UNION ALL 
                                                 SELECT "0001" AS DepartmentID,t.InvestorID,"1" AS ExchangeID,
                                                     "d" AS ProductID,"0" AS SecurityType,"00000000" AS SecurityID,
-                                                    "B" AS BusinessClass,"1" AS BrokerageType,"0" AS RatioByAmt,
+                                                    "B" AS BusinessClass,"0" AS BrokerageType,"0" AS RatioByAmt,
                                                     "0" AS RatioByPar,"0" AS FeePerOrder,"5" AS FeeMin,
                                                     "100000000" AS FeeMax,"10" AS FeeByVolume
                                                 FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1
@@ -405,7 +405,7 @@ class broker_etf_csv:
                                                 UNION ALL 
                                                 SELECT "0001" AS DepartmentID,t.InvestorID,"1" AS ExchangeID,
                                                     "d" AS ProductID,"0" AS SecurityType,"00000000" AS SecurityID,
-                                                    "C" AS BusinessClass,"1" AS BrokerageType,"0" AS RatioByAmt,
+                                                    "C" AS BusinessClass,"0" AS BrokerageType,"0" AS RatioByAmt,
                                                     "0" AS RatioByPar,"0" AS FeePerOrder,"5" AS FeeMin,
                                                     "100000000" AS FeeMax,"10" AS FeeByVolume
                                                 FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1
@@ -413,7 +413,7 @@ class broker_etf_csv:
                                                 UNION ALL 
                                                 SELECT "0001" AS DepartmentID,t.InvestorID,"1" AS ExchangeID,
                                                     "d" AS ProductID,"0" AS SecurityType,"00000000" AS SecurityID,
-                                                    "D" AS BusinessClass,"1" AS BrokerageType,"0" AS RatioByAmt,
+                                                    "D" AS BusinessClass,"0" AS BrokerageType,"0" AS RatioByAmt,
                                                     "0" AS RatioByPar,"0" AS FeePerOrder,"5" AS FeeMin,
                                                     "100000000" AS FeeMax,"10" AS FeeByVolume
                                                 FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1
@@ -421,7 +421,7 @@ class broker_etf_csv:
                                                 UNION ALL 
                                                 SELECT "0001" AS DepartmentID,t.InvestorID,"1" AS ExchangeID,
                                                     "d" AS ProductID,"0" AS SecurityType,"00000000" AS SecurityID,
-                                                    "E" AS BusinessClass,"1" AS BrokerageType,"0" AS RatioByAmt,
+                                                    "E" AS BusinessClass,"0" AS BrokerageType,"0" AS RatioByAmt,
                                                     "0" AS RatioByPar,"0" AS FeePerOrder,"5" AS FeeMin,
                                                     "100000000" AS FeeMax,"10" AS FeeByVolume
                                                 FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1
@@ -429,7 +429,7 @@ class broker_etf_csv:
                                                 UNION ALL 
                                                 SELECT "0001" AS DepartmentID,t.InvestorID,"1" AS ExchangeID,
                                                     "d" AS ProductID,"0" AS SecurityType,"00000000" AS SecurityID,
-                                                    "F" AS BusinessClass,"1" AS BrokerageType,"0" AS RatioByAmt,
+                                                    "F" AS BusinessClass,"0" AS BrokerageType,"0" AS RatioByAmt,
                                                     "0" AS RatioByPar,"0" AS FeePerOrder,"5" AS FeeMin,
                                                     "100000000" AS FeeMax,"10" AS FeeByVolume
                                                 FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1
@@ -437,7 +437,7 @@ class broker_etf_csv:
                                                 UNION ALL 
                                                 SELECT "0001" AS DepartmentID,t.InvestorID,"1" AS ExchangeID,
                                                     "d" AS ProductID,"0" AS SecurityType,"00000000" AS SecurityID,
-                                                    "G" AS BusinessClass,"1" AS BrokerageType,"0" AS RatioByAmt,
+                                                    "G" AS BusinessClass,"0" AS BrokerageType,"0" AS RatioByAmt,
                                                     "0" AS RatioByPar,"0" AS FeePerOrder,"5" AS FeeMin,
                                                     "100000000" AS FeeMax,"10" AS FeeByVolume
                                                 FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1

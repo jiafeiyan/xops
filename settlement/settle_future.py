@@ -654,7 +654,8 @@ def settle_future(context, conf):
                                     and (t1.posidirection = '2' or t1.posidirection = '3')
                                     and t1.tradingday = %s
                                     and t1.settlementgroupid = %s
-                                    and t1.settlementid = %s"""
+                                    and t1.settlementid = %s
+                                    """
             cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id))
             sql = """insert into dbclear.t_clientpositionmargin(TradingDay,SettlementGroupID,SettlementID,ParticipantID,ClientID,AccountID,ProductGroupID,ProductID,UnderlyingInstrID,InstrumentID,TradingRole,HedgeFlag,PosiDirection,Position,MarginRatio,ValueMode,SettlementPrice,PositionMargin
                                   )select t1.tradingday,t1.settlementgroupid,t1.settlementid,t1.participantid,t1.clientid,
@@ -705,7 +706,9 @@ def settle_future(context, conf):
                                     and (t1.posidirection = '2' or t1.posidirection = '3')
                                     and t1.tradingday = %s
                                     and t1.settlementgroupid = %s
-                                    and t1.settlementid = %s"""
+                                    and t1.settlementid = %s
+                                    ON DUPLICATE KEY UPDATE positionmargin = VALUES(positionmargin), marginrate = VALUES(marginrate),
+                                            valuemode = VALUES(valuemode)"""
             cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id))
             sql = """insert into dbclear.t_clientpositionmargin(TradingDay,SettlementGroupID,SettlementID,ParticipantID,ClientID,AccountID,ProductGroupID,ProductID,UnderlyingInstrID,InstrumentID,TradingRole,HedgeFlag,PosiDirection,Position,MarginRatio,ValueMode,SettlementPrice,PositionMargin
                                   )select t1.tradingday,t1.settlementgroupid,t1.settlementid,t1.participantid,t1.clientid,
@@ -756,7 +759,9 @@ def settle_future(context, conf):
                                     and (t1.posidirection = '2' or t1.posidirection = '3')
                                     and t1.tradingday = %s
                                     and t1.settlementgroupid = %s
-                                    and t1.settlementid = %s"""
+                                    and t1.settlementid = %s
+                                    ON DUPLICATE KEY UPDATE positionmargin = VALUES(positionmargin), marginrate = VALUES(marginrate),
+                                            valuemode = VALUES(valuemode)"""
             cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id))
             # 持仓盈亏
             logger.info("[Calculate PositionProfit] is processing......")

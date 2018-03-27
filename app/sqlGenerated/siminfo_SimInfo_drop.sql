@@ -31,6 +31,9 @@ drop table IF EXISTS siminfo.t_ActivitySettlementGroup;
 -- 删除赛事活动投资者关系表
 drop table IF EXISTS siminfo.t_ActivityInvestor;
 
+-- 删除赛事活动可排名投资者表
+drop table IF EXISTS siminfo.t_ActivityRankableInvestor;
+
 -- 删除日历表
 drop table IF EXISTS siminfo.t_TradingCalendar;
 

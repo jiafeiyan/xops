@@ -101,10 +101,18 @@
 			<table name="ActivityInvestor" title="赛事活动投资者关系" description="赛事活动投资者关系">
 				<Columns>
 					<Column name="ID" type="number(10)" label="自增ID" description="自增ID" notnull="yes" iskey="yes" originaltype="AutoIncrementID" basetype="Int" length="10" precision="0"/>
-					<Column name="ActivityID" type="varchar2(8)" label="结算组代码" description="结算组代码，唯一标识一个结算组" notnull="yes" iskey="yes" originaltype="SettlementGroupID" basetype="VString" length="8" precision="0"/>
+					<Column name="ActivityID" type="varchar2(8)" label="赛事活动代码" description="赛事活动代码，唯一标识一个赛事活动" notnull="yes" iskey="yes" originaltype="ActivityID" basetype="VString" length="8" precision="0"/>
 					<Column name="InvestorID" type="varchar2(10)" label="投资者代码" description="投资者代码" notnull="yes" iskey="yes" originaltype="InvestorID" basetype="VString" length="10" precision="0"/>
 					<Column name="JoinDate" type="varchar2(8)" label="参与日期" description="参与日期" notnull="no" originaltype="Date" basetype="VString" length="8" precision="0"/>
 					<Column name="JoinStatus" type="char(1)" label="参与状态" default="0" description="参与状态" notnull="no" originaltype="JoinStatus" basetype="EnumChar" length="1" precision="0"/>
+				</Columns>
+				<Index/>
+			</table>
+			<table name="ActivityRankableInvestor" title="赛事活动可排名投资者" description="赛事活动可排名投资者">
+				<Columns>
+					<Column name="ActivityID" type="varchar2(8)" label="赛事活动代码" description="赛事活动代码，唯一标识一个赛事活动" notnull="yes" iskey="yes" originaltype="ActivityID" basetype="VString" length="8" precision="0"/>
+					<Column name="InvestorID" type="varchar2(10)" label="投资者代码" default="0" description="投资者代码" notnull="yes" iskey="yes" originaltype="InvestorID" basetype="VString" length="10" precision="0"/>
+					<Column name="OpenID" type="varchar2(20)" label="投资者开户使用的身份认证代码" description="投资者开户使用的身份认证代码，现为手机号" notnull="no" iskey="yes" originaltype="OpenID" basetype="VString" length="20" precision="0"/>
 				</Columns>
 				<Index/>
 			</table>
@@ -213,6 +221,9 @@
 					<Column name="CurrentAsset" type="number(19,3)" label="当前资产" description="当前资产" notnull="yes" originaltype="Money" basetype="Float" length="19" precision="3"/>
 					<Column name="TotalReturnRate" type="number(22,6)" label="总收益率" description="总收益率" notnull="yes" originaltype="Ratio" basetype="Float" length="22" precision="6"/>
 					<Column name="ReturnRateOf1Day" type="number(22,6)" label="日收益率" description="日收益率" notnull="yes" originaltype="Ratio" basetype="Float" length="22" precision="6"/>
+					<Column name="RankingStatus" type="char(1)" label="是否参与排名" default="0" description="是否参与排名" notnull="yes" originaltype="RankingStatus" basetype="EnumChar" length="1" precision="0"/>
+					<Column name="PreRanking" type="number(10)" label="总收益率昨排名" default="0" description="总收益率昨排名" notnull="yes" originaltype="Ranking" basetype="Int" length="10" precision="0"/>
+					<Column name="Ranking" type="number(10)" label="总收益率排名" default="0" description="总收益率排名" notnull="yes" originaltype="Ranking" basetype="Int" length="10" precision="0"/>
 				</Columns>
 				<Index/>
 			</table>
@@ -901,6 +912,66 @@
 				</Columns>
 				<Index/>
 			</table>
+			<table name="ClientDelivPosition" title="客户合约交割持仓" description="客户合约交割持仓">
+				<Columns>
+					<Column name="TradingDay" type="varchar2(8)" label="交易日" description="交易发生的日期" notnull="yes" iskey="yes" originaltype="Date" basetype="VString" length="8" precision="0"/>
+					<Column name="SettlementGroupID" type="varchar2(8)" label="结算组代码" description="一个结算组的编号" notnull="yes" iskey="yes" originaltype="SettlementGroupID" basetype="VString" length="8" precision="0"/>
+					<Column name="SettlementID" type="number(3)" label="结算编号" description="结算编号" notnull="yes" iskey="yes" originaltype="SettlementID" basetype="Int" length="3" precision="0"/>
+					<Column name="HedgeFlag" type="char(1)" label="投机套保标志" description="1．投机3．套保" notnull="yes" iskey="yes" originaltype="HedgeFlag" basetype="EnumChar" length="1" precision="0"/>
+					<Column name="PosiDirection" type="char(1)" label="持仓多空方向" description="1．净2．多3．空" notnull="yes" iskey="yes" originaltype="PosiDirection" basetype="EnumChar" length="1" precision="0"/>
+					<Column name="YdPosition" type="number(10)" label="上日持仓" description="上日持仓的当前数量" notnull="yes" originaltype="Volume" basetype="Int" length="10" precision="0"/>
+					<Column name="Position" type="number(10)" label="今日持仓" description="今日持仓的当前数量" notnull="yes" originaltype="Volume" basetype="Int" length="10" precision="0"/>
+					<Column name="LongFrozen" type="number(10)" label="多头冻结" description="多头冻结的持仓数量" notnull="yes" originaltype="Volume" basetype="Int" length="10" precision="0"/>
+					<Column name="ShortFrozen" type="number(10)" label="空头冻结" description="空头冻结的持仓数量" notnull="yes" originaltype="Volume" basetype="Int" length="10" precision="0"/>
+					<Column name="YdLongFrozen" type="number(10)" label="昨日多头冻结" description="昨日多头冻结的持仓数量" notnull="yes" originaltype="Volume" basetype="Int" length="10" precision="0"/>
+					<Column name="YdShortFrozen" type="number(10)" label="昨日空头冻结" description="昨日空头冻结的持仓数量" notnull="yes" originaltype="Volume" basetype="Int" length="10" precision="0"/>
+					<Column name="BuyTradeVolume" type="number(10)" label="当日买成交量" description="当日买成交量" notnull="yes" originaltype="Volume" basetype="Int" length="10" precision="0"/>
+					<Column name="SellTradeVolume" type="number(10)" label="当日卖成交量" description="当日卖成交量" notnull="yes" originaltype="Volume" basetype="Int" length="10" precision="0"/>
+					<Column name="PositionCost" type="number(19,3)" label="持仓成本" description="当前所有持仓的持有成本" notnull="yes" originaltype="Money" basetype="Float" length="19" precision="3"/>
+					<Column name="YdPositionCost" type="number(19,3)" label="昨日持仓成本" description="昨日当前所有持仓的持有成本" notnull="yes" originaltype="Money" basetype="Float" length="19" precision="3"/>
+					<Column name="UseMargin" type="number(19,3)" label="占用的保证金" description="所有持仓占用的保证金" notnull="yes" originaltype="Money" basetype="Float" length="19" precision="3"/>
+					<Column name="FrozenMargin" type="number(19,3)" label="冻结的保证金" description="所有冻结持仓占用的保证金" notnull="yes" originaltype="Money" basetype="Float" length="19" precision="3"/>
+					<Column name="LongFrozenMargin" type="number(19,3)" label="多头冻结的保证金" description="所有冻结持仓占用的保证金" notnull="yes" originaltype="Money" basetype="Float" length="19" precision="3"/>
+					<Column name="ShortFrozenMargin" type="number(19,3)" label="空头冻结的保证金" description="所有冻结持仓占用的保证金" notnull="yes" originaltype="Money" basetype="Float" length="19" precision="3"/>
+					<Column name="FrozenPremium" type="number(19,3)" label="冻结的权利金" description="所有冻结持仓占用的权利金" notnull="yes" originaltype="Money" basetype="Float" length="19" precision="3"/>
+					<Column name="InstrumentID" type="varchar2(30)" label="合约代码" description="合约在系统中的编号" notnull="yes" iskey="yes" originaltype="InstrumentID" basetype="VString" length="30" precision="0"/>
+					<Column name="ParticipantID" type="varchar2(10)" label="会员代码" description="每一位会员在系统中的编码，编号唯一且遵循交易所制定的编码规则" notnull="yes" iskey="yes" originaltype="ParticipantID" basetype="VString" length="10" precision="0"/>
+					<Column name="ClientID" type="varchar2(10)" label="客户代码" description="客户在系统中的编号，编号唯一且遵循交易所制定的编码规则" notnull="yes" iskey="yes" originaltype="ClientID" basetype="VString" length="10" precision="0"/>
+				</Columns>
+				<Index/>
+			</table>
+			<table name="ClientDelivFee" title="客户交割手续费" description="客户交割手续费">
+				<Columns>
+					<Column name="TradingDay" type="varchar2(8)" label="交易日" description="交易发生的日期" notnull="yes" iskey="yes" originaltype="Date" basetype="VString" length="8" precision="0"/>
+					<Column name="SettlementGroupID" type="varchar2(8)" label="结算组代码" description="一个结算组的编号" notnull="yes" iskey="yes" originaltype="SettlementGroupID" basetype="VString" length="8" precision="0"/>
+					<Column name="SettlementID" type="number(3)" label="结算编号" description="结算编号" notnull="yes" iskey="yes" originaltype="SettlementID" basetype="Int" length="3" precision="0"/>
+					<Column name="InstrumentID" type="varchar2(30)" label="合约代码" description="合约的编号" notnull="yes" iskey="yes" originaltype="InstrumentID" basetype="VString" length="30" precision="0"/>
+					<Column name="ParticipantID" type="varchar2(10)" label="会员代码" description="会员代码" notnull="yes" iskey="yes" originaltype="ParticipantID" basetype="VString" length="10" precision="0"/>
+					<Column name="ClientID" type="varchar2(10)" label="客户代码" description="客户代码" notnull="yes" iskey="yes" originaltype="ClientID" basetype="VString" length="10" precision="0"/>
+					<Column name="AccountID" type="varchar2(12)" label="资金帐号" description="内部资金帐号的标识" notnull="yes" iskey="yes" originaltype="AccountID" basetype="VString" length="12" precision="0"/>
+					<Column name="ProductGroupID" type="varchar2(8)" label="产品组代码" description="一个产品组的编号" notnull="yes" iskey="yes" originaltype="ProductGroupID" basetype="VString" length="8" precision="0"/>
+					<Column name="ProductID" type="varchar2(8)" label="产品代码" description="交易品种在系统中的编号" notnull="yes" iskey="yes" originaltype="ProductID" basetype="VString" length="8" precision="0"/>
+					<Column name="UnderlyingInstrID" type="varchar2(30)" label="基础商品代码" description="基础商品在系统中的编号，仅对衍生品的衍生品有效" originaltype="InstrumentID" basetype="VString" length="30" precision="0"/>
+					<Column name="Position" type="number(10)" label="交割持仓量" description="交割持仓量" notnull="yes" originaltype="Volume" basetype="Int" length="10" precision="0"/>
+					<Column name="ValueMode" type="char(1)" label="取值方式" description="百分比或绝对值" notnull="yes" originaltype="ValueMode" basetype="EnumChar" length="1" precision="0"/>
+					<Column name="DelivFeeRatio" type="number(22,6)" label="交割手续费率" description="交割手续费率" notnull="yes" originaltype="Ratio" basetype="Float" length="22" precision="6"/>
+					<Column name="MinFee" type="number(19,3)" label="最低费用" description="最低费用" notnull="yes" originaltype="Money" basetype="Float" length="19" precision="3"/>
+					<Column name="MaxFee" type="number(19,3)" label="最高费用" description="最高费用" notnull="yes" originaltype="Money" basetype="Float" length="19" precision="3"/>
+					<Column name="Price" type="number(16,6)" label="交割价格" description="交割价格" notnull="yes" originaltype="Price" basetype="FixNumber" length="16" precision="6"/>
+					<Column name="DelivFee" type="number(19,3)" label="交割手续费" description="交割手续费" notnull="yes" originaltype="Money" basetype="Float" length="19" precision="3"/>
+					<Column name="Tax" type="number(19,3)" label="税费等" default="0" description="税费等" notnull="yes" originaltype="Money" basetype="Float" length="19" precision="3"/>
+				</Columns>
+				<Index/>
+			</table>
+			<table name="DelivInstrument" title="交割合约" description="交割合约">
+				<Columns>
+					<Column name="TradingDay" type="varchar2(8)" label="交易日" description="交易发生的日期" notnull="yes" iskey="yes" originaltype="Date" basetype="VString" length="8" precision="0"/>
+					<Column name="SettlementGroupID" type="varchar2(8)" label="结算组代码" description="一个结算组的编号" notnull="yes" iskey="yes" originaltype="SettlementGroupID" basetype="VString" length="8" precision="0"/>
+					<Column name="SettlementID" type="number(3)" label="结算编号" description="结算编号" notnull="yes" iskey="yes" originaltype="SettlementID" basetype="Int" length="3" precision="0"/>
+					<Column name="InstrumentID" type="varchar2(30)" label="合约代码" description="合约在系统中的编号" notnull="yes" iskey="yes" originaltype="InstrumentID" basetype="VString" length="30" precision="0"/>
+				</Columns>
+				<Index/>
+			</table>
 			<table name="ClientPositionMargin" title="客户合约持仓保证金" description="客户合约持仓保证金">
 				<Columns>
 					<Column name="TradingDay" type="varchar2(8)" label="交易日" description="交易发生的日期" notnull="yes" iskey="yes" originaltype="Date" basetype="VString" length="8" precision="0"/>
@@ -1562,7 +1633,7 @@
 			<table name="S_ActivityInvestor" title="赛事活动投资者关系" description="赛事活动投资者关系">
 				<Columns>
 					<Column name="ID" type="number(10)" label="自增ID" description="自增ID" notnull="yes" iskey="yes" originaltype="AutoIncrementID" basetype="Int" length="10" precision="0"/>
-					<Column name="ActivityID" type="varchar2(8)" label="结算组代码" description="结算组代码，唯一标识一个结算组" notnull="yes" iskey="yes" originaltype="SettlementGroupID" basetype="VString" length="8" precision="0"/>
+					<Column name="ActivityID" type="varchar2(8)" label="赛事活动代码" description="赛事活动代码，唯一标识一个赛事活动" notnull="yes" iskey="yes" originaltype="ActivityID" basetype="VString" length="8" precision="0"/>
 					<Column name="InvestorID" type="varchar2(10)" label="投资者代码" description="投资者代码" notnull="yes" iskey="yes" originaltype="InvestorID" basetype="VString" length="10" precision="0"/>
 					<Column name="JoinDate" type="varchar2(8)" label="参与日期" description="参与日期" notnull="no" originaltype="Date" basetype="VString" length="8" precision="0"/>
 					<Column name="JoinStatus" type="char(1)" label="参与状态" default="0" description="参与状态" notnull="no" originaltype="JoinStatus" basetype="EnumChar" length="1" precision="0"/>
@@ -1615,6 +1686,34 @@
 				</Columns>
 				<Index/>
 			</table>
+			<table name="S_ClientPosition" title="客户合约持仓" description="客户合约持仓">
+				<Columns>
+					<Column name="TradingDay" type="varchar2(8)" label="交易日" description="交易发生的日期" notnull="yes" iskey="yes" originaltype="Date" basetype="VString" length="8" precision="0"/>
+					<Column name="SettlementGroupID" type="varchar2(8)" label="结算组代码" description="一个结算组的编号" notnull="yes" iskey="yes" originaltype="SettlementGroupID" basetype="VString" length="8" precision="0"/>
+					<Column name="SettlementID" type="number(3)" label="结算编号" description="结算编号" notnull="yes" iskey="yes" originaltype="SettlementID" basetype="Int" length="3" precision="0"/>
+					<Column name="HedgeFlag" type="char(1)" label="投机套保标志" description="1．投机3．套保" notnull="yes" iskey="yes" originaltype="HedgeFlag" basetype="EnumChar" length="1" precision="0"/>
+					<Column name="PosiDirection" type="char(1)" label="持仓多空方向" description="1．净2．多3．空" notnull="yes" iskey="yes" originaltype="PosiDirection" basetype="EnumChar" length="1" precision="0"/>
+					<Column name="YdPosition" type="number(10)" label="上日持仓" description="上日持仓的当前数量" notnull="yes" originaltype="Volume" basetype="Int" length="10" precision="0"/>
+					<Column name="Position" type="number(10)" label="今日持仓" description="今日持仓的当前数量" notnull="yes" originaltype="Volume" basetype="Int" length="10" precision="0"/>
+					<Column name="LongFrozen" type="number(10)" label="多头冻结" description="多头冻结的持仓数量" notnull="yes" originaltype="Volume" basetype="Int" length="10" precision="0"/>
+					<Column name="ShortFrozen" type="number(10)" label="空头冻结" description="空头冻结的持仓数量" notnull="yes" originaltype="Volume" basetype="Int" length="10" precision="0"/>
+					<Column name="YdLongFrozen" type="number(10)" label="昨日多头冻结" description="昨日多头冻结的持仓数量" notnull="yes" originaltype="Volume" basetype="Int" length="10" precision="0"/>
+					<Column name="YdShortFrozen" type="number(10)" label="昨日空头冻结" description="昨日空头冻结的持仓数量" notnull="yes" originaltype="Volume" basetype="Int" length="10" precision="0"/>
+					<Column name="BuyTradeVolume" type="number(10)" label="当日买成交量" description="当日买成交量" notnull="yes" originaltype="Volume" basetype="Int" length="10" precision="0"/>
+					<Column name="SellTradeVolume" type="number(10)" label="当日卖成交量" description="当日卖成交量" notnull="yes" originaltype="Volume" basetype="Int" length="10" precision="0"/>
+					<Column name="PositionCost" type="number(19,3)" label="持仓成本" description="当前所有持仓的持有成本" notnull="yes" originaltype="Money" basetype="Float" length="19" precision="3"/>
+					<Column name="YdPositionCost" type="number(19,3)" label="昨日持仓成本" description="昨日当前所有持仓的持有成本" notnull="yes" originaltype="Money" basetype="Float" length="19" precision="3"/>
+					<Column name="UseMargin" type="number(19,3)" label="占用的保证金" description="所有持仓占用的保证金" notnull="yes" originaltype="Money" basetype="Float" length="19" precision="3"/>
+					<Column name="FrozenMargin" type="number(19,3)" label="冻结的保证金" description="所有冻结持仓占用的保证金" notnull="yes" originaltype="Money" basetype="Float" length="19" precision="3"/>
+					<Column name="LongFrozenMargin" type="number(19,3)" label="多头冻结的保证金" description="所有冻结持仓占用的保证金" notnull="yes" originaltype="Money" basetype="Float" length="19" precision="3"/>
+					<Column name="ShortFrozenMargin" type="number(19,3)" label="空头冻结的保证金" description="所有冻结持仓占用的保证金" notnull="yes" originaltype="Money" basetype="Float" length="19" precision="3"/>
+					<Column name="FrozenPremium" type="number(19,3)" label="冻结的权利金" description="所有冻结持仓占用的权利金" notnull="yes" originaltype="Money" basetype="Float" length="19" precision="3"/>
+					<Column name="InstrumentID" type="varchar2(30)" label="合约代码" description="合约在系统中的编号" notnull="yes" iskey="yes" originaltype="InstrumentID" basetype="VString" length="30" precision="0"/>
+					<Column name="ParticipantID" type="varchar2(10)" label="会员代码" description="每一位会员在系统中的编码，编号唯一且遵循交易所制定的编码规则" notnull="yes" iskey="yes" originaltype="ParticipantID" basetype="VString" length="10" precision="0"/>
+					<Column name="ClientID" type="varchar2(10)" label="客户代码" description="客户在系统中的编号，编号唯一且遵循交易所制定的编码规则" notnull="yes" iskey="yes" originaltype="ClientID" basetype="VString" length="10" precision="0"/>
+				</Columns>
+				<Index/>
+			</table>
 			<table name="S_PartClient" title="会员客户关系" description="会员客户关系">
 				<Columns>
 					<Column name="TradingDay" type="varchar2(8)" label="交易日" description="交易发生的日期" notnull="yes" iskey="yes" originaltype="Date" basetype="VString" length="8" precision="0"/>
@@ -1654,6 +1753,9 @@
 					<Column name="CurrentAsset" type="number(19,3)" label="当前资产" description="当前资产" notnull="yes" originaltype="Money" basetype="Float" length="19" precision="3"/>
 					<Column name="TotalReturnRate" type="number(22,6)" label="总收益率" description="总收益率" notnull="yes" originaltype="Ratio" basetype="Float" length="22" precision="6"/>
 					<Column name="ReturnRateOf1Day" type="number(22,6)" label="日收益率" description="日收益率" notnull="yes" originaltype="Ratio" basetype="Float" length="22" precision="6"/>
+					<Column name="RankingStatus" type="char(1)" label="是否参与排名" default="0" description="是否参与排名" notnull="yes" originaltype="RankingStatus" basetype="EnumChar" length="1" precision="0"/>
+					<Column name="PreRanking" type="number(10)" label="总收益率昨排名" default="0" description="总收益率昨排名" notnull="yes" originaltype="Ranking" basetype="Int" length="10" precision="0"/>
+					<Column name="Ranking" type="number(10)" label="总收益率排名" default="0" description="总收益率排名" notnull="yes" originaltype="Ranking" basetype="Int" length="10" precision="0"/>
 				</Columns>
 				<Index/>
 			</table>

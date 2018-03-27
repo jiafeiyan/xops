@@ -132,7 +132,7 @@ create table snap.t_S_ActivitySettlementGroup
 create table snap.t_S_ActivityInvestor
 (
 	ID    bigInt(10)  auto_increment    not null COMMENT '自增ID'
-	,ActivityID   varchar(8) binary  not null COMMENT '结算组代码'
+	,ActivityID   varchar(8) binary  not null COMMENT '赛事活动代码'
 	,InvestorID   varchar(10) binary  not null COMMENT '投资者代码'
 	,JoinDate   varchar(8) binary   COMMENT '参与日期'
 	,JoinStatus   char(1) binary   default '0'  COMMENT '参与状态'
@@ -203,6 +203,39 @@ create table snap.t_S_Client
 
 
 -- ******************************
+-- 创建客户合约持仓表
+-- ******************************
+create table snap.t_S_ClientPosition
+(
+	TradingDay   varchar(8) binary  not null COMMENT '交易日'
+	,SettlementGroupID   varchar(8) binary  not null COMMENT '结算组代码'
+	,SettlementID   INTEGER   not null COMMENT '结算编号'
+	,HedgeFlag   char(1) binary  not null COMMENT '投机套保标志'
+	,PosiDirection   char(1) binary  not null COMMENT '持仓多空方向'
+	,YdPosition    bigInt(10)    not null COMMENT '上日持仓'
+	,Position    bigInt(10)    not null COMMENT '今日持仓'
+	,LongFrozen    bigInt(10)    not null COMMENT '多头冻结'
+	,ShortFrozen    bigInt(10)    not null COMMENT '空头冻结'
+	,YdLongFrozen    bigInt(10)    not null COMMENT '昨日多头冻结'
+	,YdShortFrozen    bigInt(10)    not null COMMENT '昨日空头冻结'
+	,BuyTradeVolume    bigInt(10)    not null COMMENT '当日买成交量'
+	,SellTradeVolume    bigInt(10)    not null COMMENT '当日卖成交量'
+	,PositionCost 	   decimal(19,3)   not null COMMENT '持仓成本'
+	,YdPositionCost 	   decimal(19,3)   not null COMMENT '昨日持仓成本'
+	,UseMargin 	   decimal(19,3)   not null COMMENT '占用的保证金'
+	,FrozenMargin 	   decimal(19,3)   not null COMMENT '冻结的保证金'
+	,LongFrozenMargin 	   decimal(19,3)   not null COMMENT '多头冻结的保证金'
+	,ShortFrozenMargin 	   decimal(19,3)   not null COMMENT '空头冻结的保证金'
+	,FrozenPremium 	   decimal(19,3)   not null COMMENT '冻结的权利金'
+	,InstrumentID   varchar(30) binary  not null COMMENT '合约代码'
+	,ParticipantID   varchar(10) binary  not null COMMENT '会员代码'
+	,ClientID   varchar(10) binary  not null COMMENT '客户代码'
+	  ,PRIMARY KEY (TradingDay,SettlementGroupID,SettlementID,HedgeFlag,PosiDirection,InstrumentID,ParticipantID,ClientID)
+) COMMENT='客户合约持仓';
+
+
+
+-- ******************************
 -- 创建会员客户关系表
 -- ******************************
 create table snap.t_S_PartClient
@@ -259,6 +292,9 @@ create table snap.t_S_ActivityInvestorEvaluation
 	,CurrentAsset 	   decimal(19,3)   not null COMMENT '当前资产'
 	,TotalReturnRate 	   decimal(22,6)   not null COMMENT '总收益率'
 	,ReturnRateOf1Day 	   decimal(22,6)   not null COMMENT '日收益率'
+	,RankingStatus   char(1) binary   default '0' not null COMMENT '是否参与排名'
+	,PreRanking    bigInt(10)     default '0' not null COMMENT '总收益率昨排名'
+	,Ranking    bigInt(10)     default '0' not null COMMENT '总收益率排名'
 	  ,PRIMARY KEY (TradingDay,ActivityID,InvestorID)
 ) COMMENT='投资者赛事评估信息';
 

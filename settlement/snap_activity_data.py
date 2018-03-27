@@ -23,14 +23,14 @@ def snap_data(context, conf):
         cursor = mysql_conn.cursor()
 
         logger.info("[snap t_activityinvestorevaluation]......")
-        sql = """INSERT INTO snap.t_s_activityinvestorevaluation(TradingDay,ActivityID,InvestorID,InitialAsset,PreAsset,CurrentAsset,TotalReturnRate,ReturnRateOf1Day)
-                            SELECT DATE_FORMAT(NOW(), '%Y%m%d'),ActivityID,InvestorID,InitialAsset,PreAsset,CurrentAsset,TotalReturnRate,ReturnRateOf1Day
+        sql = """INSERT INTO snap.t_s_activityinvestorevaluation(TradingDay,ActivityID,InvestorID,InitialAsset,PreAsset,CurrentAsset,TotalReturnRate,ReturnRateOf1Day,RankingStatus,PreRanking,Ranking)
+                            SELECT DATE_FORMAT(NOW(), '%Y%m%d'),ActivityID,InvestorID,InitialAsset,PreAsset,CurrentAsset,TotalReturnRate,ReturnRateOf1Day,RankingStatus,PreRanking,Ranking
                             FROM siminfo.t_activityinvestorevaluation"""
         cursor.execute(sql)
 
         mysql_conn.commit()
     except Exception as e:
-        logger.error("[snap data] Error: %s" % (e))
+        logger.error("[snap data] Error: %s" % e)
         result_code = -1
     finally:
         mysql_conn.close()
