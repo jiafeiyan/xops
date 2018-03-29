@@ -611,7 +611,7 @@ def settle_future(context, conf):
                                     t1.hedgeflag,t1.posidirection,t1.position + t1.ydposition,
                                     if(t1.posidirection='2',
                                       t2.longmarginratio,
-                                      t2.shortmarginratio) as marginrate,
+                                      t2.shortmarginratio) as MarginRatio,
                                     t2.valuemode,t3.settlementprice,
                                     round(if(t2.valuemode='1',
                                             if(t1.posidirection='2',
@@ -663,7 +663,7 @@ def settle_future(context, conf):
                                     t1.hedgeflag,t1.posidirection,t1.position + t1.ydposition,
                                     if(t1.posidirection='2',
                                       t2.longmarginratio,
-                                      t2.shortmarginratio) as marginrate,
+                                      t2.shortmarginratio) as MarginRatio,
                                     t2.valuemode,t3.settlementprice,
                                     round(if(t2.valuemode='1',
                                             if(t1.posidirection='2',
@@ -707,7 +707,7 @@ def settle_future(context, conf):
                                     and t1.tradingday = %s
                                     and t1.settlementgroupid = %s
                                     and t1.settlementid = %s
-                                    ON DUPLICATE KEY UPDATE positionmargin = VALUES(positionmargin), marginrate = VALUES(marginrate),
+                                    ON DUPLICATE KEY UPDATE positionmargin = VALUES(positionmargin), MarginRatio = VALUES(MarginRatio),
                                             valuemode = VALUES(valuemode)"""
             cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id))
             sql = """insert into dbclear.t_clientpositionmargin(TradingDay,SettlementGroupID,SettlementID,ParticipantID,ClientID,AccountID,ProductGroupID,ProductID,UnderlyingInstrID,InstrumentID,TradingRole,HedgeFlag,PosiDirection,Position,MarginRatio,ValueMode,SettlementPrice,PositionMargin
@@ -716,7 +716,7 @@ def settle_future(context, conf):
                                     t1.hedgeflag,t1.posidirection,t1.position + t1.ydposition,
                                     if(t1.posidirection='2',
                                       t2.longmarginratio,
-                                      t2.shortmarginratio) as marginrate,
+                                      t2.shortmarginratio) as MarginRatio,
                                     t2.valuemode,t3.settlementprice,
                                     round(if(t2.valuemode='1',
                                             if(t1.posidirection='2',
@@ -760,7 +760,7 @@ def settle_future(context, conf):
                                     and t1.tradingday = %s
                                     and t1.settlementgroupid = %s
                                     and t1.settlementid = %s
-                                    ON DUPLICATE KEY UPDATE positionmargin = VALUES(positionmargin), marginrate = VALUES(marginrate),
+                                    ON DUPLICATE KEY UPDATE positionmargin = VALUES(positionmargin), MarginRatio = VALUES(MarginRatio),
                                             valuemode = VALUES(valuemode)"""
             cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id))
             # 持仓盈亏

@@ -1,0 +1,14 @@
+{
+    "mysqlId": "simplatform_base",
+    "baseDataHome" : "${HOME}/sim_data",
+    "Syncs": [
+      {
+        "host": "etf_data",
+        "items": [
+          "${HOME}/depthmarketdata.csv",
+          "${HOME}/product.csv",
+          "${HOME}/instrument.csv"
+        ]
+      }
+    ]
+}

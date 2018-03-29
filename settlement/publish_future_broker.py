@@ -46,8 +46,12 @@ def publish_future(context, conf):
 
         # 投资者资金预处理
         sql = """UPDATE siminfo.t_investorfund t1
-                                     SET t1.prebalance = t1.balance, t1.prestockvalue = t1.stockvalue, t1.stockvalue = 0,
-                                     t1.currmargin = 0, t1.fee = 0
+                                     SET t1.prebalance = t1.balance, 
+                                     t1.prestockvalue = t1.stockvalue, 
+                                     t1.PreMargin = t1.CurrMargin,
+                                     t1.stockvalue = 0,
+                                     t1.currmargin = 0, 
+                                     t1.fee = 0
                                    WHERE t1.brokersystemid = %s"""
         cursor.execute(sql, (broker_system_id,))
 
@@ -65,15 +69,15 @@ def publish_future(context, conf):
             cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id))
             row = cursor.fetchone()
             if row is None:
-                logger.error("[publish stock broker] Error: There is no data for %s-%s."
+                logger.error("[publish future broker] Error: There is no data for %s-%s."
                              % (settlement_group_id, settlement_id))
                 result_code = -1
             elif row[3] == '0':
-                logger.error("[publish stock broker] Error: Settlement for %s-%s has not done."
+                logger.error("[publish future broker] Error: Settlement for %s-%s has not done."
                              % (settlement_group_id, settlement_id))
                 result_code = -1
             elif row[3] == '2':
-                logger.error("[publish stock broker] Error: Settlement for %s-%s has been published."
+                logger.error("[publish future broker] Error: Settlement for %s-%s has been published."
                              % (settlement_group_id, settlement_id))
                 result_code = -1
             else:
@@ -100,7 +104,7 @@ def publish_future(context, conf):
                                     0,
                                     0,
                                     0,
-                                    PositionCost,
+                                    (PositionCost + YdPositionCost) as PositionCost,
                                     UseMargin,
                                     0,
                                     0,
@@ -112,7 +116,7 @@ def publish_future(context, conf):
                             FROM
                                 dbclear.t_clientposition t 
                             WHERE
-                                t.tradingday = %s AND t.settlementgroupid = %s AND t.settlementid = %s"""
+                                t.tradingday = %s AND t.settlementgroupid = %s AND t.settlementid = %s AND t.Position != 0"""
                 cursor.execute(sql, (next_trading_day, current_trading_day, settlement_group_id, settlement_id))
 
                 # 更新会员持仓 t_partposition
@@ -198,7 +202,7 @@ def publish_future(context, conf):
                                         AND t2.settlementid = %s
                                     ) t2 
                                     SET t1.balance = t1.available + t2.available - t2.transfee - t2.DelivFee + t2.profit,
-                                    t1.available = t1.balance + t2.available - t2.transfee -t2.DelivFee + t2.profit - t2.positionmargin,
+                                    t1.available = t1.available + t2.available - t2.transfee - t2.DelivFee + t2.profit - t2.positionmargin,
                                     t1.fee = t1.fee + t2.transfee,
                                     t1.currmargin = t1.currmargin + t2.positionmargin
                                 WHERE
