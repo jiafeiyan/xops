@@ -14,10 +14,17 @@ if [ $? != 0 ]; then
         exit 1
 fi
 
-echo "starting snap_settle_data..."
+echo "starting snap_settle_data stock..."
 python ${SIM_PLATFORM_HOME}/settlement/snap_settle_data.py -conf ${SIM_PLATFORM_HOME}/settlement/snap_settle_data_stock.json
 if [ $? != 0 ]; then
         echo "snap_settle_data stock error..."
+        exit 1
+fi
+
+echo "starting snap_settle_data etf..."
+python ${SIM_PLATFORM_HOME}/settlement/snap_settle_data.py -conf ${SIM_PLATFORM_HOME}/settlement/snap_settle_data_etf.json
+if [ $? != 0 ]; then
+        echo "snap_settle_data etf error..."
         exit 1
 fi
 
@@ -37,6 +44,20 @@ echo "starting publish_stock_broker..."
 python ${SIM_PLATFORM_HOME}/settlement/publish_stock_broker.py
 if [ $? != 0 ]; then
         echo "publish_stock_broker error..."
+        exit 1
+fi
+
+echo "starting settle_etf..."
+python ${SIM_PLATFORM_HOME}/settlement/settle_etf.py
+if [ $? != 0 ]; then
+        echo "settle_etf error..."
+        exit 1
+fi
+
+echo "starting publish_etf_broker..."
+python ${SIM_PLATFORM_HOME}/settlement/publish_etf_broker.py
+if [ $? != 0 ]; then
+        echo "publish_etf_broker error..."
         exit 1
 fi
 
@@ -64,9 +85,16 @@ if [ $? != 0 ]; then
         exit 1
 fi
 
-echo "starting snap_initial_data..."
+echo "starting snap_initial_data stock..."
 python ${SIM_PLATFORM_HOME}/settlement/snap_initial_data.py -conf ${SIM_PLATFORM_HOME}/settlement/snap_initial_data_stock.json
 if [ $? != 0 ]; then
         echo "snap_initial_data stock error..."
+        exit 1
+fi
+
+echo "starting snap_initial_data etf..."
+python ${SIM_PLATFORM_HOME}/settlement/snap_initial_data.py -conf ${SIM_PLATFORM_HOME}/settlement/snap_initial_data_etf.json
+if [ $? != 0 ]; then
+        echo "snap_initial_data etf error..."
         exit 1
 fi
