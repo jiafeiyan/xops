@@ -45,7 +45,7 @@ sh ${SIM_PLATFORM_HOME}/appshell/trans_etfinfo.sh >> crontab.log
 
 # 8) toSyncAll.sh
 echo "start toSyncAll.sh ... "
-sh ${SIM_PLATFORM_HOME}/appshell/toSyncAll.sh >> crontab.log
+sh ${SIM_PLATFORM_HOME}/appshell/toSyncAll_stock.sh >> crontab.log
 
 # 9) stock_csv_all.sh
 echo "start stock_csv_all ... "
@@ -57,7 +57,7 @@ sh ${SIM_PLATFORM_HOME}/appshell/etf_csv_all.sh >> crontab.log
 
 # 11) tinit.sh
 echo "start tinit.sh ... "
-sh ${SIM_PLATFORM_HOME}/appshell/tinit.sh >> crontab.log
+sh ${SIM_PLATFORM_HOME}/appshell/tinit_stock.sh >> crontab.log
 
 # 12) start stock exchange
 echo "start start_stock_exchange.sh ... "

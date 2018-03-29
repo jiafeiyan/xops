@@ -23,17 +23,9 @@ sh ${SIM_PLATFORM_HOME}/appshell/stop_future_broker.sh >> crontab.log
 echo "start stop_stock_exchange.sh ... "
 sh ${SIM_PLATFORM_HOME}/appshell/stop_future_exchange.sh >> crontab.log
 
-# 3) sync_stock_broker_csvs.py
-#echo "start sync_stock_broker_csvs.py ... "
-#python ${SIM_PLATFORM_HOME}/settlement/sync_stock_broker_csvs.py >> crontab.log
-#
-## 4) settle_stock_userpwd.py
-#echo "start settle_stock_userpwd.py ... "
-#python ${SIM_PLATFORM_HOME}/settlement/settle_stock_userpwd.py >> crontab.log
-
 # 5) toSyncAll.sh
 echo "start toSyncAll.sh ... "
-sh ${SIM_PLATFORM_HOME}/appshell/toSyncAll.sh >> crontab.log
+sh ${SIM_PLATFORM_HOME}/appshell/toSyncAll_future.sh >> crontab.log
 
 # 6) future_csv_all.sh
 echo "start future_csv_all ... "
@@ -41,7 +33,7 @@ sh ${SIM_PLATFORM_HOME}/appshell/future_csv_all.sh >> crontab.log
 
 # 7) tinit.sh
 echo "start tinit.sh ... "
-sh ${SIM_PLATFORM_HOME}/appshell/tinit.sh >> crontab.log
+sh ${SIM_PLATFORM_HOME}/appshell/tinit_future.sh >> crontab.log
 
 # 8) start future exchange
 echo "start start_future_exchange.sh ... "
