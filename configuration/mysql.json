@@ -1,8 +1,8 @@
 {
   "simplatform_base": {
     "user": "root",
-    "password": "chenyan",
-    "host": "192.168.99.100",
+    "password": "111111",
+    "host": "192.188.188.119",
     "port": 3306,
     "database": "siminfo",
     "pool_size": 20

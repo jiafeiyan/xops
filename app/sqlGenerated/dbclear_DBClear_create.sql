@@ -445,3 +445,24 @@ create table dbclear.t_ClientFund
 
 
 
+-- ******************************
+-- 创建客户持仓权利金表
+-- ******************************
+create table dbclear.t_ClientPositionPremium
+(
+	TradingDay   varchar(8) binary  not null COMMENT '交易日'
+	,SettlementGroupID   varchar(8) binary  not null COMMENT '结算组代码'
+	,SettlementID   INTEGER   not null COMMENT '结算编号'
+	,Direction   char(1) binary  not null COMMENT '买卖方向'
+	,ParticipantID   varchar(10) binary  not null COMMENT '会员代码'
+	,ClientID   varchar(10) binary  not null COMMENT '客户代码'
+	,AccountID   varchar(12) binary  not null COMMENT '资金帐号'
+	,InstrumentID   varchar(30) binary  not null COMMENT '合约代码'
+	,Volume    bigInt(10)    not null COMMENT '数量'
+	,UserID   varchar(15) binary   COMMENT '交易用户代码'
+	,Premium 	   decimal(19,3)   not null COMMENT '占用的保证金'
+	  ,PRIMARY KEY (TradingDay,SettlementGroupID,SettlementID,Direction)
+) COMMENT='客户持仓权利金';
+
+
+

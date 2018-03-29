@@ -46,3 +46,6 @@ drop table IF EXISTS dbclear.t_ClientTransFee;
 -- 删除客户资金表
 drop table IF EXISTS dbclear.t_ClientFund;
 
+-- 删除客户持仓权利金表
+drop table IF EXISTS dbclear.t_ClientPositionPremium;
+
