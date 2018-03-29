@@ -313,7 +313,7 @@ class broker_etf_csv:
                                          "FrozenMargin", "FrozenCash", "FrozenCommission", "CurrMargin", "Commission",
                                          "RoyaltyIn", "RoyaltyOut", "AccountOwner"),
                                 sql="""SELECT '0001' AS DepartmentID,t.InvestorID AS AccountID,'1' AS CurrencyID,
-                                                '3' AS AccountType,t.Available AS PreDeposit,'0' AS PreFrozenCash,
+                                                '3' AS AccountType,t.Balance AS PreDeposit,'0' AS PreFrozenCash,
                                                 t.Available AS UsefulMoney,t.Available AS FetchLimit,
                                                 t.Deposit AS Deposit,t.Withdraw AS Withdraw,'0' AS FrozenMargin,
                                                 '0' AS FrozenCash,'0' AS FrozenCommission,'0' AS CurrMargin,
@@ -388,60 +388,74 @@ class broker_etf_csv:
                                                 "SecurityID", "BusinessClass", "BrokerageType", "RatioByAmt",
                                                 "RatioByPar", "FeePerOrder", "FeeMin", "FeeMax", "FeeByVolume"),
                                        sql="""SELECT "0001" AS DepartmentID,t.InvestorID,"1" AS ExchangeID,
-                                                    "d" AS ProductID,"0" AS SecurityType,"00000000" AS SecurityID,
-                                                    "A" AS BusinessClass,"0" AS BrokerageType,"0" AS RatioByAmt,
-                                                    "0" AS RatioByPar,"0" AS FeePerOrder,"5" AS FeeMin,
-                                                    "100000000" AS FeeMax,"10" AS FeeByVolume
-                                                FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1
-                                                WHERE t.InvestorID = t1.InvestorID AND t1.SettlementGroupID = %s
+                                                        "d" AS ProductID,"0" AS SecurityType,"00000000" AS SecurityID,
+                                                        "A" AS BusinessClass,"0" AS BrokerageType,"0" AS RatioByAmt,
+                                                        "0" AS RatioByPar,"0" AS FeePerOrder,t2.MinOpenFee AS FeeMin,
+                                                        t2.MaxOpenFee AS FeeMax,t2.CloseYesterdayFeeRatio AS FeeByVolume
+                                                FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1,siminfo.t_transfeeratedetail t2
+                                                WHERE t.InvestorID = t1.InvestorID 
+                                                AND t1.SettlementGroupID = t2.SettlementGroupID
+                                                AND t1.SettlementGroupID = %s
                                                 UNION ALL 
                                                 SELECT "0001" AS DepartmentID,t.InvestorID,"1" AS ExchangeID,
                                                     "d" AS ProductID,"0" AS SecurityType,"00000000" AS SecurityID,
                                                     "B" AS BusinessClass,"0" AS BrokerageType,"0" AS RatioByAmt,
-                                                    "0" AS RatioByPar,"0" AS FeePerOrder,"5" AS FeeMin,
-                                                    "100000000" AS FeeMax,"10" AS FeeByVolume
-                                                FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1
-                                                WHERE t.InvestorID = t1.InvestorID AND t1.SettlementGroupID = %s
+                                                    "0" AS RatioByPar,"0" AS FeePerOrder,t2.MinOpenFee AS FeeMin,
+                                                    t2.MaxOpenFee AS FeeMax,t2.CloseYesterdayFeeRatio AS FeeByVolume
+                                                FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1,siminfo.t_transfeeratedetail t2
+                                                WHERE t.InvestorID = t1.InvestorID 
+                                                AND t1.SettlementGroupID = t2.SettlementGroupID
+                                                AND t1.SettlementGroupID = %s
                                                 UNION ALL 
                                                 SELECT "0001" AS DepartmentID,t.InvestorID,"1" AS ExchangeID,
                                                     "d" AS ProductID,"0" AS SecurityType,"00000000" AS SecurityID,
                                                     "C" AS BusinessClass,"0" AS BrokerageType,"0" AS RatioByAmt,
-                                                    "0" AS RatioByPar,"0" AS FeePerOrder,"5" AS FeeMin,
-                                                    "100000000" AS FeeMax,"10" AS FeeByVolume
-                                                FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1
-                                                WHERE t.InvestorID = t1.InvestorID AND t1.SettlementGroupID = %s
+                                                    "0" AS RatioByPar,"0" AS FeePerOrder,t2.MinOpenFee AS FeeMin,
+                                                    t2.MaxOpenFee AS FeeMax,t2.CloseYesterdayFeeRatio AS FeeByVolume
+                                                FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1,siminfo.t_transfeeratedetail t2
+                                                WHERE t.InvestorID = t1.InvestorID 
+                                                AND t1.SettlementGroupID = t2.SettlementGroupID
+                                                AND t1.SettlementGroupID = %s
                                                 UNION ALL 
                                                 SELECT "0001" AS DepartmentID,t.InvestorID,"1" AS ExchangeID,
                                                     "d" AS ProductID,"0" AS SecurityType,"00000000" AS SecurityID,
                                                     "D" AS BusinessClass,"0" AS BrokerageType,"0" AS RatioByAmt,
-                                                    "0" AS RatioByPar,"0" AS FeePerOrder,"5" AS FeeMin,
-                                                    "100000000" AS FeeMax,"10" AS FeeByVolume
-                                                FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1
-                                                WHERE t.InvestorID = t1.InvestorID AND t1.SettlementGroupID = %s
+                                                    "0" AS RatioByPar,"0" AS FeePerOrder,t2.MinOpenFee AS FeeMin,
+                                                    t2.MaxOpenFee AS FeeMax,t2.CloseYesterdayFeeRatio AS FeeByVolume
+                                                FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1,siminfo.t_transfeeratedetail t2
+                                                WHERE t.InvestorID = t1.InvestorID 
+                                                AND t1.SettlementGroupID = t2.SettlementGroupID
+                                                AND t1.SettlementGroupID = %s
                                                 UNION ALL 
                                                 SELECT "0001" AS DepartmentID,t.InvestorID,"1" AS ExchangeID,
                                                     "d" AS ProductID,"0" AS SecurityType,"00000000" AS SecurityID,
                                                     "E" AS BusinessClass,"0" AS BrokerageType,"0" AS RatioByAmt,
-                                                    "0" AS RatioByPar,"0" AS FeePerOrder,"5" AS FeeMin,
-                                                    "100000000" AS FeeMax,"10" AS FeeByVolume
-                                                FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1
-                                                WHERE t.InvestorID = t1.InvestorID AND t1.SettlementGroupID = %s
+                                                    "0" AS RatioByPar,"0" AS FeePerOrder,t2.MinOpenFee AS FeeMin,
+                                                    t2.MaxOpenFee AS FeeMax,t2.CloseYesterdayFeeRatio AS FeeByVolume
+                                                FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1,siminfo.t_transfeeratedetail t2
+                                                WHERE t.InvestorID = t1.InvestorID 
+                                                AND t1.SettlementGroupID = t2.SettlementGroupID
+                                                AND t1.SettlementGroupID = %s
                                                 UNION ALL 
                                                 SELECT "0001" AS DepartmentID,t.InvestorID,"1" AS ExchangeID,
                                                     "d" AS ProductID,"0" AS SecurityType,"00000000" AS SecurityID,
                                                     "F" AS BusinessClass,"0" AS BrokerageType,"0" AS RatioByAmt,
-                                                    "0" AS RatioByPar,"0" AS FeePerOrder,"5" AS FeeMin,
-                                                    "100000000" AS FeeMax,"10" AS FeeByVolume
-                                                FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1
-                                                WHERE t.InvestorID = t1.InvestorID AND t1.SettlementGroupID = %s
+                                                    "0" AS RatioByPar,"0" AS FeePerOrder,t2.MinOpenFee AS FeeMin,
+                                                    t2.MaxOpenFee AS FeeMax,t2.CloseYesterdayFeeRatio AS FeeByVolume
+                                                FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1,siminfo.t_transfeeratedetail t2
+                                                WHERE t.InvestorID = t1.InvestorID 
+                                                AND t1.SettlementGroupID = t2.SettlementGroupID
+                                                AND t1.SettlementGroupID = %s
                                                 UNION ALL 
                                                 SELECT "0001" AS DepartmentID,t.InvestorID,"1" AS ExchangeID,
                                                     "d" AS ProductID,"0" AS SecurityType,"00000000" AS SecurityID,
                                                     "G" AS BusinessClass,"0" AS BrokerageType,"0" AS RatioByAmt,
-                                                    "0" AS RatioByPar,"0" AS FeePerOrder,"5" AS FeeMin,
-                                                    "100000000" AS FeeMax,"10" AS FeeByVolume
-                                                FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1
-                                                WHERE t.InvestorID = t1.InvestorID AND t1.SettlementGroupID = %s""",
+                                                    "0" AS RatioByPar,"0" AS FeePerOrder,t2.MinOpenFee AS FeeMin,
+                                                    t2.MaxOpenFee AS FeeMax,t2.CloseYesterdayFeeRatio AS FeeByVolume
+                                                FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1,siminfo.t_transfeeratedetail t2
+                                                WHERE t.InvestorID = t1.InvestorID 
+                                                AND t1.SettlementGroupID = t2.SettlementGroupID
+                                                AND t1.SettlementGroupID = %s""",
                                        params=(self.settlementGroupID, self.settlementGroupID, self.settlementGroupID,
                                                self.settlementGroupID, self.settlementGroupID, self.settlementGroupID,
                                                self.settlementGroupID,)),
