@@ -27,9 +27,9 @@ sh ${SIM_PLATFORM_HOME}/appshell/stop_stock_broker.sh >> crontab.log
 echo "start stop_stock_exchange.sh ... "
 sh ${SIM_PLATFORM_HOME}/appshell/stop_stock_exchange.sh >> crontab.log
 
-# 4) sync_stock_prepare_data.py
-echo "start sync_stock_prepare_data.py ... "
-python ${SIM_PLATFORM_HOME}/settlement/sync_stock_prepare_data.py >> crontab.log
+# 4) sync_stock_broker_csvs.py
+echo "start sync_stock_broker_csvs.py ... "
+python ${SIM_PLATFORM_HOME}/settlement/sync_stock_broker_csvs.py >> crontab.log
 
 # 5) settle_stock_userpwd.py
 echo "start settle_stock_userpwd.py ... "
@@ -37,11 +37,15 @@ python ${SIM_PLATFORM_HOME}/settlement/settle_stock_userpwd.py >> crontab.log
 
 # 6) sync_stock_prepare_data.py
 echo "start sync_stock_prepare_data.py ... "
-python ${SIM_PLATFORM_HOME}/settlement/sync_stock_prepare_data.py >> crontab.log
+python ${SIM_PLATFORM_HOME}/datatrans/sync_stock_prepare_data.py >> crontab.log
 
 # 7) trans_etfinfo.sh
 echo "start trans_etfinfo.py ... "
 sh ${SIM_PLATFORM_HOME}/appshell/trans_etfinfo.sh >> crontab.log
+
+# 7) trans_stockinfo.sh
+echo "start trans_etfinfo.py ... "
+sh ${SIM_PLATFORM_HOME}/appshell/trans_stockinfo.sh >> crontab.log
 
 # 8) toSyncAll.sh
 echo "start toSyncAll.sh ... "
