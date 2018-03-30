@@ -59,24 +59,51 @@ def settle_future(context, conf):
             logger.info("[calculate settlement price] is processing......")
             sql = """UPDATE dbclear.t_marketdata tm,
                                 (
-                                    SELECT
-                                        t.tradingday,
-                                        t.settlementgroupid,
-                                        t.settlementid,
-                                        t.instrumentid,
-                                    CASE
-                                        WHEN t.Volume = 0 THEN
-                                            0 ELSE round( t.Turnover / t.Volume / t1.VolumeMultiple, 2 ) 
-                                        END AS settlementprice 
-                                    FROM
-                                        dbclear.t_marketdata t, siminfo.t_instrument t1
-                                    WHERE
-                                        t.tradingday = %s 
-                                        AND t.settlementgroupid = %s 
-                                        AND t.settlementid = %s
-                                        AND t.instrumentid = t1.instrumentid
-                                        AND t.settlementgroupid = t1.settlementgroupid
-                                    ) tt 
+                                    select t1.tradingday,
+                                           t1.settlementgroupid,
+                                           t1.settlementid,
+                                           t1.instrumentid,
+                                           case
+                                             when abs(mod((t1.settlementprice - t3.presettlementprice), t2.pricetick)) <
+                                                  (t2.pricetick / 2) then
+                                              t3.presettlementprice +
+                                              if(sign(t1.settlementprice - t3.presettlementprice)=1,
+                                                     floor((t1.settlementprice - t3.presettlementprice) /
+                                                           t2.pricetick),
+                                                     ceil((t1.settlementprice - t3.presettlementprice) /
+                                                          t2.pricetick)) * t2.pricetick
+                                             else
+                                              t3.presettlementprice +
+                                              if(sign(t1.settlementprice - t3.presettlementprice)=1,
+                                                     ceil((t1.settlementprice - t3.presettlementprice) /
+                                                          t2.pricetick),
+                                                     floor((t1.settlementprice - t3.presettlementprice) /
+                                                           t2.pricetick)) * t2.pricetick
+                                           end as settlementprice
+                                      from (SELECT
+                                                    t.tradingday,
+                                                    t.settlementgroupid,
+                                                    t.settlementid,
+                                                    t.instrumentid,
+                                            CASE
+                                                    WHEN t.Volume = 0 THEN
+                                                            0 ELSE round( t.Turnover / t.Volume / t1.VolumeMultiple, 2 ) 
+                                                    END AS settlementprice 
+                                            FROM
+                                                    dbclear.t_marketdata t, siminfo.t_instrument t1
+                                            WHERE
+                                                    t.tradingday = %s
+                                                    AND t.settlementgroupid = %s
+                                                    AND t.settlementid = %s
+                                                    AND t.instrumentid = t1.instrumentid
+                                                    AND t.settlementgroupid = t1.settlementgroupid) t1,
+                                           siminfo.t_instrumentproperty t2, dbclear.t_marketdata t3
+                                     where t1.settlementgroupid = t2.settlementgroupid
+                                       and t1.instrumentid = t2.instrumentid
+                                       and t1.tradingday = t3.tradingday
+                                       and t1.settlementgroupid = t3.settlementgroupid
+                                       and t1.settlementid = t3.settlementid
+                                       and t1.instrumentid = t3.instrumentid) tt 
                                     SET tm.settlementprice = tt.settlementprice 
                                 WHERE
                                     tm.settlementgroupid = tt.settlementgroupid 

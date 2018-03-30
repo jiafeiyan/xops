@@ -2,13 +2,12 @@
 
 import os
 import json
-import shutil
 
 import rsync
 from utils import log, Configuration, parse_conf_args, process_assert, path, mysql
 
 
-def sync_etf_broker_csvs(context, conf):
+def sync_stock_prepare_data(context, conf):
     result_code = 0
     logger = log.get_logger(category="SyncEtfBrokerCsvs")
 
@@ -18,19 +17,22 @@ def sync_etf_broker_csvs(context, conf):
     sql = """SELECT t1.tradingday FROM siminfo.t_tradesystemtradingday t1 WHERE t1.tradesystemid = %s"""
     res = mysqlDB.select(sql, ("0001",))
     current_trading_day = str(res[0][0])
-    base_dir = conf.get("baseDataHome")
 
+    # 拷贝目标地址
+    base_dir = conf.get("baseDataHome")
     data_target_dir = os.path.join(base_dir, current_trading_day)
 
     real_dir_path = path.convert(data_target_dir)
-    if os.path.exists(real_dir_path):
-        shutil.rmtree(real_dir_path)
+    if not os.path.exists(real_dir_path):
+        os.makedirs(str(real_dir_path))
 
     syncs = conf.get("Syncs")
-    file_name = "%s%s%s" % ("reff03", current_trading_day[4:8], ".txt")
-
-    items = syncs[0].get("items")[0]
-    syncs[0]["items"][0] = "%s%s%s" % (items, os.path.sep, file_name)
+    for sources in syncs:
+        for index, file in enumerate(sources['items']):
+            file = file.replace("%y", current_trading_day[0:4]) \
+                .replace("%m", current_trading_day[4:6]) \
+                .replace("%d", current_trading_day[6:8])
+            sources['items'][index] = file
 
     rsync_config = {"type": "get", "target": data_target_dir, "Syncs": syncs}
     logger.info("[sync etf broker csvs with %s] begin" % json.dumps(rsync_config, encoding="UTF-8", ensure_ascii=False))
@@ -50,7 +52,7 @@ def main():
 
     context, conf = Configuration.load(base_dir=base_dir, config_names=config_names, config_files=config_files)
 
-    process_assert(sync_etf_broker_csvs(context, conf))
+    process_assert(sync_stock_prepare_data(context, conf))
 
 
 if __name__ == "__main__":

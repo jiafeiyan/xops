@@ -40,6 +40,13 @@ if [ $? != 0 ]; then
         exit 1
 fi
 
+echo "starting settle_etf..."
+python ${SIM_PLATFORM_HOME}/settlement/settle_etf.py
+if [ $? != 0 ]; then
+        echo "settle_etf error..."
+        exit 1
+fi
+
 echo "starting publish_stock_broker..."
 python ${SIM_PLATFORM_HOME}/settlement/publish_stock_broker.py
 if [ $? != 0 ]; then
@@ -47,12 +54,6 @@ if [ $? != 0 ]; then
         exit 1
 fi
 
-echo "starting settle_etf..."
-python ${SIM_PLATFORM_HOME}/settlement/settle_etf.py
-if [ $? != 0 ]; then
-        echo "settle_etf error..."
-        exit 1
-fi
 
 echo "starting publish_etf_broker..."
 python ${SIM_PLATFORM_HOME}/settlement/publish_etf_broker.py

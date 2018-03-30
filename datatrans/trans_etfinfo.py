@@ -71,12 +71,7 @@ class trans_etfinfo:
                                    VolumeMultiple,UnderlyingMultiple,
                                    InstrumentID,ExchInstrumentID,InstrumentName,
                                    DeliveryYear,DeliveryMonth,AdvanceMonth
-                              )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
-                              ON DUPLICATE KEY UPDATE 
-                                InstrumentName=VALUES(InstrumentName),StrikePrice=VALUES(StrikePrice),
-                                DeliveryYear=VALUES(DeliveryYear),DeliveryMonth=VALUES(DeliveryMonth),
-                                OptionsType=VALUES(OptionsType),UnderlyingType=VALUES(UnderlyingType),
-                                StrikeType=VALUES(StrikeType)"""
+                              )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
             sql_insert_params = []
             for etf in etf_list:
                 ProductID = 'ETF'
@@ -119,18 +114,7 @@ class trans_etfinfo:
                                           EndDelivDate,StrikeDate,BasisPrice,MaxMarketOrderVolume,MinMarketOrderVolume,
                                           MaxLimitOrderVolume,MinLimitOrderVolume,PriceTick,
                                           AllowDelivPersonOpen,InstrumentID,InstLifePhase
-                                          )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
-                                        ON DUPLICATE KEY UPDATE 
-                                        OpenDate=VALUES(OpenDate),
-                                        ExpireDate=VALUES(ExpireDate),
-                                        StartDelivDate=VALUES(StartDelivDate),
-                                        EndDelivDate=VALUES(EndDelivDate),
-                                        StrikeDate=VALUES(StrikeDate),
-                                        MaxMarketOrderVolume=VALUES(MaxMarketOrderVolume),
-                                        MinMarketOrderVolume=VALUES(MinMarketOrderVolume),
-                                        MaxLimitOrderVolume=VALUES(MaxLimitOrderVolume),
-                                        MinLimitOrderVolume=VALUES(MinLimitOrderVolume),
-                                        PriceTick=VALUES(PriceTick)"""
+                                          )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
             sql_params = []
             for etf in etf_list:
                 sql_params.append((self.SettlementGroupID, '99991219', etf.StartDate, etf.ExpireDate, etf.DeliveryDate,
@@ -160,10 +144,7 @@ class trans_etfinfo:
                                             MarginCalcID,
                                             InstrumentID,
                                             ParticipantID
-                                        ) VALUES (%s,%s,%s,%s)
-                                     ON DUPLICATE KEY UPDATE 
-                                        MarginCalcID=VALUES(MarginCalcID),
-                                        ParticipantID=VALUES(ParticipantID)"""
+                                        ) VALUES (%s,%s,%s,%s)"""
             sql_insert_params = []
             for etf in etf_list:
                 SGID = self.SettlementGroupID
@@ -191,11 +172,7 @@ class trans_etfinfo:
                                           SettlementGroupID,TradingRole,HedgeFlag,
                                           ValueMode,LongMarginRatio,ShortMarginRatio,AdjustRatio1,AdjustRatio2,
                                           InstrumentID,ParticipantID,ClientID
-                                      ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
-                                    ON DUPLICATE KEY UPDATE 
-                                    ValueMode=VALUES(ValueMode),LongMarginRatio=VALUES(LongMarginRatio),
-                                    ShortMarginRatio=VALUES(ShortMarginRatio),AdjustRatio1=VALUES(AdjustRatio1),
-                                    AdjustRatio2=VALUES(AdjustRatio2)"""
+                                      ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
             sql_insert_params = []
             for etf in etf_list:
                 SGID = self.SettlementGroupID
@@ -221,19 +198,19 @@ class trans_etfinfo:
             if template is None:
                 self.logger.error("t_PriceBanding template is None")
                 return
+
             sql_insert_price = """INSERT INTO siminfo.t_PriceBanding (
                                            SettlementGroupID,PriceLimitType,ValueMode,RoundingMode,
                                            UpperValue,LowerValue,InstrumentID,TradingSegmentSN
-                                       ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s) 
-                                        ON DUPLICATE KEY UPDATE 
-                                        PriceLimitType=VALUES(PriceLimitType),ValueMode=VALUES(ValueMode),
-                                        RoundingMode=VALUES(RoundingMode),UpperValue=VALUES(UpperValue),
-                                        LowerValue=VALUES(LowerValue)"""
+                                       ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)"""
             sql_insert_params = []
             for etf in etf_list:
                 SGID = self.SettlementGroupID
-                sql_insert_params.append((SGID, template[SGID][1], template[SGID][2], template[SGID][3],
-                                          template[SGID][4], template[SGID][5], etf.SecurityID,
+                PriceLimitType = '2'
+                DailyPriceUpLimit = float(etf.DailyPriceUpLimit) - float(etf.SettlePrice)
+                DailyPriceDownLimit = float(etf.SettlePrice) - float(etf.DailyPriceDownLimit)
+                sql_insert_params.append((SGID, template[SGID][1], PriceLimitType, template[SGID][3],
+                                          DailyPriceUpLimit, DailyPriceDownLimit, etf.SecurityID,
                                           template[SGID][7]))
             cursor.executemany(sql_insert_price, sql_insert_params)
             mysql_conn.commit()
@@ -255,13 +232,7 @@ class trans_etfinfo:
                                             OpenInterest,ClosePrice,SettlementPrice,
                                             UpperLimitPrice,LowerLimitPrice,PreDelta,
                                             CurrDelta,UpdateTime,UpdateMillisec,InstrumentID
-                                       )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
-                                    ON DUPLICATE KEY UPDATE  
-                                        PreSettlementPrice = VALUES(PreSettlementPrice),
-                                        PreClosePrice = VALUES(PreClosePrice),
-                                        UnderlyingClosePx=VALUES(UnderlyingClosePx),
-                                        UpperLimitPrice = VALUES(UpperLimitPrice),
-                                        LowerLimitPrice = VALUES(LowerLimitPrice)"""
+                                       )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
             sql_insert_params = []
             for etf in etf_list:
                 sql_insert_params.append((self.TradingDay, self.SettlementGroupID, None, etf.SettlePrice,
@@ -287,10 +258,7 @@ class trans_etfinfo:
                                                     SettlementGroupID,TradingSegmentSN,
                                                     TradingSegmentName,StartTime,
                                                     InstrumentStatus,InstrumentID
-                                                ) VALUES (%s,%s,%s,%s,%s,%s)
-                                                ON DUPLICATE KEY UPDATE  
-                                                    TradingSegmentName=VALUES(TradingSegmentName),
-                                                    StartTime=VALUES(StartTime),InstrumentStatus=VALUES(InstrumentStatus)"""
+                                                ) VALUES (%s,%s,%s,%s,%s,%s)"""
             # 存在更新记录
             sql_insert_params = []
             SegmentAttr = self.__loadJSON(tableName='t_TradingSegmentAttr')

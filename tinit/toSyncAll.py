@@ -404,11 +404,16 @@ class toSyncAll:
         delete = "DELETE FROM sync.t_Curr" + table_name + " WHERE TradeSystemID=%s"
         self.logger.info("同步siminfo.t_TradingSegmentAttr ==>> sync.t_CurrTradingSegmentAttr")
         sql = """INSERT INTO sync.t_Curr""" + table_name + """ SELECT t2.TradeSystemID, 
-                             t.SettlementGroupID,TradingSegmentSN,TradingSegmentName,
-                             StartTime,InstrumentStatus,DayOffset,InstrumentID
-                             FROM siminfo.t_""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
-                             WHERE t.SettlementGroupID = t2.SettlementGroupID
-                             AND t2.TradeSystemID=%s"""
+                     t.SettlementGroupID,TradingSegmentSN,TradingSegmentName,
+                     StartTime,InstrumentStatus,
+                     CASE WHEN DayOffset = -1 THEN DATEDIFF(DATE_FORMAT(NOW(), '%Y%m%d'), 
+                    t3.TradingDay
+                    ) ELSE DayOffset END as DayOffset,
+                     InstrumentID
+                     FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2 , siminfo.t_tradesystemtradingday t3  
+                     WHERE t.SettlementGroupID = t2.SettlementGroupID
+                     and t2.TradeSystemID = t3.TradeSystemID
+                     AND t2.TradeSystemID = %s"""
         trans = [dict(sql=delete, params=(self.tradeSystemID,)),
                  dict(sql=sql, params=(self.tradeSystemID,))]
         mysqlDB.executetransaction(trans)

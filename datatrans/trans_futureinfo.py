@@ -20,9 +20,9 @@ class trans_futureinfo:
         self.mysqlDB = mysql(configs=context.get("mysql")[configs.get("mysqlId")])
         # 初始化模板路径
         self.initTemplate = context.get("init")[configs.get("initId")]
-        self.file_instrument = "instrument.csv"
-        self.file_product = "product.csv"
-        self.file_marketdata = "depthmarketdata.csv"
+        self.file_instrument = "future_instrument.csv"
+        self.file_product = "future_product.csv"
+        self.file_marketdata = "future_depthmarketdata.csv"
         # 交易所和结算组对应关系
         self.exchange_conf = self.__get_exchange()
         self.__transform()
