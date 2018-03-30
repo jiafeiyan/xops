@@ -1,6 +1,7 @@
 {
     "mysqlId": "simplatform_base",
     "baseDataHome" : "${HOME}/sim_data",
+    "time_await": "3",
     "Syncs": [
       {
         "host": "stock_exchange",

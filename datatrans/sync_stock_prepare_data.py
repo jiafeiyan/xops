@@ -2,6 +2,7 @@
 
 import os
 import json
+import time
 
 import rsync
 from utils import log, Configuration, parse_conf_args, process_assert, path, mysql
@@ -52,8 +53,15 @@ def main():
 
     context, conf = Configuration.load(base_dir=base_dir, config_names=config_names, config_files=config_files)
 
-    process_assert(sync_stock_prepare_data(context, conf))
-
+    # process_assert(sync_stock_prepare_data(context, conf))
+    result = sync_stock_prepare_data(context, conf)
+    # 失败处理，超时等待
+    while result == -1:
+        logger = log.get_logger(category="SyncEtfBrokerCsvs")
+        logger.error("获取文件失败，%s分钟后重新获取" % str(conf.get("time_await")))
+        await = float(conf.get("time_await")) * 60
+        time.sleep(await)
+        result = sync_stock_prepare_data(context, conf)
 
 if __name__ == "__main__":
     main()
