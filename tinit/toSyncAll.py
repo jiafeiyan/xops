@@ -410,7 +410,7 @@ class toSyncAll:
                     t3.TradingDay
                     ) ELSE DayOffset END as DayOffset,
                      InstrumentID
-                     FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2 , siminfo.t_tradesystemtradingday t3  
+                     FROM siminfo.t_""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2 , siminfo.t_tradesystemtradingday t3  
                      WHERE t.SettlementGroupID = t2.SettlementGroupID
                      and t2.TradeSystemID = t3.TradeSystemID
                      AND t2.TradeSystemID = %s"""

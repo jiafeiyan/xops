@@ -89,7 +89,7 @@ class trans_stockinfo:
                                                   ProductGroupID,
                                                   ProductID,
                                                   "4", "2", None, "0",
-                                                  1, 1, 123, 123,
+                                                  1, 1, 0, 0,
                                                   stock.ZQDM, stock.ZWMC,
                                                   2099, 12, "012"))
                     else:
@@ -98,7 +98,7 @@ class trans_stockinfo:
                                                   ProductGroupID,
                                                   ProductID,
                                                   "3", "1", None, "0",
-                                                  1, 1, 123, 123,
+                                                  1, 1, 0, 0,
                                                   stock.ZQDM, stock.ZWMC,
                                                   2099, 12, "012"))
                 elif settlement_group == "SG02":
@@ -107,7 +107,7 @@ class trans_stockinfo:
                                               ProductGroupID,
                                               ProductID,
                                               "4", "2", None, "0",
-                                              1, 1, 123, 123,
+                                              1, 1, 0, 0,
                                               stock.ZQDM, stock.ZWMC,
                                               2099, 12, "012"))
 
@@ -153,7 +153,7 @@ class trans_stockinfo:
             if template is None:
                 self.logger.error("t_MarginRate template is None")
                 return
-            sql_insert_rate = """INSERT INTO t_MarginRate (
+            sql_insert_rate = """INSERT INTO siminfo.t_MarginRate (
                                 SettlementGroupID,
                                 MarginCalcID,
                                 InstrumentID,
@@ -316,7 +316,7 @@ class trans_stockinfo:
             if sgid == 'SG01':
                 # 读取txt文件
                 stock_file = codecs.open(stock_path[0], encoding='gbk')
-                stock_data.update({sgid: self.__txt_to_stock(stock_file, ("ES", "510050", "510300"))})
+                stock_data.update({sgid: self.__txt_to_stock(stock_file, ("ES","ASH","510050", "510300"))})
             if sgid == 'SG02':
                 # 读取xml文件
                 stock_data.update({sgid: self.__xml_to_stock(stock_path)})
@@ -368,7 +368,7 @@ class trans_stockinfo:
             VO = stockVO(lines.split("|"))
             if stock_filter is None:
                 stock_list.append(VO)
-            elif VO.ZQLB in stock_filter:
+            elif VO.ZQLB in stock_filter and VO.ZQZLB in stock_filter:
                 stock_list.append(VO)
             elif VO.ZQDM in stock_filter:
                 stock_list.append(VO)
