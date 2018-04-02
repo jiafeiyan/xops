@@ -9,6 +9,12 @@
                   "${SIM_PLATFORM_HOME}/csvfiles/broker/stock"]
       },
       {
+        "host": "etf_broker",
+        "type": "put",
+        "target" : "${HOME}/run/sptinit/csv",
+        "items": ["${SIM_PLATFORM_HOME}/csvfiles/broker/etf/SG07"]
+      },
+      {
         "host": "stock_exchange",
         "type": "put",
         "target" : "${HOME}/run/tinit/dump",

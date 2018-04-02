@@ -43,6 +43,13 @@ class trans_futureinfo:
         if csvs is None:
             return
         mysqlDB = self.mysqlDB
+        # 查询当前交易日
+        sql = """SELECT tradingday FROM siminfo.t_tradesystemtradingday WHERE tradesystemid = %s"""
+        fc = mysqlDB.select(sql, ('0002',))
+        current_trading_day = fc[0][0]
+        self.TradingDay = current_trading_day
+        self.logger.info("[trans_futureinfo] current_trading_day = %s" % current_trading_day)
+
         if csvs[0] is not None:
             # ===========处理instrument.csv写入t_Instrument表==============
             self.__t_Instrument(mysqlDB=mysqlDB, csv_file=csvs[0])
@@ -435,7 +442,6 @@ class trans_futureinfo:
         # 获取文件路径
         catalog = env_dist['HOME']
         now = datetime.datetime.now().strftime("%Y%m%d")
-        self.TradingDay = now
         catalog = '%s%s%s%s%s' % (catalog, os.path.sep, 'sim_data', os.path.sep, now)
         instrument = '%s%s%s' % (catalog, os.path.sep, self.file_instrument)
         product = '%s%s%s' % (catalog, os.path.sep, self.file_product)

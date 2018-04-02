@@ -34,6 +34,13 @@ class trans_stockinfo:
         if stock_list is None:
             return
         mysqlDB = self.mysqlDB
+        # 查询当前交易日
+        sql = """SELECT tradingday FROM siminfo.t_tradesystemtradingday WHERE tradesystemid = %s"""
+        fc = mysqlDB.select(sql, ('0001',))
+        current_trading_day = fc[0][0]
+        self.TradingDay = current_trading_day
+        self.logger.info("[trans_stockinfo] current_trading_day = %s" % current_trading_day)
+
         for settlement_group in stock_list:
             self.logger.info("==========trans %s 数据===========" % settlement_group)
             stock_data = stock_list[settlement_group]
@@ -299,8 +306,6 @@ class trans_stockinfo:
         # 获取文件路径
         catalog = env_dist['HOME']
         now = datetime.datetime.now().strftime("%Y%m%d")
-        # 添加当前系统时间
-        self.TradingDay = now
         # 文件路径
         catalog = '%s%s%s%s%s' % (catalog, os.path.sep, 'sim_data', os.path.sep, now)
         stock_data = dict()
