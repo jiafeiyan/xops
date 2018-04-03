@@ -991,6 +991,16 @@
 		<Field name="SettlementPrice" type="Price" label="今结算" description="该合约当日成交价格按成交量的加权平均价，当日无成交的，按上一日结算价"/>
 		<Field name="PositionMargin" type="Money" notnull="yes" label="占用的保证金" description="持仓占用的保证金"/>
 	</Entity>
+	<Entity name="ClientPositionPremium" title="客户合约持仓权利金" description="客户合约持仓权利金">
+		<Ref entity="SettlementGroupSettlementRef"/>
+		<Field name="ParticipantID" type="ParticipantID" notnull="yes" label="会员代码" description="每一位会员在系统中的编码，编号唯一且遵循交易所制定的编码规则" iskey="yes"/>
+		<Field name="ClientID" type="ClientID" notnull="yes" label="客户代码" description="客户在系统中的编号，编号唯一且遵循交易所制定的编码规则" iskey="yes"/>
+		<Field name="AccountID" type="AccountID" notnull="yes" label="资金帐号" description="本成交所使用的资金帐户" iskey="yes"/>
+		<Field name="InstrumentID" type="InstrumentID" notnull="yes" label="合约代码" description="合约在系统中的编号" iskey="yes"/>
+		<Field name="Volume" type="Volume" notnull="yes" label="数量" description="成交数量"/>
+		<Field name="UserID" type="UserID" notnull="no" label="交易用户代码" description="交易员在系统中的编号，编号唯一且遵循交易所制定的编码规则" iskey="yes"/>
+		<Field name="Premium" type="Money" notnull="yes" label="占用的保证金" description="权利金"/>
+	</Entity>
 	<Entity name="ClientTradeProfit" title="客户合约成交盈亏" description="客户合约成交盈亏">
 		<Ref entity="SettlementGroupSettlementRef"/>
 		<Field name="InstrumentID" type="InstrumentID" notnull="yes" label="合约代码" description="合约的编号" iskey="yes"/>

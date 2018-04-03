@@ -1096,6 +1096,21 @@
 				</Columns>
 				<Index/>
 			</table>
+			<table name="ClientPositionPremium" title="客户持仓权利金" description="客户持仓权利金">
+				<Columns>
+					<Column name="TradingDay" type="varchar2(8)" label="交易日" description="交易发生的日期" notnull="yes" iskey="yes" originaltype="Date" basetype="VString" length="8" precision="0"/>
+					<Column name="SettlementGroupID" type="varchar2(8)" label="结算组代码" description="一个结算组的编号" notnull="yes" iskey="yes" originaltype="SettlementGroupID" basetype="VString" length="8" precision="0"/>
+					<Column name="SettlementID" type="number(3)" label="结算编号" description="结算编号" notnull="yes" iskey="yes" originaltype="SettlementID" basetype="Int" length="3" precision="0"/>
+					<Column name="ParticipantID" type="varchar2(10)" label="会员代码" description="每一位会员在系统中的编码，编号唯一且遵循交易所制定的编码规则" notnull="yes" iskey="yes" originaltype="ParticipantID" basetype="VString" length="10" precision="0"/>
+					<Column name="ClientID" type="varchar2(10)" label="客户代码" description="客户在系统中的编号，编号唯一且遵循交易所制定的编码规则" notnull="yes" iskey="yes" originaltype="ClientID" basetype="VString" length="10" precision="0"/>
+					<Column name="AccountID" type="varchar2(12)" label="资金帐号" description="本成交所使用的资金帐户" notnull="yes" iskey="yes" originaltype="AccountID" basetype="VString" length="12" precision="0"/>
+					<Column name="InstrumentID" type="varchar2(30)" label="合约代码" description="合约在系统中的编号" notnull="yes" iskey="yes" originaltype="InstrumentID" basetype="VString" length="30" precision="0"/>
+					<Column name="Volume" type="number(10)" label="数量" description="成交数量" notnull="yes" originaltype="Volume" basetype="Int" length="10" precision="0"/>
+					<Column name="UserID" type="varchar2(15)" label="交易用户代码" description="交易员在系统中的编号，编号唯一且遵循交易所制定的编码规则" notnull="no" iskey="yes" originaltype="UserID" basetype="VString" length="15" precision="0"/>
+					<Column name="Premium" type="number(19,3)" label="占用的保证金" description="权利金" notnull="yes" originaltype="Money" basetype="Float" length="19" precision="3"/>
+				</Columns>
+				<Index/>
+			</table>
 		</tables>
 		<tables group="Sync">
 			<table name="TradeSystemBrokerSystem" title="交易系统柜台系统对应关系" description="交易系统柜台系统对应关系">
