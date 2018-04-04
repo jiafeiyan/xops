@@ -92,6 +92,7 @@ class toSyncAll:
         self.__t_CurrPriceBanding(mysqlDB)
         self.__t_Client(mysqlDB)
         self.__t_ClientPosition(mysqlDB)
+        self.__t_FuturePositionDtl(mysqlDB)
 
     def __t_Account(self, mysqlDB):
         table_name = "t_Account"
@@ -406,9 +407,11 @@ class toSyncAll:
         sql = """INSERT INTO sync.t_Curr""" + table_name + """ SELECT t2.TradeSystemID, 
                      t.SettlementGroupID,TradingSegmentSN,TradingSegmentName,
                      StartTime,InstrumentStatus,
-                     CASE WHEN DayOffset = -1 THEN DATEDIFF(DATE_FORMAT(NOW(), '%Y%m%d'), 
-                    t3.TradingDay
-                    ) ELSE DayOffset END as DayOffset,
+                     CASE WHEN DayOffset = -1 THEN IF(DATEDIFF(DATE_FORMAT(NOW(), '%Y%m%d'), 
+                        t3.TradingDay
+                        ) = 0, DayOffset, DATEDIFF(DATE_FORMAT(NOW(), '%Y%m%d'), 
+                        t3.TradingDay
+                    )) ELSE DayOffset END as DayOffset,
                      InstrumentID
                      FROM siminfo.t_""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2 , siminfo.t_tradesystemtradingday t3  
                      WHERE t.SettlementGroupID = t2.SettlementGroupID
@@ -591,6 +594,29 @@ class toSyncAll:
                            FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
                            WHERE t.SettlementGroupID = t2.SettlementGroupID 
                            AND t2.TradeSystemID=%s"""
+        trans = [dict(sql=delete, params=(self.tradeSystemID,)),
+                 dict(sql=sql, params=(self.tradeSystemID,))]
+        mysqlDB.executetransaction(trans)
+
+    def __t_FuturePositionDtl(self, mysqlDB):
+        table_name = "t_FuturePositionDtl"
+        self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
+        delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
+        self.logger.info("同步" + table_name + " ==>> sync")
+        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,t.TradingDay,t.SettlementGroupID,
+                                                          t.SettlementID,t.InstrumentID,t.ParticipantID,t.ClientID,
+                                                          t.HedgeFlag,t.Direction,t.OpenDate,t.TradeID,t.Volume,
+                                                          t.OpenPrice,t.TradeType,t.CombInstrumentID,t.ExchangeID,
+                                                          t.CloseProfitByDate,t.CloseProfitByTrade,
+                                                          t.PositionProfitByDate,t.PositionProfitByTrade,t.Margin,
+                                                          t.ExchMargin,t.MarginRateByMoney,t.MarginRateByVolume,
+                                                          t.LastSettlementPrice,t.SettlementPrice,t.CloseVolume,
+                                                          t.CloseAmount,t3.InvestorID
+                          FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2, siminfo.t_investorclient t3
+                           WHERE t.SettlementGroupID = t2.SettlementGroupID 
+                             and t.SettlementGroupID = t3.SettlementGroupID
+                             and t.ClientID = t3.ClientID
+                           AND t2.TradeSystemID = %s"""
         trans = [dict(sql=delete, params=(self.tradeSystemID,)),
                  dict(sql=sql, params=(self.tradeSystemID,))]
         mysqlDB.executetransaction(trans)

@@ -61,8 +61,7 @@ class exchange_future_csv:
         self.__data_to_csv("t_TradingAccountPassword", mysqlDB)
         self.__data_to_csv("t_TradingCode", mysqlDB)
         self.__data_to_csv("t_UserRightsAssign", mysqlDB)
-        # todo
-        # self.__data_to_csv("t_InvestorPositionDtl", mysqlDB)
+        self.__data_to_csv("t_InvestorPositionDtl", mysqlDB)
 
     def __data_to_csv(self, table_name, mysqlDB):
         table_sqls = dict(
@@ -170,8 +169,8 @@ class exchange_future_csv:
                                                 t.InvestorID AS AccountID,
                                                 '0' AS PreMortgage,
                                                 '0' AS PreCredit,
-                                                '1000000' AS PreDeposit,
-                                                '1000000' AS PreBalance,
+                                                t.Balance AS PreDeposit,
+                                                t.Balance AS PreBalance,
                                                 t.PreMargin,
                                                 '0' AS InterestBase,
                                                 '0' AS Interest,
@@ -318,12 +317,22 @@ class exchange_future_csv:
                                                      "OpenRatioByMoney", "OpenRatioByVolume", "CloseRatioByMoney",
                                                      "CloseRatioByVolume", "CloseTodayRatioByMoney",
                                                      "CloseTodayRatioByVolume"),
-                                            sql="""SELECT t.InstrumentID,'1' AS InvestorRange,'10010' AS BrokerID,
-                                                        '00000000' AS InvestorID,'0' AS OpenRatioByMoney,
-                                                        '12' AS OpenRatioByVolume,'0' AS CloseRatioByMoney,
-                                                        '12' AS CloseRatioByVolume,'0' AS CloseTodayRatioByMoney,
-                                                        '12' AS CloseTodayRatioByVolume
-                                                    FROM siminfo.t_Instrument t WHERE t.SettlementGroupID IN """ +
+                                            sql="""SELECT t.InstrumentID,
+                                                '1' AS InvestorRange,
+                                                '10010' AS BrokerID,
+                                                '00000000' AS InvestorID,
+                                                if (t1.ValueMode = '1', t1.OpenFeeRatio , '0') as OpenRatioByMoney,
+                                                if (t1.ValueMode = '2', t1.OpenFeeRatio , '0') as OpenRatioByVolume,
+                                                if (t1.ValueMode = '1', t1.CloseTodayFeeRatio , '0') as CloseRatioByMoney,
+                                                if (t1.ValueMode = '2', t1.CloseTodayFeeRatio , '0') as CloseRatioByVolume,
+                                                if (t1.ValueMode = '1', t1.CloseTodayFeeRatio , '0') as CloseTodayRatioByMoney,
+                                                if (t1.ValueMode = '2', t1.CloseTodayFeeRatio , '0') as CloseTodayRatioByVolume 
+                                            FROM
+                                                siminfo.t_Instrument t,
+                                                siminfo.t_transfeeratedetail t1 
+                                            WHERE t.SettlementGroupID = t1.SettlementGroupID
+                                                and t.InstrumentID = t1.InstrumentID
+                                                and t.SettlementGroupID IN """ +
                                                 str(tuple([str(i) for i in self.settlementGroupID])),
                                             quoting=True),
             t_Trader=dict(columns=("ExchangeID", "TraderID", "ParticipantID", "Password", "InstallCount", "BrokerID"),
@@ -383,7 +392,7 @@ class exchange_future_csv:
                                                     t.InvestorID AS AccountID,
                                                     t.`Password` AS PASSWORD,
                                                     'CNY' AS CurrencyID 
-                                                FROM t_investor t""",
+                                                FROM siminfo.t_investor t""",
                                           quoting=True),
             t_TradingCode=dict(columns=("InvestorID", "BrokerID", "ExchangeID", "ClientID", "IsActive", "ClientIDType"),
                                sql="""SELECT t.InvestorID,'10010' AS BrokerID,t1.ExchangeID,t.ClientID,
@@ -400,6 +409,7 @@ class exchange_future_csv:
                                             UNION ALL 
                                             SELECT '10010' AS BrokerID,'10010_admin' AS UserID,'1' AS DRIdentityID """,
                                     quoting=True),
+
             t_InvestorPositionDtl=dict(columns=("InstrumentID", "BrokerID", "InvestorID", "HedgeFlag", "Direction",
                                                 "OpenDate", "TradeID", "Volume", "OpenPrice", "TradingDay",
                                                 "SettlementID", "TradeType", "CombInstrumentID", "ExchangeID",
@@ -407,7 +417,14 @@ class exchange_future_csv:
                                                 "PositionProfitByTrade", "Margin", "ExchMargin", "MarginRateByMoney",
                                                 "MarginRateByVolume", "LastSettlementPrice", "SettlementPrice",
                                                 "CloseVolume", "CloseAmount"),
-                                       sql="""""" +
+                                       sql="""select InstrumentID,'10010' as BrokerID,InvestorID,HedgeFlag,Direction,
+                                                    OpenDate,TradeID,Volume,OpenPrice,TradingDay,SettlementID,TradeType,
+                                                    CombInstrumentID,ExchangeID,CloseProfitByDate,CloseProfitByTrade,
+                                                    PositionProfitByDate,PositionProfitByTrade,Margin,ExchMargin,
+                                                    MarginRateByMoney,MarginRateByVolume,LastSettlementPrice,
+                                                    SettlementPrice,CloseVolume,CloseAmount 
+                                                    from sync.t_futurepositiondtl
+                                                where SettlementGroupID in """ +
                                            str(tuple([str(i) for i in self.settlementGroupID])),
                                        quoting=True),
         )
