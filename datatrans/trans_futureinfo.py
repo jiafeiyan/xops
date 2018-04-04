@@ -35,13 +35,10 @@ class trans_futureinfo:
         exchange_conf = dict()
         for row in res:
             exchange_conf.update({str(row[0]): str(row[1])})
+        exchange_conf.update({"INE": "SG99"})
         return exchange_conf
 
     def __transform(self):
-        # 读取csv文件
-        csvs = self.__check_file()
-        if csvs is None:
-            return
         mysqlDB = self.mysqlDB
         # 查询当前交易日
         sql = """SELECT tradingday FROM siminfo.t_tradesystemtradingday WHERE tradesystemid = %s"""
@@ -49,6 +46,11 @@ class trans_futureinfo:
         current_trading_day = fc[0][0]
         self.TradingDay = current_trading_day
         self.logger.info("[trans_futureinfo] current_trading_day = %s" % current_trading_day)
+
+        # 读取csv文件
+        csvs = self.__check_file()
+        if csvs is None:
+            return
 
         if csvs[0] is not None:
             # ===========处理instrument.csv写入t_Instrument表==============
@@ -63,15 +65,18 @@ class trans_futureinfo:
             # ===========处理instrument.csv写入t_MarginRateDetail表==============
             self.__t_MarginRateDetail(mysqlDB=mysqlDB, csv_file=csvs[0])
 
-            # ===========处理instrument.csv写入t_PriceBanding表==============
-            self.__t_PriceBanding(mysqlDB=mysqlDB, csv_file=csvs[0])
-
             # ===========判断并写入t_InstrumentProperty表==============
             self.__t_InstrumentProperty(mysqlDB=mysqlDB, csv_file=csvs[0])
+
+            # ===========判断并写入t_TransFeeRateDetail表==============
+            self.__t_TransFeeRateDetail(mysqlDB=mysqlDB, csv_file=csvs[0])
 
         if csvs[2] is not None:
             # ===========写入t_MarketData表 ==============
             self.__t_MarketData(mysqlDB=mysqlDB, csv_file=csvs[2])
+
+            # ===========写入t_PriceBanding表==============
+            self.__t_PriceBanding(mysqlDB=mysqlDB, csv_file=csvs[2])
 
     def __t_Instrument(self, mysqlDB, csv_file):
         mysql_conn = mysqlDB.get_cnx()
@@ -92,18 +97,25 @@ class trans_futureinfo:
                                            )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
             sql_insert_params = []
             for future in islice(csv_file, 1, None):
+                # 去除组合合约
                 if "&" in future["ProductID"]:
                     continue
                 SGID = self.exchange_conf[future["ExchangeID"]]
                 ProductID = future["ProductID"]
+                ProductClass = future["ProductClass"]
+                UnderlyingInstrID = None
+                # 判断是否为期权
+                if ProductClass == '2':
+                    UnderlyingInstrID = future["UnderlyingInstrID"]
                 sql_insert_params.append((SGID, ProductID,
-                                          ProductID, ProductID,
-                                          future["ProductClass"], "2",
-                                          future["StrikePrice"], future["PositionType"],
+                                          ProductID, UnderlyingInstrID,
+                                          ProductClass, future["PositionType"],
+                                          future["StrikePrice"], future["OptionsType"],
                                           future["VolumeMultiple"],
                                           "0" if future["UnderlyingMultiple"] is None else future["UnderlyingMultiple"],
                                           future["InstrumentID"],
-                                          future["InstrumentName"].decode(encoding='gbk', errors='ignore').encode(encoding='utf8'),
+                                          future["InstrumentName"].decode(encoding='gbk', errors='ignore').encode(
+                                              encoding='utf8'),
                                           future["DeliveryYear"], future["DeliveryMonth"], "012"))
             cursor.executemany(sql_insert_futures, sql_insert_params)
             mysql_conn.commit()
@@ -333,6 +345,56 @@ class trans_futureinfo:
                       template[9], template[10])
         return params
 
+    def __t_TransFeeRateDetail(self, mysqlDB, csv_file):
+        mysql_conn = mysqlDB.get_cnx()
+        mysql_conn.start_transaction()
+        try:
+            # 获取模板文件
+            template = self.__loadJSON(tableName='t_TransFeeRateDetail')
+            if template is None:
+                self.logger.error("t_TransFeeRateDetail template is None")
+                return
+            cursor = mysql_conn.cursor()
+            # 删除期货交易所下所有数据
+            cursor.execute("delete from siminfo.t_transfeeratedetail where SettlementGroupID in "
+                           + str(tuple([str(i) for i in self.exchange_conf.values()])))
+            sql_insert_detail = """insert into siminfo.t_transfeeratedetail(
+                                    SettlementGroupID,TradingRole,HedgeFlag,ValueMode,OpenFeeRatio,
+                                    CloseYesterdayFeeRatio,CloseTodayFeeRatio,MinOpenFee,MinCloseFee,
+                                    MaxOpenFee,MaxCloseFee,InstrumentID,ParticipantID,
+                                    ClientID) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
+            sql_insert_params = []
+            for future in islice(csv_file, 1, None):
+                if "&" in future["ProductID"]:
+                    continue
+                SGID = self.exchange_conf[future["ExchangeID"]]
+                if SGID in template:
+                    sql_insert_params.append(
+                    self.__get_trans_fee_rate_detail(attr=template[SGID],
+                                                  product=future["ProductID"],
+                                                  instrument=future["InstrumentID"]))
+            cursor.executemany(sql_insert_detail, sql_insert_params)
+            mysql_conn.commit()
+        finally:
+            mysql_conn.close()
+        self.logger.info("写入t_TransFeeRateDetail完成")
+
+    # 通过产品代码生成目标合约的保证金率
+    def __get_trans_fee_rate_detail(self, attr, product, instrument):
+        template = attr["template"]
+        trans_fee = attr["transFee"]
+        # 判断产品代码是否存在于模版
+        if product in trans_fee.keys():
+            params = (template[0], template[1], template[2], trans_fee[product][1],
+                      trans_fee[product][0], trans_fee[product][0], trans_fee[product][0],
+                      template[7], template[8], template[9], template[10], instrument, template[12],
+                      template[13])
+        else:
+            params = (template[0], template[1], template[2], template[3], template[4], template[5], template[6],
+                      template[7], template[8], template[9], template[10], instrument, template[12],
+                      template[13])
+        return params
+
     def __t_PriceBanding(self, mysqlDB, csv_file):
         mysql_conn = mysqlDB.get_cnx()
         mysql_conn.start_transaction()
@@ -352,13 +414,18 @@ class trans_futureinfo:
                             ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)"""
             sql_insert_params = []
             for future in islice(csv_file, 1, None):
-                if "&" in future["ProductID"]:
-                    continue
                 SGID = self.exchange_conf[future["ExchangeID"]]
-                if SGID in template:
-                    sql_insert_params.append((SGID, template[SGID][1], template[SGID][2], template[SGID][3],
-                                              template[SGID][4], template[SGID][5], future["InstrumentID"],
-                                              template[SGID][7]))
+                if future["ExchangeID"] != 'INE' and float(future["PreSettlementPrice"]) != 0:
+                    if SGID == 'SG06':
+                        sql_insert_params.append((SGID, template[SGID][1], template[SGID][2], template[SGID][3],
+                                                  template[SGID][4], template[SGID][5], future["InstrumentID"],
+                                                  template[SGID][7]))
+                    else:
+                        DailyPriceUpLimit = float(future['UpperLimitPrice']) - float(future['PreSettlementPrice'])
+                        DailyPriceDownLimit = float(future['PreSettlementPrice']) - float(future['LowerLimitPrice'])
+                        sql_insert_params.append((SGID, template[SGID][1], "2", template[SGID][3],
+                                                  DailyPriceUpLimit, DailyPriceDownLimit, future["InstrumentID"],
+                                                  template[SGID][7]))
             cursor.executemany(sql_insert_price, sql_insert_params)
             mysql_conn.commit()
         finally:
@@ -422,7 +489,7 @@ class trans_futureinfo:
                 SGID = self.exchange_conf[future["ExchangeID"]]
                 sql_params.append(
                     (self.TradingDay, SGID, None, future["PreSettlementPrice"], future["PreClosePrice"],
-                     future["PreOpenInterest"], None, 
+                     future["PreOpenInterest"], None,
                      None, None, None, None,
                      None, None, None,
                      None, None, future["PreDelta"],
@@ -441,8 +508,7 @@ class trans_futureinfo:
             return None
         # 获取文件路径
         catalog = env_dist['HOME']
-        now = datetime.datetime.now().strftime("%Y%m%d")
-        catalog = '%s%s%s%s%s' % (catalog, os.path.sep, 'sim_data', os.path.sep, now)
+        catalog = '%s%s%s%s%s' % (catalog, os.path.sep, 'sim_data', os.path.sep, self.TradingDay)
         instrument = '%s%s%s' % (catalog, os.path.sep, self.file_instrument)
         product = '%s%s%s' % (catalog, os.path.sep, self.file_product)
         depthmarketdata = '%s%s%s' % (catalog, os.path.sep, self.file_marketdata)
@@ -455,9 +521,9 @@ class trans_futureinfo:
             self.logger.error("%s%s" % (product, " is not exists"))
             product = None
         # 判断depthmarketdata.csv文件是否存在，不存在设置为空
-        if not os.path.exists(product):
+        if not os.path.exists(depthmarketdata):
             self.logger.error("%s%s" % (depthmarketdata, " is not exists"))
-            product = None
+            depthmarketdata = None
         # 读取CSV文件
         if file_name is None:
             return self.__loadCSV(instrument), self.__loadCSV(product), self.__loadCSV(depthmarketdata)
@@ -469,7 +535,10 @@ class trans_futureinfo:
             return self.__loadCSV(depthmarketdata)
 
     def __loadCSV(self, csv_file):
-        return [row for row in csv.DictReader(open(csv_file))]
+        if csv_file is None:
+            return None
+        else:
+            return [row for row in csv.DictReader(open(csv_file))]
 
     # 主要读取template数据
     def __loadJSON(self, tableName):

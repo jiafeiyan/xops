@@ -29,10 +29,6 @@ class trans_stockinfo:
         self.__transform()
 
     def __transform(self):
-        # 读取txt文件(‘ES’表示股票；‘EU’表示基金；‘D’表示债券； ‘RWS’表示权证；‘FF’表示期货。（参考ISO10962），集合资产管理计划、债券预发行取‘D’)
-        stock_list = self.__check_file()
-        if stock_list is None:
-            return
         mysqlDB = self.mysqlDB
         # 查询当前交易日
         sql = """SELECT tradingday FROM siminfo.t_tradesystemtradingday WHERE tradesystemid = %s"""
@@ -41,6 +37,10 @@ class trans_stockinfo:
         self.TradingDay = current_trading_day
         self.logger.info("[trans_stockinfo] current_trading_day = %s" % current_trading_day)
 
+        # 读取txt文件(‘ES’表示股票；‘EU’表示基金；‘D’表示债券； ‘RWS’表示权证；‘FF’表示期货。（参考ISO10962），集合资产管理计划、债券预发行取‘D’)
+        stock_list = self.__check_file()
+        if stock_list is None:
+            return
         for settlement_group in stock_list:
             self.logger.info("==========trans %s 数据===========" % settlement_group)
             stock_data = stock_list[settlement_group]
@@ -89,35 +89,14 @@ class trans_stockinfo:
                 ProductID = 'ZQ_SZ'
                 ProductGroupID = 'ZQ'
             for stock in stock_data:
-                if settlement_group == "SG01":
-                    if stock.ZQLB != "ES":
-                        sql_insert_params.append((settlement_group,
-                                                  ProductID,
-                                                  ProductGroupID,
-                                                  ProductID,
-                                                  "4", "2", None, "0",
-                                                  1, 1, 0, 0,
-                                                  stock.ZQDM, stock.ZWMC,
-                                                  2099, 12, "012"))
-                    else:
-                        sql_insert_params.append((settlement_group,
-                                                  ProductID,
-                                                  ProductGroupID,
-                                                  ProductID,
-                                                  "3", "1", None, "0",
-                                                  1, 1, 0, 0,
-                                                  stock.ZQDM, stock.ZWMC,
-                                                  2099, 12, "012"))
-                elif settlement_group == "SG02":
-                    sql_insert_params.append((settlement_group,
-                                              ProductID,
-                                              ProductGroupID,
-                                              ProductID,
-                                              "4", "2", None, "0",
-                                              1, 1, 0, 0,
-                                              stock.ZQDM, stock.ZWMC,
-                                              2099, 12, "012"))
-
+                sql_insert_params.append((settlement_group,
+                                          ProductID,
+                                          ProductGroupID,
+                                          ProductID,
+                                          "4", "2", None, "0",
+                                          1, 1, 0, 0,
+                                          stock.ZQDM, stock.ZWMC,
+                                          2099, 12, "012"))
             cursor.executemany(sql_insert_instrument, sql_insert_params)
             mysql_conn.commit()
         finally:
@@ -305,15 +284,14 @@ class trans_stockinfo:
             return None
         # 获取文件路径
         catalog = env_dist['HOME']
-        now = datetime.datetime.now().strftime("%Y%m%d")
         # 文件路径
-        catalog = '%s%s%s%s%s' % (catalog, os.path.sep, 'sim_data', os.path.sep, now)
+        catalog = '%s%s%s%s%s' % (catalog, os.path.sep, 'sim_data', os.path.sep, self.TradingDay)
         stock_data = dict()
         # 遍历导入文件
         for sgid in self.stock_filename:
             stock_path = self.stock_filename.get(sgid)
             for index, enum_file in enumerate(stock_path):
-                stock_path[index] = '%s%s%s' % (catalog, os.path.sep, enum_file.replace("%y", now[0:4]).replace("%m", now[4:6]).replace("%d", now[6:8]),)
+                stock_path[index] = '%s%s%s' % (catalog, os.path.sep, enum_file.replace("%y", self.TradingDay[0:4]).replace("%m", self.TradingDay[4:6]).replace("%d", self.TradingDay[6:8]),)
                 # 判断文件是否存在
                 if not os.path.exists(stock_path[index]):
                     self.logger.error("%s%s" % (stock_path[index], " is not exists"))

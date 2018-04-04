@@ -29,10 +29,6 @@ class trans_etfinfo:
         self.__transform()
 
     def __transform(self):
-        etf_list = self.__check_file()
-        if etf_list is None:
-            return
-
         mysqlDB = self.mysqlDB
         # 查询当前交易日
         sql = """SELECT tradingday FROM siminfo.t_tradesystemtradingday WHERE tradesystemid = %s"""
@@ -40,6 +36,10 @@ class trans_etfinfo:
         current_trading_day = fc[0][0]
         self.TradingDay = current_trading_day
         self.logger.info("[trans_etfinfo] current_trading_day = %s" % current_trading_day)
+
+        etf_list = self.__check_file()
+        if etf_list is None:
+            return
 
         # ===========处理etf_txt写入t_Instrument表==============
         self.__t_Instrument(mysqlDB=mysqlDB, etf_list=etf_list)
@@ -101,7 +101,7 @@ class trans_etfinfo:
                 sql_insert_params.append((self.SettlementGroupID, ProductID,
                                           ProductGroupID, etf.UnderlyingSecurityID,
                                           "2", "2", UnderlyingType, StrikeType, etf.ExercisePrice, OptionsType,
-                                          1, 10000, etf.SecurityID, etf.ContractID, etf.ContractSymbol,
+                                          1, etf.ContractMultiplierUnit, etf.SecurityID, etf.ContractID, etf.ContractSymbol,
                                           etf.DeliveryDate[0:4], etf.DeliveryDate[4:6], "012"))
             cursor.executemany(sql_insert_etf, sql_insert_params)
             mysql_conn.commit()
@@ -291,9 +291,8 @@ class trans_etfinfo:
             return None
         # 获取文件路径
         catalog = env_dist['HOME']
-        now = datetime.datetime.now().strftime("%Y%m%d")
-        catalog = '%s%s%s%s%s' % (catalog, os.path.sep, 'sim_data', os.path.sep, now)
-        etf = '%s%s%s%s%s' % (catalog, os.path.sep, self.etf_filename, now[4:8], '.txt')
+        catalog = '%s%s%s%s%s' % (catalog, os.path.sep, 'sim_data', os.path.sep, self.TradingDay)
+        etf = '%s%s%s%s%s' % (catalog, os.path.sep, self.etf_filename, self.TradingDay[4:8], '.txt')
         # 判断reff03MMDD.txt文件是否存在
         if not os.path.exists(etf):
             self.logger.error("%s%s" % (etf, " is not exists"))
