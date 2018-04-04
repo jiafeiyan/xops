@@ -157,3 +157,6 @@ drop table IF EXISTS snap.t_S_InvestorFund;
 -- 删除会员资金表
 drop table IF EXISTS snap.t_S_PartFund;
 
+-- 删除期货合约持仓明细表
+drop table IF EXISTS snap.t_S_FuturePositionDtl;
+

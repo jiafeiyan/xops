@@ -26,7 +26,7 @@
 	<VString typename="InvestorName" length="20" label="投资者名称"/>
 	<VString typename="ClientID" length="10" label="客户代码"/>
 	<VString typename="InstrumentID" length="30" label="合约代码"/>
-	<VString typename="ProductID" length="8" label="产品代码"/>
+	<VString typename="ProductID" length="16" label="产品代码"/>
 	<VString typename="ProductName" length="20" label="产品名称"/>
 	<VString typename="ExchangeID" length="8" label="交易所代码"/>
 	<VString typename="ExchangeName" length="30" label="交易所名称"/>

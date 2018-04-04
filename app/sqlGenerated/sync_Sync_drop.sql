@@ -103,3 +103,6 @@ drop table IF EXISTS sync.t_PartTopicSubscribe;
 -- 删除行情发布状态表
 drop table IF EXISTS sync.t_MdPubStatus;
 
+-- 删除期货合约持仓明细表
+drop table IF EXISTS sync.t_FuturePositionDtl;
+

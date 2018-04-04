@@ -172,6 +172,9 @@ drop table IF EXISTS siminfo.t_ClientPositionForSecurityProfit;
 -- 删除会员合约持仓表
 drop table IF EXISTS siminfo.t_PartPosition;
 
+-- 删除期货合约持仓明细表
+drop table IF EXISTS siminfo.t_FuturePositionDtl;
+
 ----\siminfo_SimInfo_create.sql
 -- ******************************
 -- 创建交易系统表
@@ -281,6 +284,7 @@ create table siminfo.t_Activity
 	,ActivityName   varchar(20) binary  not null COMMENT '赛事活动名称'
 	,ActivityType   varchar(4) binary  not null COMMENT '赛事活动类型'
 	,ActivityStatus   char(1) binary  not null COMMENT '赛事活动状态'
+	,InitialBalance 	   decimal(19,3)    default '100000' not null COMMENT '初始资金'
 	,CreateDate   varchar(8) binary  not null COMMENT '创建日期'
 	,CreateTime   varchar(8) binary  not null COMMENT '创建时间'
 	,BeginDate   varchar(8) binary   COMMENT '开始日期'
@@ -561,7 +565,7 @@ create table siminfo.t_ProductGroup
 create table siminfo.t_Product
 (
 	SettlementGroupID   varchar(8) binary  not null COMMENT '结算组代码'
-	,ProductID   varchar(8) binary  not null COMMENT '产品代码'
+	,ProductID   varchar(16) binary  not null COMMENT '产品代码'
 	,ProductGroupID   varchar(8) binary  not null COMMENT '产品组代码'
 	,ProductName   varchar(20) binary  not null COMMENT '产品名称'
 	,ProductClass   char(1) binary  not null COMMENT '产品类型'
@@ -576,7 +580,7 @@ create table siminfo.t_Product
 create table siminfo.t_ProductProperty
 (
 	SettlementGroupID   varchar(8) binary  not null COMMENT '结算组代码'
-	,ProductID   varchar(8) binary  not null COMMENT '产品代码'
+	,ProductID   varchar(16) binary  not null COMMENT '产品代码'
 	,ProductLifePhase   char(1) binary  not null COMMENT '产品生命周期状态'
 	,TradingModel   char(1) binary  not null COMMENT '交易模式'
 	,OptionsLimitRatio 	   decimal(22,6)    COMMENT '期权限仓系数'
@@ -606,7 +610,7 @@ create table siminfo.t_InstrumentGroup
 create table siminfo.t_Instrument
 (
 	SettlementGroupID   varchar(8) binary  not null COMMENT '结算组代码'
-	,ProductID   varchar(8) binary  not null COMMENT '产品代码'
+	,ProductID   varchar(16) binary  not null COMMENT '产品代码'
 	,ProductGroupID   varchar(8) binary  not null COMMENT '产品组代码'
 	,UnderlyingInstrID   varchar(30) binary   COMMENT '基础商品代码'
 	,ProductClass   char(1) binary  not null COMMENT '产品类型'
@@ -684,7 +688,7 @@ create table siminfo.t_SecurityProfit
 create table siminfo.t_MdPubStatus
 (
 	SettlementGroupID   varchar(8) binary  not null COMMENT '结算组代码'
-	,ProductID   varchar(8) binary  not null COMMENT '产品代码'
+	,ProductID   varchar(16) binary  not null COMMENT '产品代码'
 	,InstrumentStatus   char(1) binary  not null COMMENT '合约交易状态'
 	,MdPubStatus   char(1) binary  not null COMMENT '行情发布状态'
 	  ,PRIMARY KEY (SettlementGroupID,ProductID,InstrumentStatus)
@@ -712,7 +716,7 @@ create table siminfo.t_MarketProduct
 (
 	SettlementGroupID   varchar(8) binary  not null COMMENT '结算组代码'
 	,MarketID   varchar(8) binary  not null COMMENT '市场代码'
-	,ProductID   varchar(8) binary  not null COMMENT '产品代码'
+	,ProductID   varchar(16) binary  not null COMMENT '产品代码'
 	  ,PRIMARY KEY (SettlementGroupID,MarketID,ProductID)
 ) COMMENT='市场产品关联';
 
@@ -784,7 +788,7 @@ create table siminfo.t_PartProductRole
 (
 	SettlementGroupID   varchar(8) binary  not null COMMENT '结算组代码'
 	,ParticipantID   varchar(10) binary  not null COMMENT '会员代码'
-	,ProductID   varchar(8) binary  not null COMMENT '产品代码'
+	,ProductID   varchar(16) binary  not null COMMENT '产品代码'
 	,TradingRole   char(1) binary  not null COMMENT '交易角色'
 	  ,PRIMARY KEY (SettlementGroupID,ParticipantID,ProductID,TradingRole)
 ) COMMENT='会员产品角色';
@@ -797,7 +801,7 @@ create table siminfo.t_PartProductRole
 create table siminfo.t_PartProductRight
 (
 	SettlementGroupID   varchar(8) binary  not null COMMENT '结算组代码'
-	,ProductID   varchar(8) binary  not null COMMENT '产品代码'
+	,ProductID   varchar(16) binary  not null COMMENT '产品代码'
 	,ParticipantID   varchar(10) binary  not null COMMENT '会员代码'
 	,TradingRight   char(1) binary  not null COMMENT '交易权限'
 	  ,PRIMARY KEY (SettlementGroupID,ProductID,ParticipantID)
@@ -811,7 +815,7 @@ create table siminfo.t_PartProductRight
 create table siminfo.t_ClientProductRight
 (
 	SettlementGroupID   varchar(8) binary  not null COMMENT '结算组代码'
-	,ProductID   varchar(8) binary  not null COMMENT '产品代码'
+	,ProductID   varchar(16) binary  not null COMMENT '产品代码'
 	,ClientID   varchar(10) binary  not null COMMENT '客户代码'
 	,TradingRight   char(1) binary  not null COMMENT '交易权限'
 	  ,PRIMARY KEY (SettlementGroupID,ProductID,ClientID)
@@ -1171,6 +1175,43 @@ create table siminfo.t_PartPosition
 
 
 
+-- ******************************
+-- 创建期货合约持仓明细表
+-- ******************************
+create table siminfo.t_FuturePositionDtl
+(
+	TradingDay   varchar(8) binary  not null COMMENT '交易日'
+	,SettlementGroupID   varchar(8) binary  not null COMMENT '结算组代码'
+	,SettlementID   INTEGER   not null COMMENT '结算编号'
+	,InstrumentID   varchar(30) binary  not null COMMENT '合约代码'
+	,ParticipantID   varchar(10) binary  not null COMMENT '会员代码'
+	,ClientID   varchar(10) binary  not null COMMENT '客户代码'
+	,HedgeFlag   char(1) binary  not null COMMENT '投机套保标志'
+	,Direction   char(1) binary  not null COMMENT '买卖方向'
+	,OpenDate   varchar(8) binary  not null COMMENT '开仓日期'
+	,TradeID   varchar(12) binary  not null COMMENT '成交编号'
+	,Volume    bigInt(10)     COMMENT '开仓手数'
+	,OpenPrice 	   decimal(16,6)    COMMENT '开仓价格'
+	,TradeType   char(1) binary  not null COMMENT '成交类型'
+	,CombInstrumentID   varchar(30) binary   COMMENT '组合合约代码'
+	,ExchangeID   varchar(8) binary  not null COMMENT '交易所代码'
+	,CloseProfitByDate 	   decimal(19,3)    COMMENT '逐日平仓盈亏'
+	,CloseProfitByTrade 	   decimal(19,3)    COMMENT '逐笔平仓盈亏'
+	,PositionProfitByDate 	   decimal(19,3)    COMMENT '逐日持仓盈亏'
+	,PositionProfitByTrade 	   decimal(19,3)    COMMENT '逐笔持仓盈亏'
+	,Margin 	   decimal(19,3)    COMMENT '保证金'
+	,ExchMargin 	   decimal(19,3)    COMMENT '交易所保证金'
+	,MarginRateByMoney 	   decimal(22,6)   not null COMMENT '保证金率'
+	,MarginRateByVolume 	   decimal(22,6)   not null COMMENT '逐笔保证金'
+	,LastSettlementPrice 	   decimal(16,6)    COMMENT '昨结算'
+	,SettlementPrice 	   decimal(16,6)    COMMENT '结算价'
+	,CloseVolume    bigInt(10)     COMMENT '平仓手数'
+	,CloseAmount 	   decimal(19,3)    COMMENT '平仓金额'
+	  ,PRIMARY KEY (TradingDay,SettlementGroupID,SettlementID,InstrumentID,ParticipantID,ClientID,HedgeFlag,Direction,OpenDate,TradeID,TradeType)
+) COMMENT='期货合约持仓明细';
+
+
+
 ----\dbclear_DBClear_drop.sql
 -- 删除结算会话表
 drop table IF EXISTS dbclear.t_Settlement;
@@ -1222,6 +1263,9 @@ drop table IF EXISTS dbclear.t_ClientFund;
 
 -- 删除客户持仓权利金表
 drop table IF EXISTS dbclear.t_ClientPositionPremium;
+
+-- 删除期货合约持仓明细表
+drop table IF EXISTS dbclear.t_FuturePositionDtl;
 
 ----\dbclear_DBClear_create.sql
 -- ******************************
@@ -1488,7 +1532,7 @@ create table dbclear.t_ClientDelivFee
 	,ClientID   varchar(10) binary  not null COMMENT '客户代码'
 	,AccountID   varchar(12) binary  not null COMMENT '资金帐号'
 	,ProductGroupID   varchar(8) binary  not null COMMENT '产品组代码'
-	,ProductID   varchar(8) binary  not null COMMENT '产品代码'
+	,ProductID   varchar(16) binary  not null COMMENT '产品代码'
 	,UnderlyingInstrID   varchar(30) binary   COMMENT '基础商品代码'
 	,Position    bigInt(10)    not null COMMENT '交割持仓量'
 	,ValueMode   char(1) binary  not null COMMENT '取值方式'
@@ -1530,7 +1574,7 @@ create table dbclear.t_ClientPositionMargin
 	,ClientID   varchar(10) binary  not null COMMENT '客户代码'
 	,AccountID   varchar(12) binary  not null COMMENT '资金帐号'
 	,ProductGroupID   varchar(8) binary  not null COMMENT '产品组代码'
-	,ProductID   varchar(8) binary  not null COMMENT '产品代码'
+	,ProductID   varchar(16) binary  not null COMMENT '产品代码'
 	,UnderlyingInstrID   varchar(30) binary   COMMENT '基础商品代码'
 	,TradingRole   char(1) binary  not null COMMENT '交易角色'
 	,HedgeFlag   char(1) binary  not null COMMENT '投机套保标志'
@@ -1628,7 +1672,7 @@ create table dbclear.t_ClientTransFee
 	,ClientID   varchar(10) binary  not null COMMENT '客户代码'
 	,AccountID   varchar(12) binary  not null COMMENT '资金帐号'
 	,ProductGroupID   varchar(8) binary  not null COMMENT '产品组代码'
-	,ProductID   varchar(8) binary  not null COMMENT '产品代码'
+	,ProductID   varchar(16) binary  not null COMMENT '产品代码'
 	,UnderlyingInstrID   varchar(30) binary   COMMENT '基础商品代码'
 	,TradeID   varchar(12) binary  not null COMMENT '成交编号'
 	,OrderSysID   varchar(12) binary  not null COMMENT '报单编号'
@@ -1688,6 +1732,43 @@ create table dbclear.t_ClientPositionPremium
 	,Premium 	   decimal(19,3)   not null COMMENT '占用的保证金'
 	  ,PRIMARY KEY (TradingDay,SettlementGroupID,SettlementID,ParticipantID,ClientID,AccountID,InstrumentID,UserID)
 ) COMMENT='客户持仓权利金';
+
+
+
+-- ******************************
+-- 创建期货合约持仓明细表
+-- ******************************
+create table dbclear.t_FuturePositionDtl
+(
+	TradingDay   varchar(8) binary  not null COMMENT '交易日'
+	,SettlementGroupID   varchar(8) binary  not null COMMENT '结算组代码'
+	,SettlementID   INTEGER   not null COMMENT '结算编号'
+	,InstrumentID   varchar(30) binary  not null COMMENT '合约代码'
+	,ParticipantID   varchar(10) binary  not null COMMENT '会员代码'
+	,ClientID   varchar(10) binary  not null COMMENT '客户代码'
+	,HedgeFlag   char(1) binary  not null COMMENT '投机套保标志'
+	,Direction   char(1) binary  not null COMMENT '买卖方向'
+	,OpenDate   varchar(8) binary  not null COMMENT '开仓日期'
+	,TradeID   varchar(12) binary  not null COMMENT '成交编号'
+	,Volume    bigInt(10)     COMMENT '开仓手数'
+	,OpenPrice 	   decimal(16,6)    COMMENT '开仓价格'
+	,TradeType   char(1) binary  not null COMMENT '成交类型'
+	,CombInstrumentID   varchar(30) binary   COMMENT '组合合约代码'
+	,ExchangeID   varchar(8) binary  not null COMMENT '交易所代码'
+	,CloseProfitByDate 	   decimal(19,3)    COMMENT '逐日平仓盈亏'
+	,CloseProfitByTrade 	   decimal(19,3)    COMMENT '逐笔平仓盈亏'
+	,PositionProfitByDate 	   decimal(19,3)    COMMENT '逐日持仓盈亏'
+	,PositionProfitByTrade 	   decimal(19,3)    COMMENT '逐笔持仓盈亏'
+	,Margin 	   decimal(19,3)    COMMENT '保证金'
+	,ExchMargin 	   decimal(19,3)    COMMENT '交易所保证金'
+	,MarginRateByMoney 	   decimal(22,6)   not null COMMENT '保证金率'
+	,MarginRateByVolume 	   decimal(22,6)   not null COMMENT '逐笔保证金'
+	,LastSettlementPrice 	   decimal(16,6)    COMMENT '昨结算'
+	,SettlementPrice 	   decimal(16,6)    COMMENT '结算价'
+	,CloseVolume    bigInt(10)     COMMENT '平仓手数'
+	,CloseAmount 	   decimal(19,3)    COMMENT '平仓金额'
+	  ,PRIMARY KEY (TradingDay,SettlementGroupID,SettlementID,InstrumentID,ParticipantID,ClientID,HedgeFlag,Direction,OpenDate,TradeID,TradeType)
+) COMMENT='期货合约持仓明细';
 
 
 
@@ -1796,6 +1877,9 @@ drop table IF EXISTS sync.t_PartTopicSubscribe;
 
 -- 删除行情发布状态表
 drop table IF EXISTS sync.t_MdPubStatus;
+
+-- 删除期货合约持仓明细表
+drop table IF EXISTS sync.t_FuturePositionDtl;
 
 ----\sync_Sync_create.sql
 -- ******************************
@@ -1991,7 +2075,7 @@ create table sync.t_PartProductRole
 	TradeSystemID   varchar(8) binary  not null COMMENT '交易系统代码'
 	,SettlementGroupID   varchar(8) binary  not null COMMENT '结算组代码'
 	,ParticipantID   varchar(10) binary  not null COMMENT '会员代码'
-	,ProductID   varchar(8) binary  not null COMMENT '产品代码'
+	,ProductID   varchar(16) binary  not null COMMENT '产品代码'
 	,TradingRole   char(1) binary  not null COMMENT '交易角色'
 	  ,PRIMARY KEY (TradeSystemID,SettlementGroupID,ParticipantID,ProductID,TradingRole)
 ) COMMENT='会员产品角色';
@@ -2005,7 +2089,7 @@ create table sync.t_PartProductRight
 (
 	TradeSystemID   varchar(8) binary  not null COMMENT '交易系统代码'
 	,SettlementGroupID   varchar(8) binary  not null COMMENT '结算组代码'
-	,ProductID   varchar(8) binary  not null COMMENT '产品代码'
+	,ProductID   varchar(16) binary  not null COMMENT '产品代码'
 	,ParticipantID   varchar(10) binary  not null COMMENT '会员代码'
 	,TradingRight   char(1) binary  not null COMMENT '交易权限'
 	  ,PRIMARY KEY (TradeSystemID,SettlementGroupID,ProductID,ParticipantID)
@@ -2035,7 +2119,7 @@ create table sync.t_ClientProductRight
 (
 	TradeSystemID   varchar(8) binary  not null COMMENT '交易系统代码'
 	,SettlementGroupID   varchar(8) binary  not null COMMENT '结算组代码'
-	,ProductID   varchar(8) binary  not null COMMENT '产品代码'
+	,ProductID   varchar(16) binary  not null COMMENT '产品代码'
 	,ClientID   varchar(10) binary  not null COMMENT '客户代码'
 	,TradingRight   char(1) binary  not null COMMENT '交易权限'
 	  ,PRIMARY KEY (TradeSystemID,SettlementGroupID,ProductID,ClientID)
@@ -2155,7 +2239,7 @@ create table sync.t_Instrument
 (
 	TradeSystemID   varchar(8) binary  not null COMMENT '交易系统代码'
 	,SettlementGroupID   varchar(8) binary  not null COMMENT '结算组代码'
-	,ProductID   varchar(8) binary  not null COMMENT '产品代码'
+	,ProductID   varchar(16) binary  not null COMMENT '产品代码'
 	,ProductGroupID   varchar(8) binary  not null COMMENT '产品组代码'
 	,UnderlyingInstrID   varchar(30) binary   COMMENT '基础商品代码'
 	,ProductClass   char(1) binary  not null COMMENT '产品类型'
@@ -2351,7 +2435,7 @@ create table sync.t_MarketProduct
 	TradeSystemID   varchar(8) binary  not null COMMENT '交易系统代码'
 	,SettlementGroupID   varchar(8) binary  not null COMMENT '结算组代码'
 	,MarketID   varchar(8) binary  not null COMMENT '市场代码'
-	,ProductID   varchar(8) binary  not null COMMENT '产品代码'
+	,ProductID   varchar(16) binary  not null COMMENT '产品代码'
 	  ,PRIMARY KEY (TradeSystemID,SettlementGroupID,MarketID,ProductID)
 ) COMMENT='市场产品关联';
 
@@ -2412,11 +2496,50 @@ create table sync.t_MdPubStatus
 (
 	TradeSystemID   varchar(8) binary  not null COMMENT '交易系统代码'
 	,SettlementGroupID   varchar(8) binary  not null COMMENT '结算组代码'
-	,ProductID   varchar(8) binary  not null COMMENT '产品代码'
+	,ProductID   varchar(16) binary  not null COMMENT '产品代码'
 	,InstrumentStatus   char(1) binary  not null COMMENT '合约交易状态'
 	,MdPubStatus   char(1) binary  not null COMMENT '行情发布状态'
 	  ,PRIMARY KEY (TradeSystemID,SettlementGroupID,ProductID,InstrumentStatus)
 ) COMMENT='行情发布状态';
+
+
+
+-- ******************************
+-- 创建期货合约持仓明细表
+-- ******************************
+create table sync.t_FuturePositionDtl
+(
+	TradeSystemID   varchar(8) binary  not null COMMENT '交易系统代码'
+	,TradingDay   varchar(8) binary  not null COMMENT '交易日'
+	,SettlementGroupID   varchar(8) binary  not null COMMENT '结算组代码'
+	,SettlementID   INTEGER   not null COMMENT '结算编号'
+	,InstrumentID   varchar(30) binary  not null COMMENT '合约代码'
+	,ParticipantID   varchar(10) binary  not null COMMENT '会员代码'
+	,ClientID   varchar(10) binary  not null COMMENT '客户代码'
+	,HedgeFlag   char(1) binary  not null COMMENT '投机套保标志'
+	,Direction   char(1) binary  not null COMMENT '买卖方向'
+	,OpenDate   varchar(8) binary  not null COMMENT '开仓日期'
+	,TradeID   varchar(12) binary  not null COMMENT '成交编号'
+	,Volume    bigInt(10)     COMMENT '开仓手数'
+	,OpenPrice 	   decimal(16,6)    COMMENT '开仓价格'
+	,TradeType   char(1) binary  not null COMMENT '成交类型'
+	,CombInstrumentID   varchar(30) binary   COMMENT '组合合约代码'
+	,ExchangeID   varchar(8) binary  not null COMMENT '交易所代码'
+	,CloseProfitByDate 	   decimal(19,3)    COMMENT '逐日平仓盈亏'
+	,CloseProfitByTrade 	   decimal(19,3)    COMMENT '逐笔平仓盈亏'
+	,PositionProfitByDate 	   decimal(19,3)    COMMENT '逐日持仓盈亏'
+	,PositionProfitByTrade 	   decimal(19,3)    COMMENT '逐笔持仓盈亏'
+	,Margin 	   decimal(19,3)    COMMENT '保证金'
+	,ExchMargin 	   decimal(19,3)    COMMENT '交易所保证金'
+	,MarginRateByMoney 	   decimal(22,6)   not null COMMENT '保证金率'
+	,MarginRateByVolume 	   decimal(22,6)   not null COMMENT '逐笔保证金'
+	,LastSettlementPrice 	   decimal(16,6)    COMMENT '昨结算'
+	,SettlementPrice 	   decimal(16,6)    COMMENT '结算价'
+	,CloseVolume    bigInt(10)     COMMENT '平仓手数'
+	,CloseAmount 	   decimal(19,3)    COMMENT '平仓金额'
+	,InvestorID   varchar(10) binary  not null COMMENT '投资者代码'
+	  ,PRIMARY KEY (TradeSystemID,TradingDay,SettlementGroupID,SettlementID,InstrumentID,ParticipantID,ClientID,HedgeFlag,Direction,OpenDate,TradeID,TradeType,InvestorID)
+) COMMENT='期货合约持仓明细';
 
 
 
@@ -2580,6 +2703,9 @@ drop table IF EXISTS snap.t_S_InvestorFund;
 -- 删除会员资金表
 drop table IF EXISTS snap.t_S_PartFund;
 
+-- 删除期货合约持仓明细表
+drop table IF EXISTS snap.t_S_FuturePositionDtl;
+
 ----\snap_Snap_create.sql
 -- ******************************
 -- 创建交易系统表
@@ -2685,6 +2811,7 @@ create table snap.t_S_Activity
 	,ActivityName   varchar(20) binary  not null COMMENT '赛事活动名称'
 	,ActivityType   varchar(4) binary  not null COMMENT '赛事活动类型'
 	,ActivityStatus   char(1) binary  not null COMMENT '赛事活动状态'
+	,InitialBalance 	   decimal(19,3)    default '100000' not null COMMENT '初始资金'
 	,CreateDate   varchar(8) binary  not null COMMENT '创建日期'
 	,CreateTime   varchar(8) binary  not null COMMENT '创建时间'
 	,BeginDate   varchar(8) binary   COMMENT '开始日期'
@@ -2964,7 +3091,7 @@ create table snap.t_S_Product
 (
 	TradingDay   varchar(8) binary  not null COMMENT '交易日'
 	,SettlementGroupID   varchar(8) binary  not null COMMENT '结算组代码'
-	,ProductID   varchar(8) binary  not null COMMENT '产品代码'
+	,ProductID   varchar(16) binary  not null COMMENT '产品代码'
 	,ProductGroupID   varchar(8) binary  not null COMMENT '产品组代码'
 	,ProductName   varchar(20) binary  not null COMMENT '产品名称'
 	,ProductClass   char(1) binary  not null COMMENT '产品类型'
@@ -2980,7 +3107,7 @@ create table snap.t_S_ProductProperty
 (
 	TradingDay   varchar(8) binary  not null COMMENT '交易日'
 	,SettlementGroupID   varchar(8) binary  not null COMMENT '结算组代码'
-	,ProductID   varchar(8) binary  not null COMMENT '产品代码'
+	,ProductID   varchar(16) binary  not null COMMENT '产品代码'
 	,ProductLifePhase   char(1) binary  not null COMMENT '产品生命周期状态'
 	,TradingModel   char(1) binary  not null COMMENT '交易模式'
 	,OptionsLimitRatio 	   decimal(22,6)    COMMENT '期权限仓系数'
@@ -3012,7 +3139,7 @@ create table snap.t_S_Instrument
 (
 	TradingDay   varchar(8) binary  not null COMMENT '交易日'
 	,SettlementGroupID   varchar(8) binary  not null COMMENT '结算组代码'
-	,ProductID   varchar(8) binary  not null COMMENT '产品代码'
+	,ProductID   varchar(16) binary  not null COMMENT '产品代码'
 	,ProductGroupID   varchar(8) binary  not null COMMENT '产品组代码'
 	,UnderlyingInstrID   varchar(30) binary   COMMENT '基础商品代码'
 	,ProductClass   char(1) binary  not null COMMENT '产品类型'
@@ -3108,7 +3235,7 @@ create table snap.t_S_MarketProduct
 	TradingDay   varchar(8) binary  not null COMMENT '交易日'
 	,SettlementGroupID   varchar(8) binary  not null COMMENT '结算组代码'
 	,MarketID   varchar(8) binary  not null COMMENT '市场代码'
-	,ProductID   varchar(8) binary  not null COMMENT '产品代码'
+	,ProductID   varchar(16) binary  not null COMMENT '产品代码'
 	  ,PRIMARY KEY (TradingDay,SettlementGroupID,MarketID,ProductID)
 ) COMMENT='市场产品关联';
 
@@ -3185,7 +3312,7 @@ create table snap.t_S_PartProductRole
 	TradingDay   varchar(8) binary  not null COMMENT '交易日'
 	,SettlementGroupID   varchar(8) binary  not null COMMENT '结算组代码'
 	,ParticipantID   varchar(10) binary  not null COMMENT '会员代码'
-	,ProductID   varchar(8) binary  not null COMMENT '产品代码'
+	,ProductID   varchar(16) binary  not null COMMENT '产品代码'
 	,TradingRole   char(1) binary  not null COMMENT '交易角色'
 	  ,PRIMARY KEY (TradingDay,SettlementGroupID,ParticipantID,ProductID,TradingRole)
 ) COMMENT='会员产品角色';
@@ -3199,7 +3326,7 @@ create table snap.t_S_PartProductRight
 (
 	TradingDay   varchar(8) binary  not null COMMENT '交易日'
 	,SettlementGroupID   varchar(8) binary  not null COMMENT '结算组代码'
-	,ProductID   varchar(8) binary  not null COMMENT '产品代码'
+	,ProductID   varchar(16) binary  not null COMMENT '产品代码'
 	,ParticipantID   varchar(10) binary  not null COMMENT '会员代码'
 	,TradingRight   char(1) binary  not null COMMENT '交易权限'
 	  ,PRIMARY KEY (TradingDay,SettlementGroupID,ProductID,ParticipantID)
@@ -3214,7 +3341,7 @@ create table snap.t_S_ClientProductRight
 (
 	TradingDay   varchar(8) binary  not null COMMENT '交易日'
 	,SettlementGroupID   varchar(8) binary  not null COMMENT '结算组代码'
-	,ProductID   varchar(8) binary  not null COMMENT '产品代码'
+	,ProductID   varchar(16) binary  not null COMMENT '产品代码'
 	,ClientID   varchar(10) binary  not null COMMENT '客户代码'
 	,TradingRight   char(1) binary  not null COMMENT '交易权限'
 	  ,PRIMARY KEY (TradingDay,SettlementGroupID,ProductID,ClientID)
@@ -3572,6 +3699,43 @@ create table snap.t_S_PartFund
 	,Profit 	   decimal(19,3)   not null COMMENT '盈亏'
 	  ,PRIMARY KEY (TradingDay,SettlementGroupID,SettlementID,InstrumentID,ParticipantID,AccountID)
 ) COMMENT='会员资金';
+
+
+
+-- ******************************
+-- 创建期货合约持仓明细表
+-- ******************************
+create table snap.t_S_FuturePositionDtl
+(
+	TradingDay   varchar(8) binary  not null COMMENT '交易日'
+	,SettlementGroupID   varchar(8) binary  not null COMMENT '结算组代码'
+	,SettlementID   INTEGER   not null COMMENT '结算编号'
+	,InstrumentID   varchar(30) binary  not null COMMENT '合约代码'
+	,ParticipantID   varchar(10) binary  not null COMMENT '会员代码'
+	,ClientID   varchar(10) binary  not null COMMENT '客户代码'
+	,HedgeFlag   char(1) binary  not null COMMENT '投机套保标志'
+	,Direction   char(1) binary  not null COMMENT '买卖方向'
+	,OpenDate   varchar(8) binary  not null COMMENT '开仓日期'
+	,TradeID   varchar(12) binary  not null COMMENT '成交编号'
+	,Volume    bigInt(10)     COMMENT '开仓手数'
+	,OpenPrice 	   decimal(16,6)    COMMENT '开仓价格'
+	,TradeType   char(1) binary  not null COMMENT '成交类型'
+	,CombInstrumentID   varchar(30) binary   COMMENT '组合合约代码'
+	,ExchangeID   varchar(8) binary  not null COMMENT '交易所代码'
+	,CloseProfitByDate 	   decimal(19,3)    COMMENT '逐日平仓盈亏'
+	,CloseProfitByTrade 	   decimal(19,3)    COMMENT '逐笔平仓盈亏'
+	,PositionProfitByDate 	   decimal(19,3)    COMMENT '逐日持仓盈亏'
+	,PositionProfitByTrade 	   decimal(19,3)    COMMENT '逐笔持仓盈亏'
+	,Margin 	   decimal(19,3)    COMMENT '保证金'
+	,ExchMargin 	   decimal(19,3)    COMMENT '交易所保证金'
+	,MarginRateByMoney 	   decimal(22,6)   not null COMMENT '保证金率'
+	,MarginRateByVolume 	   decimal(22,6)   not null COMMENT '逐笔保证金'
+	,LastSettlementPrice 	   decimal(16,6)    COMMENT '昨结算'
+	,SettlementPrice 	   decimal(16,6)    COMMENT '结算价'
+	,CloseVolume    bigInt(10)     COMMENT '平仓手数'
+	,CloseAmount 	   decimal(19,3)    COMMENT '平仓金额'
+	  ,PRIMARY KEY (TradingDay,SettlementGroupID,SettlementID,InstrumentID,ParticipantID,ClientID,HedgeFlag,Direction,OpenDate,TradeID,TradeType)
+) COMMENT='期货合约持仓明细';
 
 
 

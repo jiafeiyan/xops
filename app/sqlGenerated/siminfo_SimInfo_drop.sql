@@ -171,3 +171,6 @@ drop table IF EXISTS siminfo.t_ClientPositionForSecurityProfit;
 -- 删除会员合约持仓表
 drop table IF EXISTS siminfo.t_PartPosition;
 
+-- 删除期货合约持仓明细表
+drop table IF EXISTS siminfo.t_FuturePositionDtl;
+

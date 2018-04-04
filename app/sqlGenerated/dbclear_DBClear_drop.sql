@@ -49,3 +49,6 @@ drop table IF EXISTS dbclear.t_ClientFund;
 -- 删除客户持仓权利金表
 drop table IF EXISTS dbclear.t_ClientPositionPremium;
 
+-- 删除期货合约持仓明细表
+drop table IF EXISTS dbclear.t_FuturePositionDtl;
+
