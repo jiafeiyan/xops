@@ -279,7 +279,9 @@ def sett_future(logger, cursor, current_trading_day, next_trading_day, settlemen
                                          t1.tradingrole,
                                          t3.accountid
                                        from siminfo.t_client t1, siminfo.t_partclient t2, siminfo.t_partroleaccount t3
-                                       where t1.clientid = t2.clientid
+                                       where t1.SettlementGroupID = t2.SettlementGroupID
+                                       and t1.SettlementGroupID = t3.SettlementGroupID 
+                                       and t1.clientid = t2.clientid
                                        and t2.participantid = t3.participantid
                                        and t1.tradingrole = t3.tradingrole
                                        and t3.settlementgroupid = %s) t3, siminfo.t_instrument t4
