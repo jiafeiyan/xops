@@ -58,22 +58,23 @@ def settle_etf(context, conf):
             # 更新标的收盘价
             logger.info("[calculate settlement price] is processing......")
             sql = """UPDATE dbclear.t_marketdata t1,
-                        (
-                        SELECT
-                            t.instrumentid,
-                            t.UnderlyingInstrID,
-                            t2.ClosePrice 
-                        FROM
-                            siminfo.t_instrument t
-                            LEFT JOIN dbclear.t_marketdata t2 ON t.UnderlyingInstrID = t2.InstrumentID 
-                            ) t2 
-                            SET t1.UnderlyingClosePx = t2.ClosePrice 
-                        WHERE
-                            t1.InstrumentID = t2.instrumentid 
-                            AND t1.TradingDay = %s
-                            AND t1.SettlementID = %s
-                            AND t1.SettlementGroupID = %s """
-            cursor.execute(sql, (current_trading_day, settlement_id, settlement_group_id))
+                                    (
+                                    SELECT
+                    t.instrumentid,
+                    t.UnderlyingInstrID,
+                    t2.ClosePrice 
+                    FROM
+                    siminfo.t_instrument t
+                    LEFT JOIN (select * from dbclear.t_marketdata where tradingday = %s and settlementgroupid = %s and settlementid = %s) t2 ON (t.UnderlyingInstrID = t2.InstrumentID)
+                    where t.settlementgroupid = %s 
+                                        ) t2 
+                                        SET t1.UnderlyingClosePx = t2.ClosePrice 
+                                    WHERE
+                                        t1.InstrumentID = t2.instrumentid 
+                                        AND t1.TradingDay = %s
+                                        AND t1.SettlementID = %s
+                                        AND t1.SettlementGroupID = %s """
+            cursor.execute(sql, (current_trading_day, "SG01", settlement_id, settlement_group_id, current_trading_day, settlement_id, settlement_group_id))
 
             # 结算价为零赋值为昨结算
             sql = """UPDATE dbclear.t_marketdata t 
@@ -87,8 +88,8 @@ def settle_etf(context, conf):
 
             # 交收持仓处理
             logger.info("[Move DelivPosition] is processing......")
-            sql = "delete from dbclear.t_delivinstrument where settlementgroupid = %s and settlementid = %s"
-            cursor.execute(sql, (settlement_group_id, settlement_id))
+            sql = "delete from dbclear.t_delivinstrument where settlementgroupid = %s and settlementid = %s and tradingday = %s "
+            cursor.execute(sql, (settlement_group_id, settlement_id, current_trading_day))
             # 1）插入到t_delivinstrument表
             sql = """insert into dbclear.t_delivinstrument(TradingDay, SettlementGroupID, SettlementID, InstrumentID
                                                )select %s, t.SettlementGroupID, %s, t.instrumentid
@@ -107,6 +108,7 @@ def settle_etf(context, conf):
                                             where tradingday = %s
                                               and settlementgroupid = %s
                                               and settlementid = %s
+                                              and Position != '0'
                                               and instrumentid in       
                                                   (select t.instrumentid
                                                      from dbclear.t_delivinstrument t
@@ -117,7 +119,7 @@ def settle_etf(context, conf):
                                  current_trading_day, settlement_group_id, settlement_id))
             # 3) 删除t_clientposition
             sql = """delete from dbclear.t_clientposition
-                                                 where tradingday = %s
+                                                 where (tradingday = %s
                                                    and settlementgroupid = %s
                                                    and settlementid = %s
                                                    and instrumentid in
@@ -125,7 +127,8 @@ def settle_etf(context, conf):
                                                           from dbclear.t_delivinstrument t
                                                          where t.tradingday = %s
                                                             and t.settlementgroupid = %s
-                                                            and t.settlementid = %s)"""
+                                                            and t.settlementid = %s))
+                                                    or Position = '0'"""
             cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id,
                                  current_trading_day, settlement_group_id, settlement_id))
 
@@ -133,8 +136,8 @@ def settle_etf(context, conf):
             sql = """"""
             # 交易手续费
             logger.info("[Calculate TransFee] is processing......")
-            sql = "delete from dbclear.t_clienttransfee where settlementgroupid = %s and settlementid = %s"
-            cursor.execute(sql, (settlement_group_id, settlement_id))
+            sql = "delete from dbclear.t_clienttransfee where settlementgroupid = %s and settlementid = %s and tradingday = %s "
+            cursor.execute(sql, (settlement_group_id, settlement_id, current_trading_day))
             # 插入t_clienttransfee表中(CloseYesterdayFeeRatio存放的是佣金)
             sql = """insert into dbclear.t_clienttransfee(TradingDay, SettlementGroupID, SettlementID, ParticipantID, ClientID, AccountID, ProductGroupID, ProductID, UnderlyingInstrID, InstrumentID, TradeID, Direction, TradingRole, HedgeFlag, OffsetFlag, Volume, Price, TransFeeRatio, ValueMode, TransFee, OrderSysID, MinFee, MaxFee
                             )select t1.tradingday,t1.settlementgroupid,t1.settlementid,t1.participantid,t1.clientid,
@@ -155,7 +158,7 @@ def settle_etf(context, conf):
                                                              t2.openfeeratio
                                                             when t1.offsetflag = '3' or t1.offsetflag = '1' or  t1.offsetflag = '4' then
                                                              t2.closetodayfeeratio
-                                                        end) * t3.volumemultiple * t3.UnderlyingMultiple + t2.CloseYesterdayFeeRatio,
+                                                        end) * t3.volumemultiple + t2.CloseYesterdayFeeRatio,
                                                         2) * t1.volume ,
                                             round((case
                                                             when t1.offsetflag = '0' or
@@ -163,7 +166,7 @@ def settle_etf(context, conf):
                                                              t2.openfeeratio
                                                             when t1.offsetflag = '3' or t1.offsetflag = '1' or  t1.offsetflag = '4' then
                                                              t2.closetodayfeeratio
-                                                        end) * t1.price * t3.volumemultiple * t3.UnderlyingMultiple + t2.CloseYesterdayFeeRatio,
+                                                        end) * t1.price * t3.volumemultiple + t2.CloseYesterdayFeeRatio,
                                                         2) * t1.volume ) as transfee,
                                                                 t1.OrderSysID,
                                                                 '0' as Minfee,
@@ -202,7 +205,7 @@ def settle_etf(context, conf):
                                                              t2.openfeeratio
                                                             when t1.offsetflag = '3' or t1.offsetflag = '1' or  t1.offsetflag = '4' then
                                                              t2.closetodayfeeratio
-                                                        end) * t3.volumemultiple * t3.UnderlyingMultiple + t2.CloseYesterdayFeeRatio,
+                                                        end) * t3.volumemultiple + t2.CloseYesterdayFeeRatio,
                                                         2) * t1.volume ,
                                             round((case
                                                             when t1.offsetflag = '0' or
@@ -210,7 +213,7 @@ def settle_etf(context, conf):
                                                              t2.openfeeratio
                                                             when t1.offsetflag = '3' or t1.offsetflag = '1' or  t1.offsetflag = '4' then
                                                              t2.closetodayfeeratio
-                                                        end) * t1.price * t3.volumemultiple * t3.UnderlyingMultiple + t2.CloseYesterdayFeeRatio,
+                                                        end) * t1.price * t3.volumemultiple + t2.CloseYesterdayFeeRatio,
                                                         2) * t1.volume ) as transfee,
                                                                 t1.OrderSysID,
                                                                 '0' as Minfee,
@@ -251,7 +254,7 @@ def settle_etf(context, conf):
                                                              t2.openfeeratio
                                                             when t1.offsetflag = '3' or t1.offsetflag = '1' or  t1.offsetflag = '4' then
                                                              t2.closetodayfeeratio
-                                                        end) * t3.volumemultiple * t3.UnderlyingMultiple + t2.CloseYesterdayFeeRatio,
+                                                        end) * t3.volumemultiple + t2.CloseYesterdayFeeRatio,
                                                         2) * t1.volume ,
                                             round((case
                                                             when t1.offsetflag = '0' or
@@ -259,7 +262,7 @@ def settle_etf(context, conf):
                                                              t2.openfeeratio
                                                             when t1.offsetflag = '3' or t1.offsetflag = '1' or  t1.offsetflag = '4' then
                                                              t2.closetodayfeeratio
-                                                        end) * t1.price * t3.volumemultiple * t3.UnderlyingMultiple + t2.CloseYesterdayFeeRatio,
+                                                        end) * t1.price * t3.volumemultiple + t2.CloseYesterdayFeeRatio,
                                                         2) * t1.volume ) as transfee,
                                                                 t1.OrderSysID,
                                                                 '0' as Minfee,
@@ -289,8 +292,8 @@ def settle_etf(context, conf):
             # 认沽期权义务仓维持保证金＝Min[合约结算价 +Max（12%×合标的收盘价-认沽期权虚值，7%×行权价格），行权价格]×合约单位
             # MarginRatio = Min[SettlementPrice + Max(0.12 * UnderlyingClosePx - Max(UnderlyingClosePx - strikeprice,0), 0.07 * strikeprice), strikeprice] * underlyingmultiple
             logger.info("[Calculate PositionMargin] is processing......")
-            sql = "delete from dbclear.t_clientpositionmargin where settlementgroupid = %s and settlementid = %s"
-            cursor.execute(sql, (settlement_group_id, settlement_id))
+            sql = "delete from dbclear.t_clientpositionmargin where settlementgroupid = %s and settlementid = %s and tradingday = %s "
+            cursor.execute(sql, (settlement_group_id, settlement_id, current_trading_day))
             # 插入t_clientpositionmargin表中
             sql = """insert into dbclear.t_clientpositionmargin(TradingDay,SettlementGroupID,SettlementID,ParticipantID,ClientID,AccountID,ProductGroupID,ProductID,UnderlyingInstrID,InstrumentID,TradingRole,HedgeFlag,PosiDirection,Position,MarginRatio,ValueMode,SettlementPrice,PositionMargin
                           )SELECT t1.tradingday,
@@ -336,9 +339,9 @@ def settle_etf(context, conf):
             cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id))
             # 持仓权利金
             logger.info("[Calculate PositionPremium] is processing......")
-            sql = "delete from dbclear.t_clientpositionpremium where settlementgroupid = %s and settlementid = %s"
-            cursor.execute(sql, (settlement_group_id, settlement_id))
-            # 插入t_clientpositionmargin表中
+            sql = "delete from dbclear.t_clientpositionpremium where settlementgroupid = %s and settlementid = %s and tradingday = %s "
+            cursor.execute(sql, (settlement_group_id, settlement_id, current_trading_day))
+            # 插入t_clientpositionpremium表中
             sql = """INSERT INTO dbclear.t_clientpositionpremium
                     (TradingDay,SettlementGroupID,SettlementID,ParticipantID,ClientID,AccountID,InstrumentID,Volume,UserID,Premium) 
                     SELECT

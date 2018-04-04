@@ -1,5 +1,6 @@
 {
   "mysqlId" : "simplatform_base",
+  "exchangeId" : "czce",
   "settlementGroupId" : "SG05",
   "settlementId" : "1"
 }

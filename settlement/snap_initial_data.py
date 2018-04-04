@@ -44,9 +44,21 @@ def snap_data(context, conf):
                             FROM siminfo.t_investorfund WHERE BrokerSystemID = %s"""
         cursor.execute(sql, (current_trading_day, broker_system_id,))
 
+        logger.info("[snap client position]......")
+        sql = """insert into snap.t_s_clientposition (TradingDay,SettlementGroupID,SettlementID,HedgeFlag,PosiDirection,YdPosition,Position,LongFrozen,ShortFrozen,YdLongFrozen,YdShortFrozen,BuyTradeVolume,SellTradeVolume,PositionCost,YdPositionCost,UseMargin,FrozenMargin,LongFrozenMargin,ShortFrozenMargin,FrozenPremium,InstrumentID,ParticipantID,ClientID)
+                        select %s,t.SettlementGroupID,SettlementID,HedgeFlag,PosiDirection,YdPosition,Position,LongFrozen,ShortFrozen,YdLongFrozen,YdShortFrozen,BuyTradeVolume,SellTradeVolume,PositionCost,YdPositionCost,UseMargin,FrozenMargin,LongFrozenMargin,ShortFrozenMargin,FrozenPremium,InstrumentID,ParticipantID,ClientID
+                        from siminfo.t_clientposition t, siminfo.t_brokersystemsettlementgroup t1 WHERE t.SettlementGroupID = t1.SettlementGroupID and t1.BrokerSystemID = %s and t.TradingDay = %s"""
+        cursor.execute(sql, (current_trading_day, broker_system_id, current_trading_day))
+
+        logger.info("[snap future position dtl]......")
+        sql = """insert into snap.t_s_futurepositiondtl (TradingDay,SettlementGroupID,SettlementID,InstrumentID,ParticipantID,ClientID,HedgeFlag,Direction,OpenDate,TradeID,Volume,OpenPrice,TradeType,CombInstrumentID,ExchangeID,CloseProfitByDate,CloseProfitByTrade,PositionProfitByDate,PositionProfitByTrade,Margin,ExchMargin,MarginRateByMoney,MarginRateByVolume,LastSettlementPrice,SettlementPrice,CloseVolume,CloseAmount)
+                        select %s,t.SettlementGroupID,SettlementID,InstrumentID,ParticipantID,ClientID,HedgeFlag,Direction,OpenDate,TradeID,Volume,OpenPrice,TradeType,CombInstrumentID,ExchangeID,CloseProfitByDate,CloseProfitByTrade,PositionProfitByDate,PositionProfitByTrade,Margin,ExchMargin,MarginRateByMoney,MarginRateByVolume,LastSettlementPrice,SettlementPrice,CloseVolume,CloseAmount
+                        from siminfo.t_futurepositiondtl t, siminfo.t_brokersystemsettlementgroup t1 WHERE t.SettlementGroupID = t1.SettlementGroupID and t1.BrokerSystemID = %s and t.TradingDay = %s"""
+        cursor.execute(sql, (current_trading_day, broker_system_id, current_trading_day))
+
         mysql_conn.commit()
     except Exception as e:
-        logger.error("[snap initial data] Error: %s" % (e))
+        logger.error("[snap initial data] Error: %s" % e)
         result_code = -1
     finally:
         mysql_conn.close()

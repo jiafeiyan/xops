@@ -51,12 +51,14 @@ def settle_activity(context, conf):
                                     WHERE activitystatus = '0'"""
             cursor.execute(sql, (current_trading_day, current_trading_day))
 
-            sql = """SELECT activitystatus FROM siminfo.t_activity WHERE activityid = %s"""
+            sql = """SELECT activitystatus,initialbalance FROM siminfo.t_activity WHERE activityid = %s"""
             cursor.execute(sql, (activity_id,))
             row = cursor.fetchone()
 
             if "0" == str(row[0]):
                 continue
+
+            initial_balance = str(row[1])
 
             # 赛事新参与投资者数据重置
             logger.info("[reset new activity investor data]......")
@@ -68,8 +70,8 @@ def settle_activity(context, conf):
                                       t1.Premium = 0,
                                       t1.Deposit = 0,
                                       t1.Withdraw = 0,
-                                      t1.Balance = 1000000,
-                                      t1.Available = 1000000,
+                                      t1.Balance = %s,
+                                      t1.Available = %s,
                                       t1.PreMargin = 0,
                                       t1.FuturesMargin = 0,
                                       t1.OptionsMargin = 0,
@@ -96,7 +98,7 @@ def settle_activity(context, conf):
                                           AND t1.investorid = t2.investorid
                                           AND t2.activityid = %s
                                           AND t2.joinstatus = '0'"""
-            cursor.execute(sql, (activity_id, activity_id,))
+            cursor.execute(sql, (activity_id, activity_id, initial_balance, initial_balance))
             sql = """DELETE FROM siminfo.t_clientposition 
                                 WHERE clientid IN (SELECT clientid FROM siminfo.t_investorclient t1, siminfo.t_activityinvestor t2, siminfo.t_activitysettlementgroup t3 
                                                 WHERE t1.investorid = t2.investorid AND t2.joinstatus = '0' AND t1.settlementgroupid = t3.settlementgroupid 
@@ -139,10 +141,14 @@ def settle_activity(context, conf):
             cursor.execute(sql, (activity_id,))
 
             # 根据是否真实开户设置rankingstatus，真实开户置为1，否则置为0
-            sql = """UPDATE siminfo.t_activityinvestorevaluation t, (SELECT activityid, investorid FROM siminfo.t_activityrankableinvestor WHERE activityid = %s) t1
+            # sql = """UPDATE siminfo.t_activityinvestorevaluation t, (SELECT activityid, investorid FROM siminfo.t_activityrankableinvestor WHERE activityid = %s) t1
+            #                            SET t.rankingstatus = 1
+            #                            WHERE t.activityid = %s AND t.activityid = t1.activityid AND t.investorid = t1.investorid"""
+            # cursor.execute(sql, (activity_id,activity_id,))
+            sql = """UPDATE siminfo.t_activityinvestorevaluation t
                                         SET t.rankingstatus = 1
-                                        WHERE t.activityid = %s AND t.activityid = t1.activityid AND t.investorid = t1.investorid"""
-            cursor.execute(sql, (activity_id,activity_id,))
+                                        WHERE t.activityid = %s"""
+            cursor.execute(sql, (activity_id,))
 
             # 设置总收益率排名
             sql = """UPDATE siminfo.t_activityinvestorevaluation t, 

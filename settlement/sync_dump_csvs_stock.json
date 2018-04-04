@@ -1,6 +1,7 @@
 {
     "tradeSystemId" : "0001",
     "settlementId" : "1",
+    "time_await" : "5",
     "mysqlId": "simplatform_base",
     "baseDataHome" : "${SIM_PLATFORM_HOME}/settlement_data",
     "Syncs": [

@@ -50,6 +50,7 @@ def publish_future(context, conf):
                                      t1.prestockvalue = t1.stockvalue, 
                                      t1.PreMargin = t1.CurrMargin,
                                      t1.stockvalue = 0,
+                                     t1.premium = 0,
                                      t1.currmargin = 0, 
                                      t1.fee = 0
                                    WHERE t1.brokersystemid = %s"""
@@ -184,6 +185,7 @@ def publish_future(context, conf):
                                 (SELECT
                                         t3.brokersystemid,
                                         t1.investorid,
+                                        t2.stockvalue,
                                         t2.available,
                                         t2.transfee,
                                         t2.DelivFee,
@@ -201,10 +203,11 @@ def publish_future(context, conf):
                                         AND t1.settlementgroupid = %s 
                                         AND t2.settlementid = %s
                                     ) t2 
-                                    SET t1.balance = t1.available + t2.available - t2.transfee - t2.DelivFee + t2.profit,
-                                    t1.available = t1.available + t2.available - t2.transfee - t2.DelivFee + t2.profit - t2.positionmargin,
+                                    SET t1.balance = t1.available + t2.available - t2.transfee - t2.DelivFee + t2.profit + t2.stockvalue,
+                                    t1.available = t1.available + t2.available - t2.transfee - t2.DelivFee + t2.profit + t2.stockvalue - t2.positionmargin,
                                     t1.fee = t1.fee + t2.transfee,
-                                    t1.currmargin = t1.currmargin + t2.positionmargin
+                                    t1.currmargin = t1.currmargin + t2.positionmargin,
+                                    t1.premium = t1.premium + t2.stockvalue
                                 WHERE
                                     t1.brokersystemid = t2.brokersystemid 
                                     AND t1.investorid = t2.investorid"""
@@ -215,7 +218,7 @@ def publish_future(context, conf):
                 sql = """DELETE FROM siminfo.t_marketdata WHERE settlementgroupid = %s"""
                 cursor.execute(sql, (settlement_group_id,))
                 sql = """INSERT INTO siminfo.t_marketdata (TradingDay,SettlementGroupID,LastPrice,PreSettlementPrice,
-                                PreClosePrice,PreOpenInterest,OpenPrice,HighestPrice,LowestPrice,Volume,Turnover,
+                                PreClosePrice,UnderlyingClosePx,PreOpenInterest,OpenPrice,HighestPrice,LowestPrice,Volume,Turnover,
                                 OpenInterest,ClosePrice,SettlementPrice,UpperLimitPrice,LowerLimitPrice,PreDelta,
                                 CurrDelta,UpdateTime,UpdateMillisec,InstrumentID) SELECT
                                 %s,
@@ -223,6 +226,7 @@ def publish_future(context, conf):
                                 NULL,
                                 SettlementPrice,
                                 ClosePrice,
+                                UnderlyingClosePx,
                                 OpenInterest,
                                 NULL,
                                 NULL,
@@ -242,6 +246,17 @@ def publish_future(context, conf):
                                 FROM dbclear.t_marketdata t 
                                 WHERE t.tradingday = %s AND t.settlementgroupid = %s AND t.settlementid = %s"""
                 cursor.execute(sql, (next_trading_day, current_trading_day, settlement_group_id, settlement_id))
+
+                # 更新行情 t_FuturePositionDtl
+                logger.info("[update %s t_FuturePositionDtl]......" % settlement_group_id)
+                sql = """DELETE FROM siminfo.t_FuturePositionDtl WHERE settlementgroupid = %s"""
+                cursor.execute(sql, (settlement_group_id,))
+                sql = """INSERT into siminfo.t_FuturePositionDtl (TradingDay,SettlementGroupID,SettlementID,InstrumentID,ParticipantID,ClientID,HedgeFlag,Direction,OpenDate,TradeID,Volume,OpenPrice,TradeType,CombInstrumentID,ExchangeID,CloseProfitByDate,CloseProfitByTrade,PositionProfitByDate,PositionProfitByTrade,Margin,ExchMargin,MarginRateByMoney,MarginRateByVolume,LastSettlementPrice,SettlementPrice,CloseVolume,CloseAmount)
+                        select TradingDay,SettlementGroupID,SettlementID,InstrumentID,ParticipantID,ClientID,HedgeFlag,Direction,OpenDate,TradeID,Volume,OpenPrice,TradeType,CombInstrumentID,ExchangeID,CloseProfitByDate,CloseProfitByTrade,PositionProfitByDate,PositionProfitByTrade,Margin,ExchMargin,MarginRateByMoney,MarginRateByVolume,LastSettlementPrice,SettlementPrice,CloseVolume,CloseAmount
+                        from dbclear.t_FuturePositionDtl t 
+                        WHERE t.volume !=0 and t.tradingday = %s AND t.settlementgroupid = %s AND t.settlementid = %s"""
+                cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id))
+
                 # 更新结算状态
                 logger.info("[update %s settlement status]......" % settlement_group_id)
                 sql = """UPDATE dbclear.t_settlement SET settlementstatus = '2' 
