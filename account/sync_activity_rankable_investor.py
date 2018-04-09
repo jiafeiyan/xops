@@ -33,8 +33,9 @@ def sync_rankable_activity_investors(context, conf):
             depart_id = activity_info["depart"]
             start_date = activity_info["startDate"]
 
-            sql = '''select distinct :ActivityID as activityid, sj as openid from tkhxx where yyb= :DepartID and khzt='0' and khrq>=:StartDate'''
-            oracle_cursor.execute(sql, {"ActivityID": activity_id, "DepartID": depart_id, "StartDate": start_date})
+            sql = '''select distinct :ActivityID as activityid, sj as openid from hxcenter.vkhxx3620 where yyb= :DepartID'''# and khzt='0' and khrq>=:StartDate'''
+            #oracle_cursor.execute(sql, {"ActivityID": activity_id, "DepartID": depart_id, "StartDate": start_date})
+            oracle_cursor.execute(sql, {"ActivityID": activity_id, "DepartID": depart_id})
             rows = oracle_cursor.fetchall()
 
             activity_investors = []
@@ -54,9 +55,8 @@ def sync_rankable_activity_investors(context, conf):
         mysql_conn.commit()
 
     except Exception as e:
-        logger.error("[sync activity rankable investors] Error: %s" % e)
+        logger.error("[sync activity rankable investors with %s] Error: %s" % (json.dumps(conf, encoding="UTF-8", ensure_ascii=False), e))
     finally:
-        oracle_cursor.close()
         oracle_conn.close()
         mysql_conn.close()
 

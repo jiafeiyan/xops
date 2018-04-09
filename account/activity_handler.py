@@ -91,10 +91,11 @@ def join_activity(mysql_conn, parameters):
                     current_trading_day = str(row[0])
 
                     # 检查赛事活动状态
-                    sql = """SELECT activitystatus FROM siminfo.t_activity WHERE activityid = %s"""
+                    sql = """SELECT activitystatus, initialbalance FROM siminfo.t_activity WHERE activityid = %s"""
                     cursor.execute(sql, (activity,))
                     row = cursor.fetchone()
                     activity_status = str(row[0])
+                    initial_balance = str(row[1])
 
                     join_status = '0'
                     # 检查投资者资金 持仓
@@ -102,11 +103,11 @@ def join_activity(mysql_conn, parameters):
                         sql = """SELECT t1.investorid FROM siminfo.t_investorfund t1
                                                     WHERE t1.brokersystemid = (SELECT DISTINCT t2.brokersystemid 
                                                             FROM siminfo.t_activitysettlementgroup t1, siminfo.t_brokersystemsettlementgroup t2 WHERE t1.settlementgroupid = t2.settlementgroupid AND t1.activityid = %s)
-                                                        AND t1.investorid = %s AND (t1.balance <> 1000000 OR t1.available <> 1000000 OR t1.currmargin <> 0 OR t1.profit <> 0 OR t1.stockvalue <> 0)
+                                                        AND t1.investorid = %s AND (t1.balance <> %s OR t1.available <> %s OR t1.currmargin <> 0 OR t1.profit <> 0 OR t1.stockvalue <> 0)
                                                     UNION
                                                     SELECT DISTINCT t2.investorid FROM siminfo.t_clientposition t1, siminfo.t_investorclient t2, (SELECT settlementgroupid FROM siminfo.t_activitysettlementgroup WHERE activityid = %s) t3
                                                     WHERE t2.investorid = %s AND t1.clientid = t2.clientid AND t1.settlementgroupid = t2.settlementgroupid AND t2.settlementgroupid = t3.settlementgroupid AND t1.position > 0"""
-                        cursor.execute(sql, (activity,investor_id,activity,investor_id,))
+                        cursor.execute(sql, (activity,investor_id,activity,investor_id,initial_balance,initial_balance))
                         cursor.fetchall()
                         if cursor.rowcount == 0:
                             sql = """INSERT INTO siminfo.t_activityinvestorevaluation(ActivityID,InvestorID,InitialAsset,PreAsset,CurrentAsset,TotalReturnRate,ReturnRateOf1Day)

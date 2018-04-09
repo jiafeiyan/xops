@@ -8,6 +8,7 @@ def gen_investors(context, conf):
 
     logger = log.get_logger(category="GenAccount")
 
+    total_balance = conf["balance"]
     id_int = conf["start"]
     count = conf["count"]
 
@@ -88,10 +89,10 @@ def gen_investors(context, conf):
         cursor.execute(sql)
 
         sql = '''INSERT INTO siminfo.t_investorfund(BrokerSystemID,InvestorID,PreBalance,CurrMargin,CloseProfit,Premium,Deposit,Withdraw,Balance,Available,PreMargin,FuturesMargin,OptionsMargin,PositionProfit,Profit,Interest,Fee,TotalCollateral,CollateralForMargin,PreAccmulateInterest,AccumulateInterest,AccumulateFee,ForzenDeposit,AccountStatus,PreStockValue,StockValue)
-                            SELECT t1.brokersystemid,t2.investorid,0,0,0,0,0,0,1000000,1000000,0,0,0,0,0,0,0,0,0,0,0,0,0,'0',0,0
+                            SELECT t1.brokersystemid,t2.investorid,0,0,0,0,0,0,%s,%s,0,0,0,0,0,0,0,0,0,0,0,0,0,'0',0,0
                             FROM siminfo.t_brokersystem t1, siminfo.t_investor t2
                             WHERE t2.investorstatus = '9' '''
-        cursor.execute(sql)
+        cursor.execute(sql, (total_balance, total_balance))
 
         sql = '''UPDATE siminfo.t_investor SET investorstatus = '0' WHERE investorstatus = '9' '''
         cursor.execute(sql)
