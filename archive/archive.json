@@ -1,10 +1,42 @@
 {
     "Archives" : [{
-        "host" : "root_101",
+        "host" : "stock_exchange",
         "items" : [{
-          "basedir" :"/root",
-          "sources" : "temp",
-          "target" : "databak/mydbf_`date +%Y%m%d`.tar.gz"
+          "basedir" :"${HOME}",
+          "sources" : "run/arb/log run/front1/log run/mdfront1/log run/qkernel1/log run/tinit/log run/tkernel1/log run/mdimport/log run/mdreceiver/log",
+          "target" : "sysdatabackup/stock_exchange_log_`date +%Y%m%d`.tar.gz"
+        }]
+    },
+    {
+        "host" : "future_exchange",
+        "items" : [{
+          "basedir" :"${HOME}",
+          "sources" : "run/arb/log run/front1/log run/mdfront1/log run/qkernel1/log run/tinit/log run/tkernel1/log run/mdimport/log run/mdreceiver/log",
+          "target" : "sysdatabackup/future_exchange_log_`date +%Y%m%d`.tar.gz"
+        }]
+    },
+    {
+        "host" : "stock_broker",
+        "items" : [{
+          "basedir" :"${HOME}",
+          "sources" : "run/dbsync/log run/hx_adapter/log run/ssecffexmdserver/log run/ssecffexoffer/log run/szsecffexmdserver/log run/szsecffexoffer/log run/tinit/log run/tradeserver/log",
+          "target" : "sysdatabackup/stock_broker_log_`date +%Y%m%d`.tar.gz"
+        }]
+    },
+    {
+        "host" : "etf_broker",
+        "items" : [{
+          "basedir" :"${HOME}",
+          "sources" : "run/ssecffexspmdoffer/log run/ssecffexspoffer/log run/sptinit/log run/sptradeserver/log",
+          "target" : "sysdatabackup/etf_broker_log_`date +%Y%m%d`.tar.gz"
+        }]
+    },
+    {
+        "host" : "future_broker",
+        "items" : [{
+          "basedir" :"${HOME}",
+          "sources" : "compositor1/log arb/log tkernel1/log qkernel1/log offermanager1/log front1/log front2/log tinit/log dceoffer1/log dcemdserver1/log zceoffer1/log zcemdserver1/log shfeoffer1/log shfemdserver1/log cffexoffer1/log ffexmdserver1/log",
+          "target" : "sysdatabackup/future_broker_log_`date +%Y%m%d`.tar.gz"
         }]
     }]
 }

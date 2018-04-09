@@ -144,7 +144,7 @@ class broker_stock_csv:
                                "PasswordFailLimit", "Status", "Contacter", "Fax", "Telephone", "Email", "Address",
                                "ZipCode", "OpenDate", "CloseDate"),
                       sql="""SELECT DISTINCT t.InvestorID AS UserID,t.InvestorName AS UserName,'2' AS UserType,
-                                    '0001' AS DepartmentID,t. PASSWORD AS UserPassword,'3' AS LoginLimit,
+                                    '0001' AS DepartmentID,t. PASSWORD AS UserPassword,'10' AS LoginLimit,
                                     '3' AS PasswordFailLimit,if(t.InvestorStatus='3','3','1') AS STATUS,
                                     '' AS Contacter,'' AS Fax,'' AS Telephone, '' AS Email,'' AS Address,
                                     '' AS ZipCode,'' AS OpenDate,'' AS CloseDate

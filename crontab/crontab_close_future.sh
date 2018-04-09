@@ -16,6 +16,6 @@ if [ "${trading_day}" != "${now_date}" ]; then
 fi
 
 # settlement_stock.sh
-sh ${SIM_PLATFORM_HOME}/appshell/close_exchange.sh >> crontab.log
+sh ${SIM_PLATFORM_HOME}/appshell/close_future_exchange.sh >> crontab.log
 
 echo "${now_date} crontab_close_future.sh finished..." | tee -a crontab.log
