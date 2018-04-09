@@ -13,6 +13,9 @@
     },{
     "settlementGroupId" : "SG06",
     "settlementId" : "1"
+    },{
+    "settlementGroupId" : "SG08",
+    "settlementId" : "1"
     }
   ]
 }
