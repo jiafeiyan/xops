@@ -1,4 +1,4 @@
 {
   "host" : "future_exchange",
-  "command" : "${HOME}/run/start.sh -d @tradingday@ -t `date +%H:%M:%S`"
+  "command" : "${HOME}/run/start.sh -d @tradingday@ "
 }
