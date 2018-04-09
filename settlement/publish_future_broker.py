@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+瀑布lishfuture# -*- coding: UTF-8 -*-
 
 import json
 
@@ -204,7 +204,7 @@ def publish_future(context, conf):
                                         AND t2.settlementid = %s
                                     ) t2 
                                     SET t1.balance = t1.balance - t2.transfee - t2.DelivFee + t2.profit + t2.stockvalue,
-                                    t1.available = t1.available + t2.available - t2.transfee - t2.DelivFee + t2.profit + t2.stockvalue - t2.positionmargin,
+                                    t1.available = t1.balance + t2.available - t2.transfee - t2.DelivFee + t2.profit + t2.stockvalue - t2.positionmargin,
                                     t1.fee = t1.fee + t2.transfee,
                                     t1.currmargin = t1.currmargin + t2.positionmargin,
                                     t1.premium = t1.premium + t2.stockvalue
