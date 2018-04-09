@@ -103,20 +103,35 @@ class trans_futureinfo:
                 SGID = self.exchange_conf[future["ExchangeID"]]
                 ProductID = future["ProductID"]
                 ProductClass = future["ProductClass"]
+
                 UnderlyingInstrID = None
                 # 判断是否为期权
                 if ProductClass == '2':
                     UnderlyingInstrID = future["UnderlyingInstrID"]
+
+                OptionsType = future["OptionsType"]
+                # 期权类型为空改为0
+                if OptionsType == '':
+                    OptionsType = '0'
+
+                DeliveryYear = future["DeliveryYear"]
+                DeliveryMonth = future["DeliveryMonth"]
+                # 计算期权交割年月
+                if ProductClass == '2' and DeliveryYear == '1':
+                    DeliveryYear = "%s%s" % (str(datetime.datetime.now().year)[0:3], future["UnderlyingInstrID"][-3:-2])
+                    if int(DeliveryYear) < datetime.datetime.now().year:
+                        DeliveryYear = "%s%s" % (str(int(str(datetime.datetime.now().year)[0:3]) + 1), future["UnderlyingInstrID"][-3:-2])
+                    DeliveryMonth = future["UnderlyingInstrID"][-2:]
                 sql_insert_params.append((SGID, ProductID,
                                           ProductID, UnderlyingInstrID,
                                           ProductClass, future["PositionType"],
-                                          future["StrikePrice"], future["OptionsType"],
+                                          future["StrikePrice"], OptionsType,
                                           future["VolumeMultiple"],
                                           "0" if future["UnderlyingMultiple"] is None else future["UnderlyingMultiple"],
                                           future["InstrumentID"],
                                           future["InstrumentName"].decode(encoding='gbk', errors='ignore').encode(
                                               encoding='utf8'),
-                                          future["DeliveryYear"], future["DeliveryMonth"], "012"))
+                                          DeliveryYear, DeliveryMonth, "012"))
             cursor.executemany(sql_insert_futures, sql_insert_params)
             mysql_conn.commit()
         finally:

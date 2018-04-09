@@ -104,7 +104,7 @@ class exchange_future_csv:
         self.__data_to_csv("t_User", mysqlDB)
         self.__data_to_csv("t_UserFunctionRight", mysqlDB)
         self.__data_to_csv("t_UserIP", mysqlDB)
-        self.__data_to_csv("t_InstrumentTradingRight", mysqlDB)
+        # self.__data_to_csv("t_InstrumentTradingRight", mysqlDB)
 
         # ================shfe.txt====================
         self.__generate_marketdata("shfe", mysqlDB)
