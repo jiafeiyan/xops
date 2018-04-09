@@ -5,10 +5,10 @@
     "Syncs": [
       {
         "host": "stock_exchange",
-        "items": ["${HOME}/123/cpxx%m%d.txt",
-                  "${HOME}/123/reff03%m%d.txt",
-                  "${HOME}/123/cashauctionparams_%y%m%d.xml",
-                  "${HOME}/123/securities_%y%m%d.xml"]
+        "items": ["${HOME}/security_share/info/cpxx%m%d.txt",
+                  "${HOME}/security_share/info/reff03%m%d.txt",
+                  "${HOME}/security_share/cashauctionparams_%y%m%d.xml",
+                  "${HOME}/security_share/securities_%y%m%d.xml"]
       }
     ]
 }

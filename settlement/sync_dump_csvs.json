@@ -14,7 +14,8 @@
       },
       {
         "host": "stock_exchange",
-        "items": ["${HOME}/run/tkernel1/dump/clpr03%m%d.txt"]
+        "items": ["${HOME}/security_share/info/clpr03%m%d.txt"]
       }
+
     ]
 }
