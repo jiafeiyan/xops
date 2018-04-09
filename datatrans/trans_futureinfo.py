@@ -35,7 +35,6 @@ class trans_futureinfo:
         exchange_conf = dict()
         for row in res:
             exchange_conf.update({str(row[0]): str(row[1])})
-        exchange_conf.update({"INE": "SG99"})
         return exchange_conf
 
     def __transform(self):
@@ -430,7 +429,7 @@ class trans_futureinfo:
             sql_insert_params = []
             for future in islice(csv_file, 1, None):
                 SGID = self.exchange_conf[future["ExchangeID"]]
-                if future["ExchangeID"] != 'INE' and float(future["PreSettlementPrice"]) != 0:
+                if float(future["PreSettlementPrice"]) != 0:
                     if SGID == 'SG06':
                         sql_insert_params.append((SGID, template[SGID][1], template[SGID][2], template[SGID][3],
                                                   template[SGID][4], template[SGID][5], future["InstrumentID"],
@@ -451,10 +450,6 @@ class trans_futureinfo:
         mysql_conn = mysqlDB.get_cnx()
         mysql_conn.start_transaction()
         try:
-            property = self.__loadJSON(tableName='t_InstrumentProperty')
-            if property is None:
-                self.logger.error("t_InstrumentProperty template is None")
-                return
             cursor = mysql_conn.cursor()
             cursor.execute("delete from siminfo.t_InstrumentProperty where SettlementGroupID in "
                            + str(tuple([str(i) for i in self.exchange_conf.values()])))

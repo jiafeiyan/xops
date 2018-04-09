@@ -75,5 +75,11 @@
               "IC":["0.2","0.2"]
             }
           },
-  "SG07": ["SG07","1","1","2","0","MarginUnit","MarginRatioParam1","MarginRatioParam2","InstrumentID","00000000","00000000"]
+  "SG07": ["SG07","1","1","2","0","MarginUnit","MarginRatioParam1","MarginRatioParam2","InstrumentID","00000000","00000000"],
+  "SG08": {
+            "template":["SG08","1","1","1","0.080000","0.080000","","","InstrumentID","00000000","00000000"],
+            "marginRatio":{
+              "sc":["0.08","0.08"]
+            }
+          }
 }

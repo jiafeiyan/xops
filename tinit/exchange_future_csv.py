@@ -114,6 +114,8 @@ class exchange_future_csv:
         self.__generate_marketdata("czce", mysqlDB)
         # ================cffex.txt===================
         self.__generate_marketdata("cffex", mysqlDB)
+        # ================ine.txt===================
+        self.__generate_marketdata("ine", mysqlDB)
 
     def __data_to_csv(self, table_name, mysqlDB):
         table_sqls = dict(
