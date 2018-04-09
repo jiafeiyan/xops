@@ -1320,7 +1320,10 @@ def calc_future_posdtl(logger, cursor, current_trading_day, settlement_group_id,
 
                 total_close_volume += curr_close_volume
                 total_close_amount += round(close_price * curr_close_volume * volume_multiple, 2)
-                total_close_profit += round((close_price - open_price) * curr_close_volume * volume_multiple, 2)
+                if direction_pair[0] == '0':
+                    total_close_profit += round((close_price - open_price) * curr_close_volume * volume_multiple, 2)
+                else:
+                    total_close_profit += round((open_price - close_price) * curr_close_volume * volume_multiple, 2)
 
                 open_position[6] = str(open_volume)
                 open_position[10] = str(total_close_profit)
