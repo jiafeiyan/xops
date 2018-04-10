@@ -42,6 +42,11 @@ if [ $? != 0 ]; then
         echo "settle_future cffex error..."
         exit 1
 fi
+python ${SIM_PLATFORM_HOME}/settlement/settle_future.py -conf ${SIM_PLATFORM_HOME}/settlement/settle_future_ine.json
+if [ $? != 0 ]; then
+        echo "settle_future ine error..."
+        exit 1
+fi
 
 echo "starting publish_future_broker..."
 python ${SIM_PLATFORM_HOME}/settlement/publish_future_broker.py
