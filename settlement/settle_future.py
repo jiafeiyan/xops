@@ -1120,7 +1120,7 @@ def sett_future_option(logger, cursor, current_trading_day, next_trading_day, se
                             SELECT
                                 t1.TradingDay,t1.SettlementGroupID,t1.SettlementID,t1.Direction,t1.ParticipantID,t1.ClientID,t1.AccountID,
                                 t1.InstrumentID,if (t1.OffsetFlag = '0',t1.Volume, -1 * t1.Volume ) as Volume,t1.UserID,
-                                ROUND( IF ( t1.Direction = '0', - 1 * Price * t2.UnderlyingMultiple, Price * t2.UnderlyingMultiple ) , 2 ) * t1.Volume AS Premium 
+                                ROUND( IF ( t1.Direction = '0', - 1 * Price * t2.VolumeMultiple, Price * t2.VolumeMultiple ) , 2 ) * t1.Volume AS Premium 
                             FROM
                                 dbclear.t_trade t1,siminfo.t_instrument t2 
                             WHERE
@@ -1161,7 +1161,7 @@ def sett_future_option(logger, cursor, current_trading_day, next_trading_day, se
                         t5.ValueMode,
                         t3.SettlementPrice,
                         GREATEST(
-                        round(t3.SettlementPrice * t4.UnderlyingMultiple + 
+                        round(t3.SettlementPrice * t4.VolumeMultiple + 
                                         if(t5.ValueMode = '1', 
                                                 if(t1.PosiDirection='2',0,t5.ShortMarginRatio) * 
                                                         (t1.Position + t1.YdPosition) * t4.underlyvolumemultiple * t4.SettlementPrice,
@@ -1169,9 +1169,9 @@ def sett_future_option(logger, cursor, current_trading_day, next_trading_day, se
                                                         (t1.Position + t1.YdPosition) * t4.underlyvolumemultiple 
                                                 ) -
                                         (1/2) * if(t4.OptionsType = '1', 
-                                                                GREATEST(t4.StrikePrice - t4.SettlementPrice,0) * t4.UnderlyingMultiple,
-                                                                GREATEST(t4.SettlementPrice - t4.StrikePrice,0)), 2) * t4.UnderlyingMultiple,
-                        round(t3.SettlementPrice * t4.UnderlyingMultiple + 
+                                                                GREATEST(t4.StrikePrice - t4.SettlementPrice,0) * t4.VolumeMultiple,
+                                                                GREATEST(t4.SettlementPrice - t4.StrikePrice,0)), 2) * t4.VolumeMultiple,
+                        round(t3.SettlementPrice * t4.VolumeMultiple + 
                                             (1/2) * if(t5.ValueMode = '1', 
                                                 if(t1.PosiDirection='2',0,t5.ShortMarginRatio) * (t1.Position + t1.YdPosition) * t4.underlyvolumemultiple * t4.SettlementPrice,
                                                 if(t1.PosiDirection='2',0,t5.ShortMarginRatio) * (t1.Position + t1.YdPosition) * t4.underlyvolumemultiple) , 2)
