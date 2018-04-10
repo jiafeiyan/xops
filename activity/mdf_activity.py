@@ -24,6 +24,7 @@ def mdf_activity(context, conf):
             code = activity["code"]
             name = activity["name"]
             atype = activity["type"]
+            initial_balance = activity["balance"]
             begin = activity["begin"]
             end = activity["end"]
             status = activity["status"]
@@ -39,9 +40,9 @@ def mdf_activity(context, conf):
                 sys.stderr.write("Error: Activity %s is not existed.\n" % (code,))
                 logger.error("[gen activity with {code=%s, name=%s, type=%s, begin=%s, end=%s, status=%s, settlementgroups=%s}] Error: Activity %s is not existed." % (code, name, atype, begin, end, status, settlement_groups, code))
             else:
-                sql = '''UPDATE siminfo.t_activity set activityname = %s, activitytype = %s, begindate = %s, enddate = %s, activitystatus = %s, updatedate = DATE_FORMAT(NOW(), '%Y%m%d'), updatetime = DATE_FORMAT(NOW(), '%H:%i:%S')
+                sql = '''UPDATE siminfo.t_activity set activityname = %s, activitytype = %s, initialbalance = %s, begindate = %s, enddate = %s, activitystatus = %s, updatedate = DATE_FORMAT(NOW(), '%Y%m%d'), updatetime = DATE_FORMAT(NOW(), '%H:%i:%S')
                                     WHERE activityid = %s'''
-                cursor.execute(sql, (name, atype, begin, end, status, code,))
+                cursor.execute(sql, (name, atype, initial_balance, begin, end, status, code,))
 
                 sql = '''DELETE FROM siminfo.t_activitysettlementgroup WHERE activityid = %s'''
                 cursor.execute(sql, (code,))
