@@ -51,6 +51,7 @@ class exchange_future_csv:
         self.__data_to_csv("t_IndexPrice", mysqlDB)
         # self.__data_to_csv("t_InstrumentMarginRate", mysqlDB)
         self.__data_to_csv("t_InstrumentCommissionRate", mysqlDB)
+        self.__data_to_csv("t_OptionInstrCommRate", mysqlDB)
         # ======== 0301 新增 ========
         self.__data_to_csv("t_Trader", mysqlDB)
         self.__data_to_csv("t_TraderAssign", mysqlDB)
@@ -335,6 +336,29 @@ class exchange_future_csv:
                                                 and t.SettlementGroupID IN """ +
                                                 str(tuple([str(i) for i in self.settlementGroupID])),
                                             quoting=True),
+            t_OptionInstrCommRate=dict(columns=("InstrumentID", "InvestorRange", "BrokerID", "InvestorID",
+                                                "OpenRatioByMoney", "OpenRatioByVolume", "CloseRatioByMoney",
+                                                "CloseRatioByVolume", "CloseTodayRatioByMoney",
+                                                "CloseTodayRatioByVolume", "StrikeRatioByMoney", "StrikeRatioByVolume"),
+                                       sql="""SELECT t.InstrumentID,
+                                                '1' as InvestorRange,
+                                                '10010' as BrokerID,
+                                                '00000000' as InvestorID,
+                                                if(t1.ValueMode = '1',t1.OpenFeeRatio,'0') as OpenRatioByMoney,
+                                                if(t1.ValueMode = '2',t1.OpenFeeRatio,'0') as OpenRatioByVolume,
+                                                if(t1.ValueMode = '1',t1.CloseTodayFeeRatio,'0') as CloseRatioByMoney,
+                                                if(t1.ValueMode = '2',t1.CloseTodayFeeRatio,'0') as CloseRatioByVolume,
+                                                if(t1.ValueMode = '1',t1.CloseTodayFeeRatio,'0') as CloseTodayRatioByMoney,
+                                                if(t1.ValueMode = '2',t1.CloseTodayFeeRatio,'0') as CloseTodayRatioByVolume,
+                                                if(t1.ValueMode = '1',t1.CloseTodayFeeRatio,'0') as StrikeRatioByMoney,
+                                                if(t1.ValueMode = '2',t1.CloseTodayFeeRatio,'0') as StrikeRatioByVolume
+                                            from siminfo.t_instrument t, siminfo.t_transfeeratedetail t1 
+                                            where t.SettlementGroupID = t1.SettlementGroupID 
+                                            and t.InstrumentID = t1.InstrumentID 
+                                            and t.ProductClass = '2'
+                                            AND t.SettlementGroupID IN """ +
+                                           str(tuple([str(i) for i in self.settlementGroupID])),
+                                       quoting=True),
             t_Trader=dict(columns=("ExchangeID", "TraderID", "ParticipantID", "Password", "InstallCount", "BrokerID"),
                           sql="""SELECT t2.ExchangeID,t1.UserID AS TraderID,t1.ParticipantID,
                                     '111111' Password,'1' AS InstallCount,'10010' AS BrokerID 

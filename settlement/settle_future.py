@@ -110,7 +110,8 @@ def settle_future(context, conf):
                                                    tm.settlementgroupid = tt.settlementgroupid 
                                                    AND tm.settlementid = tt.settlementid 
                                                    AND tm.instrumentid = tt.instrumentid 
-                                                   AND tm.tradingday = tt.tradingday"""
+                                                   AND tm.tradingday = tt.tradingday
+                                                   AND tm.settlementprice = 0"""
             cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id))
             # 结算价为零赋值为昨结算
             sql = """UPDATE dbclear.t_marketdata t 
@@ -143,6 +144,9 @@ def settle_future(context, conf):
             logger.info("[delete t_clientpositionpremium ... ]")
             sql = "delete from dbclear.t_clientpositionpremium where settlementgroupid = %s and settlementid = %s and tradingday = %s "
             cursor.execute(sql, (settlement_group_id, settlement_id, current_trading_day))
+
+            # 计算持仓明细
+            calc_future_posdtl(logger, cursor, current_trading_day, settlement_group_id, settlement_id, exchange_id)
             # 期货结算
             sett_future(logger, cursor, current_trading_day, next_trading_day, settlement_group_id, settlement_id)
             # 期货期权计算
@@ -185,8 +189,6 @@ def settle_future(context, conf):
                                                 group by t.tradingday,t.settlementgroupid,t.settlementid,t.participantid,t.clientid,t.accountid)
                                                 ON DUPLICATE KEY UPDATE dbclear.t_clientfund.StockValue = values(StockValue)"""
             cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id))
-            # 计算持仓明细
-            calc_future_posdtl(logger, cursor, current_trading_day, settlement_group_id, settlement_id, exchange_id)
             # 更新结算状态
             logger.info("[update settlement status] is processing......")
             sql = """UPDATE dbclear.t_settlement SET settlementstatus = '1' 
@@ -343,6 +345,20 @@ def sett_future(logger, cursor, current_trading_day, next_trading_day, settlemen
                                           or Position = '0'"""
     cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id,
                          current_trading_day, settlement_group_id, settlement_id))
+    # 删除 t_FuturePositionDtl
+    sql = """delete from dbclear.t_FuturePositionDtl
+                where (tradingday = %s
+                    and settlementgroupid = %s
+                    and settlementid = %s
+                    and instrumentid in
+                            (select t.instrumentid
+                                 from dbclear.t_delivinstrument t
+                                where t.tradingday = %s
+                                     and t.settlementgroupid = %s
+                                     and t.settlementid = %s))"""
+    cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id,
+                         current_trading_day, settlement_group_id, settlement_id))
+
     # 交割手续费
     logger.info("[Calculate DelivFee] is processing......")
     # 插入t_clientdelivfee表中
@@ -953,6 +969,19 @@ def sett_future_option(logger, cursor, current_trading_day, next_trading_day, se
                                               or Position = '0'"""
     cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id,
                          current_trading_day, settlement_group_id, settlement_id))
+    # 删除 t_FuturePositionDtl
+    sql = """delete from dbclear.t_FuturePositionDtl
+                where (tradingday = %s
+                    and settlementgroupid = %s
+                    and settlementid = %s
+                    and instrumentid in
+                            (select t.instrumentid
+                                 from dbclear.t_delivinstrument t
+                                where t.tradingday = %s
+                                     and t.settlementgroupid = %s
+                                     and t.settlementid = %s))"""
+    cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id,
+                         current_trading_day, settlement_group_id, settlement_id))
     # 交割手续费
     sql = """"""
     # 交易手续费
@@ -1120,7 +1149,7 @@ def sett_future_option(logger, cursor, current_trading_day, next_trading_day, se
                             SELECT
                                 t1.TradingDay,t1.SettlementGroupID,t1.SettlementID,t1.Direction,t1.ParticipantID,t1.ClientID,t1.AccountID,
                                 t1.InstrumentID,if (t1.OffsetFlag = '0',t1.Volume, -1 * t1.Volume ) as Volume,t1.UserID,
-                                ROUND( IF ( t1.Direction = '0', - 1 * Price * t2.VolumeMultiple, Price * t2.VolumeMultiple ) , 2 ) * t1.Volume AS Premium 
+                                ROUND( IF ( t1.Direction = '0', - 1 * Price * t2.VolumeMultiple * t2.UnderlyingMultiple, Price * t2.VolumeMultiple * t2.UnderlyingMultiple) , 2 ) * t1.Volume AS Premium 
                             FROM
                                 dbclear.t_trade t1,siminfo.t_instrument t2 
                             WHERE
@@ -1161,7 +1190,7 @@ def sett_future_option(logger, cursor, current_trading_day, next_trading_day, se
                         t5.ValueMode,
                         t3.SettlementPrice,
                         GREATEST(
-                        round(t3.SettlementPrice * t4.VolumeMultiple + 
+                        round(t3.SettlementPrice * t4.VolumeMultiple * t4.UnderlyingMultiple + 
                                         if(t5.ValueMode = '1', 
                                                 if(t1.PosiDirection='2',0,t5.ShortMarginRatio) * 
                                                         (t1.Position + t1.YdPosition) * t4.underlyvolumemultiple * t4.SettlementPrice,
@@ -1169,9 +1198,9 @@ def sett_future_option(logger, cursor, current_trading_day, next_trading_day, se
                                                         (t1.Position + t1.YdPosition) * t4.underlyvolumemultiple 
                                                 ) -
                                         (1/2) * if(t4.OptionsType = '1', 
-                                                                GREATEST(t4.StrikePrice - t4.SettlementPrice,0) * t4.VolumeMultiple,
-                                                                GREATEST(t4.SettlementPrice - t4.StrikePrice,0)), 2) * t4.VolumeMultiple,
-                        round(t3.SettlementPrice * t4.VolumeMultiple + 
+                                                                GREATEST(t4.StrikePrice - t4.SettlementPrice,0) * t4.VolumeMultiple * t4.UnderlyingMultiple,
+                                                                GREATEST(t4.SettlementPrice - t4.StrikePrice,0)), 2) * t4.VolumeMultiple * t4.UnderlyingMultiple,
+                        round(t3.SettlementPrice * t4.VolumeMultiple * t4.UnderlyingMultiple + 
                                             (1/2) * if(t5.ValueMode = '1', 
                                                 if(t1.PosiDirection='2',0,t5.ShortMarginRatio) * (t1.Position + t1.YdPosition) * t4.underlyvolumemultiple * t4.SettlementPrice,
                                                 if(t1.PosiDirection='2',0,t5.ShortMarginRatio) * (t1.Position + t1.YdPosition) * t4.underlyvolumemultiple) , 2)
