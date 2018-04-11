@@ -1206,13 +1206,13 @@ def sett_future_option(logger, cursor, current_trading_day, next_trading_day, se
                                                 if(t1.PosiDirection='2',0,t5.ShortMarginRatio) * (t1.Position + t1.YdPosition) * t4.underlyvolumemultiple) , 2)
                        ) as positionmargin
                     FROM
-                    ( SELECT t1.*, t2.tradingrole FROM dbclear.t_clientposition t1, siminfo.t_client t2 WHERE t1.clientid = t2.clientid ) t1,
+                    ( SELECT t1.*, t2.tradingrole FROM dbclear.t_clientposition t1, siminfo.t_client t2 WHERE t1.clientid = t2.clientid and t2.SettlementGroupID = %s) t1,
                     siminfo.t_PartRoleAccount t2,
                     dbclear.t_marketdata t3,
                     (select t.*, t1.volumemultiple as underlyvolumemultiple,t2.SettlementPrice
                         from siminfo.t_instrument t left join siminfo.t_instrument t1 on t.UnderlyingInstrID = t1.InstrumentID and t.SettlementGroupID = t1.SettlementGroupID 
-                        left join dbclear.t_marketdata t2 on t.SettlementGroupID = t2.SettlementGroupID and t.InstrumentID = t2.InstrumentID
-                        where t.ProductClass = '2') t4,
+                        left join dbclear.t_marketdata t2 on t2.TradingDay = %s and t2.SettlementID = %s and t.SettlementGroupID = t2.SettlementGroupID and t.InstrumentID = t2.InstrumentID
+                        where t.ProductClass = '2' and t.SettlementGroupID = %s) t4,
                     siminfo.t_marginratedetail t5
                     WHERE t2.TradingRole = t1.TradingRole
                             and t2.SettlementGroupID = t1.SettlementGroupID
@@ -1220,6 +1220,7 @@ def sett_future_option(logger, cursor, current_trading_day, next_trading_day, se
                             AND t1.tradingday = t3.tradingday 
                             and t1.instrumentid = t5.InstrumentID
                             AND t1.instrumentid = t4.instrumentid 
+                            and t1.InstrumentID = t3.InstrumentID
                             AND t1.settlementid = t3.settlementid 
                             AND t1.settlementgroupid = t3.settlementgroupid 
                             AND t1.settlementgroupid = t4.settlementgroupid 
@@ -1229,7 +1230,8 @@ def sett_future_option(logger, cursor, current_trading_day, next_trading_day, se
                             and t1.tradingday = %s
                             and t1.settlementgroupid = %s
                             and t1.settlementid = %s"""
-    cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id))
+    cursor.execute(sql, (settlement_group_id, current_trading_day, settlement_id, settlement_group_id,
+                         current_trading_day, settlement_group_id, settlement_id))
 
 
 def calc_future_posdtl(logger, cursor, current_trading_day, settlement_group_id, settlement_id, exchange_id):
