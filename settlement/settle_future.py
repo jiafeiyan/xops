@@ -588,7 +588,7 @@ def sett_future(logger, cursor, current_trading_day, next_trading_day, settlemen
                                                       t2.closetodayfeeratio
                                                      when t1.offsetflag = '4' then
                                                       t2.closeyesterdayfeeratio
-                                                   end) * t1.volume * t3.volumemultiple,
+                                                   end) * t1.volume,
                                                    2),
                                              round((case
                                                      when t1.offsetflag = '0' or
@@ -642,7 +642,7 @@ def sett_future(logger, cursor, current_trading_day, next_trading_day, settlemen
                                                       t2.closetodayfeeratio
                                                      when t1.offsetflag = '4' then
                                                       t2.closeyesterdayfeeratio
-                                                   end) * t1.volume * t3.volumemultiple,
+                                                   end) * t1.volume,
                                                    2),
                                              round((case
                                                      when t1.offsetflag = '0' or
@@ -698,7 +698,7 @@ def sett_future(logger, cursor, current_trading_day, next_trading_day, settlemen
                                                       t2.closetodayfeeratio
                                                      when t1.offsetflag = '4' then
                                                       t2.closeyesterdayfeeratio
-                                                   end) * t1.volume * t3.volumemultiple,
+                                                   end) * t1.volume,
                                                    2),
                                              round((case
                                                      when t1.offsetflag = '0' or
@@ -1005,7 +1005,7 @@ def sett_future_option(logger, cursor, current_trading_day, next_trading_day, se
                                         t2.openfeeratio
                                        when t1.offsetflag = '3' or t1.offsetflag = '1' or  t1.offsetflag = '4' then
                                         t2.closetodayfeeratio
-                               end) * t3.volumemultiple ,
+                               end),
                                2) * t1.volume ,
                            round((case
                                        when t1.offsetflag = '0' or
@@ -1054,7 +1054,7 @@ def sett_future_option(logger, cursor, current_trading_day, next_trading_day, se
                                         t2.openfeeratio
                                        when t1.offsetflag = '3' or t1.offsetflag = '1' or  t1.offsetflag = '4' then
                                         t2.closetodayfeeratio
-                               end) * t3.volumemultiple ,
+                               end),
                                2) * t1.volume ,
                            round((case
                                        when t1.offsetflag = '0' or
@@ -1105,7 +1105,7 @@ def sett_future_option(logger, cursor, current_trading_day, next_trading_day, se
                                         t2.openfeeratio
                                        when t1.offsetflag = '3' or t1.offsetflag = '1' or  t1.offsetflag = '4' then
                                         t2.closetodayfeeratio
-                               end) * t3.volumemultiple ,
+                               end),
                                2) * t1.volume ,
                            round((case
                                        when t1.offsetflag = '0' or

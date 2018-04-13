@@ -19,7 +19,7 @@ def settle_activity(context, conf):
         cursor = mysql_conn.cursor()
 
         # 结算正在进行的赛事数据
-        sql = """SELECT * FROM siminfo.t_activity"""
+        sql = """SELECT activityid FROM siminfo.t_activity WHERE activitystatus != '2'"""
         cursor.execute(sql)
         rows = cursor.fetchall()
 
@@ -38,6 +38,14 @@ def settle_activity(context, conf):
             current_trading_day = str(row[0])
             logger.info("[get current trading day for activity %s] current_trading_day = %s" % (activity_id, current_trading_day))
 
+            sql = """SELECT activitystatus FROM siminfo.t_activity WHERE activityid = %s"""
+            cursor.execute(sql, (activity_id,))
+            row = cursor.fetchone()
+
+            if "0" == str(row[0]):
+                sql = """DELETE FROM siminfo.t_activityinvestorevaluation WHERE activityid = %s"""
+                cursor.execute(sql, (activity_id,))
+
             # 赛事开始状态设置
             sql = """UPDATE siminfo.t_activity 
                                     SET
@@ -48,8 +56,8 @@ def settle_activity(context, conf):
                                         THEN '1' 
                                         ELSE activitystatus 
                                       END 
-                                    WHERE activitystatus = '0'"""
-            cursor.execute(sql, (current_trading_day, current_trading_day))
+                                    WHERE activityid = %s AND activitystatus = '0'"""
+            cursor.execute(sql, (current_trading_day, current_trading_day, activity_id))
 
             sql = """SELECT activitystatus,initialbalance FROM siminfo.t_activity WHERE activityid = %s"""
             cursor.execute(sql, (activity_id,))
@@ -98,7 +106,7 @@ def settle_activity(context, conf):
                                           AND t1.investorid = t2.investorid
                                           AND t2.activityid = %s
                                           AND t2.joinstatus = '0'"""
-            cursor.execute(sql, (activity_id, activity_id, initial_balance, initial_balance))
+            cursor.execute(sql, (initial_balance, initial_balance, activity_id, activity_id))
             sql = """DELETE FROM siminfo.t_clientposition 
                                 WHERE clientid IN (SELECT clientid FROM siminfo.t_investorclient t1, siminfo.t_activityinvestor t2, siminfo.t_activitysettlementgroup t3 
                                                 WHERE t1.investorid = t2.investorid AND t2.joinstatus = '0' AND t1.settlementgroupid = t3.settlementgroupid 
