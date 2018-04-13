@@ -1189,22 +1189,20 @@ def sett_future_option(logger, cursor, current_trading_day, next_trading_day, se
                         if (t1.posidirection = '3',t5.ShortMarginRatio,0) as MarginRatio,
                         t5.ValueMode,
                         t3.SettlementPrice,
-                        GREATEST(
+                        if (t1.posidirection = '3', GREATEST(
                         round(t3.SettlementPrice * t4.VolumeMultiple * t4.UnderlyingMultiple + 
                                         if(t5.ValueMode = '1', 
-                                                if(t1.PosiDirection='2',0,t5.ShortMarginRatio) * 
-                                                        (t1.Position + t1.YdPosition) * t4.underlyvolumemultiple * t4.SettlementPrice,
-                                                if(t1.PosiDirection='2',0,t5.ShortMarginRatio) * 
-                                                        (t1.Position + t1.YdPosition) * t4.underlyvolumemultiple 
+                                                t5.ShortMarginRatio * (t1.Position + t1.YdPosition) * t4.underlyvolumemultiple * t4.SettlementPrice,
+                                                t5.ShortMarginRatio * (t1.Position + t1.YdPosition) * t4.underlyvolumemultiple 
                                                 ) -
                                         (1/2) * if(t4.OptionsType = '1', 
                                                                 GREATEST(t4.StrikePrice - t4.SettlementPrice,0) * t4.VolumeMultiple * t4.UnderlyingMultiple,
                                                                 GREATEST(t4.SettlementPrice - t4.StrikePrice,0)), 2) * t4.VolumeMultiple * t4.UnderlyingMultiple,
                         round(t3.SettlementPrice * t4.VolumeMultiple * t4.UnderlyingMultiple + 
                                             (1/2) * if(t5.ValueMode = '1', 
-                                                if(t1.PosiDirection='2',0,t5.ShortMarginRatio) * (t1.Position + t1.YdPosition) * t4.underlyvolumemultiple * t4.SettlementPrice,
-                                                if(t1.PosiDirection='2',0,t5.ShortMarginRatio) * (t1.Position + t1.YdPosition) * t4.underlyvolumemultiple) , 2)
-                       ) as positionmargin
+                                                t5.ShortMarginRatio * (t1.Position + t1.YdPosition) * t4.underlyvolumemultiple * t4.SettlementPrice,
+                                                t5.ShortMarginRatio * (t1.Position + t1.YdPosition) * t4.underlyvolumemultiple) , 2)
+                       ), 0) as positionmargin
                     FROM
                     ( SELECT t1.*, t2.tradingrole FROM dbclear.t_clientposition t1, siminfo.t_client t2 WHERE t1.clientid = t2.clientid and t2.SettlementGroupID = %s) t1,
                     siminfo.t_PartRoleAccount t2,
