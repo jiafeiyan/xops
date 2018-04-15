@@ -21,8 +21,9 @@ class trans_futureinfo:
         # 初始化模板路径
         self.initTemplate = context.get("init")[configs.get("initId")]
         self.file_instrument = "future_instrument.csv"
-        self.file_product = "future_product.csv"
         self.file_marketdata = "future_depthmarketdata.csv"
+        self.file_product = "future_product.csv"
+        self.file_marginrate = "future_marginrate.csv"
         # 交易所和结算组对应关系
         self.exchange_conf = self.__get_exchange()
         self.__transform()
@@ -61,14 +62,15 @@ class trans_futureinfo:
             # ===========处理instrument.csv写入t_MarginRate表==============
             self.__t_MarginRate(mysqlDB=mysqlDB, csv_file=csvs[0])
 
-            # ===========处理instrument.csv写入t_MarginRateDetail表==============
-            self.__t_MarginRateDetail(mysqlDB=mysqlDB, csv_file=csvs[0])
-
             # ===========判断并写入t_InstrumentProperty表==============
             self.__t_InstrumentProperty(mysqlDB=mysqlDB, csv_file=csvs[0])
 
             # ===========判断并写入t_TransFeeRateDetail表==============
             self.__t_TransFeeRateDetail(mysqlDB=mysqlDB, csv_file=csvs[0])
+
+        if csvs[1] is not None and csvs[3] is not None:
+            # ===========处理instrument.csv写入t_MarginRateDetail表==============
+            self.__t_MarginRateDetail(mysqlDB, csvs[1], csvs[3])
 
         if csvs[2] is not None:
             # ===========写入t_MarketData表 ==============
@@ -312,16 +314,19 @@ class trans_futureinfo:
             mysql_conn.close()
         self.logger.info("写入t_MarginRate完成")
 
-    def __t_MarginRateDetail(self, mysqlDB, csv_file):
+    def __t_MarginRateDetail(self, mysqlDB, *args):
         mysql_conn = mysqlDB.get_cnx()
         mysql_conn.start_transaction()
         try:
-            # 获取模板文件
-            template = self.__loadJSON(tableName='t_MarginRateDetail')
-            if template is None:
-                self.logger.error("t_MarginRateDetail template is None")
-                return
             cursor = mysql_conn.cursor()
+            # 产品文件
+            products = args[0]
+            # 通过产品文件将产品和结算组挂接
+            product_sgid = dict()
+            for product in islice(products, 1, None):
+                product_sgid[product['ProductID']] = self.exchange_conf[str(product['ExchangeID']).upper()]
+            # 保证金率文件
+            marginrate = args[1]
             # 删除期货交易所下所有数据
             cursor.execute("delete from siminfo.t_MarginRateDetail where SettlementGroupID in "
                            + str(tuple([str(i) for i in self.exchange_conf.values()])))
@@ -331,33 +336,18 @@ class trans_futureinfo:
                                         InstrumentID,ParticipantID,ClientID
                                     ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
             sql_insert_params = []
-            for future in islice(csv_file, 1, None):
-                if "&" in future["ProductID"]:
-                    continue
-                SGID = self.exchange_conf[future["ExchangeID"]]
-                if SGID in template:
-                    sql_insert_params.append(
-                        self.__get_margin_rate_detail(attr=template[SGID],
-                                                      product=future["ProductID"],
-                                                      instrument=future["InstrumentID"]))
+            for future in islice(marginrate, 1, None):
+                for k, v in product_sgid.iteritems():
+                    if k in str(future['InstrumentID']):
+                        sql_insert_params.append((v, '1', future['HedgeFlag'], '1',
+                                                  future['LongMarginRatioByMoney'], future['ShortMarginRatioByMoney'],
+                                                  future['InstrumentID'], '00000000', '00000000'))
+                        break
             cursor.executemany(sql_insert_detail, sql_insert_params)
             mysql_conn.commit()
         finally:
             mysql_conn.close()
         self.logger.info("写入t_MarginRateDetail完成")
-
-    # 通过产品代码生成目标合约的保证金率
-    def __get_margin_rate_detail(self, attr, product, instrument):
-        template = attr["template"]
-        margin_ratio = attr["marginRatio"]
-        # 判断产品代码是否存在于模版
-        if product in margin_ratio.keys():
-            params = (template[0], template[1], template[2], template[3], margin_ratio[product][0],
-                      margin_ratio[product][1], instrument, template[9], template[10])
-        else:
-            params = (template[0], template[1], template[2], template[3], template[4], template[5], instrument,
-                      template[9], template[10])
-        return params
 
     def __t_TransFeeRateDetail(self, mysqlDB, csv_file):
         mysql_conn = mysqlDB.get_cnx()
@@ -519,9 +509,14 @@ class trans_futureinfo:
         # 获取文件路径
         catalog = env_dist['HOME']
         catalog = '%s%s%s%s%s' % (catalog, os.path.sep, 'sim_data', os.path.sep, self.TradingDay)
+        # 合约信息
         instrument = '%s%s%s' % (catalog, os.path.sep, self.file_instrument)
+        # 产品信息
         product = '%s%s%s' % (catalog, os.path.sep, self.file_product)
+        # 行情信息
         depthmarketdata = '%s%s%s' % (catalog, os.path.sep, self.file_marketdata)
+        # 保证金率
+        marginrate = '%s%s%s' % (catalog, os.path.sep, self.file_marginrate)
         # 判断instrument.csv文件是否存在，不存在设置为空
         if not os.path.exists(instrument):
             self.logger.error("%s%s" % (instrument, " is not exists"))
@@ -534,15 +529,22 @@ class trans_futureinfo:
         if not os.path.exists(depthmarketdata):
             self.logger.error("%s%s" % (depthmarketdata, " is not exists"))
             depthmarketdata = None
+        # 判断marginrate.csv文件是否存在，不存在设置为空
+        if not os.path.exists(marginrate):
+            self.logger.error("%s%s" % (marginrate, " is not exists"))
+            marginrate = None
         # 读取CSV文件
         if file_name is None:
-            return self.__loadCSV(instrument), self.__loadCSV(product), self.__loadCSV(depthmarketdata)
+            return self.__loadCSV(instrument), self.__loadCSV(product), \
+                   self.__loadCSV(depthmarketdata), self.__loadCSV(marginrate)
         elif file_name == 'instrument':
             return self.__loadCSV(instrument)
         elif file_name == 'property':
             return self.__loadCSV(product)
         elif file_name == 'depthmarketdata':
             return self.__loadCSV(depthmarketdata)
+        elif file_name == 'marginrate':
+            return self.__loadCSV(marginrate)
 
     def __loadCSV(self, csv_file):
         if csv_file is None:
