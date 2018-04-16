@@ -1,4 +1,4 @@
 {
   "host" : "future_broker",
-  "command" : "source ${HOME}/.bash_profile && ecall.sh startservice"
+  "command" : "source ${HOME}/.bash_profile && sh ${HOME}/bakuplog && ecall.sh startservice"
 }

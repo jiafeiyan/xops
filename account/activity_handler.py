@@ -107,7 +107,7 @@ def join_activity(mysql_conn, parameters):
                                                     UNION
                                                     SELECT DISTINCT t2.investorid FROM siminfo.t_clientposition t1, siminfo.t_investorclient t2, (SELECT settlementgroupid FROM siminfo.t_activitysettlementgroup WHERE activityid = %s) t3
                                                     WHERE t2.investorid = %s AND t1.clientid = t2.clientid AND t1.settlementgroupid = t2.settlementgroupid AND t2.settlementgroupid = t3.settlementgroupid AND t1.position > 0"""
-                        cursor.execute(sql, (activity,investor_id,activity,investor_id,initial_balance,initial_balance))
+                        cursor.execute(sql, (activity,investor_id,initial_balance,initial_balance,activity,investor_id))
                         cursor.fetchall()
                         if cursor.rowcount == 0:
                             sql = """INSERT INTO siminfo.t_activityinvestorevaluation(ActivityID,InvestorID,InitialAsset,PreAsset,CurrentAsset,TotalReturnRate,ReturnRateOf1Day)

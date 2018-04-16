@@ -13,7 +13,7 @@ last_trading_day=`sh ${SIM_PLATFORM_HOME}/appshell/get_future_lasttradingday.sh`
 
 if [ "${last_trading_day}" != "${now_date}" ]; then
     echo "当前日期[${now_date}]非当前交易日[${trading_day}]前一交易日[${last_trading_day}]..." | tee -a crontab.log
-    exit 1
+#    exit 1
 fi
 
 # 1) shutdown future broker
@@ -51,19 +51,22 @@ sh ${SIM_PLATFORM_HOME}/appshell/future_csv_all.sh >> crontab.log
 echo "start tinit.sh ... "
 sh ${SIM_PLATFORM_HOME}/appshell/tinit_future.sh >> crontab.log
 
-# 8) start future exchange
-echo "start start_future_exchange.sh ... "
-sh ${SIM_PLATFORM_HOME}/appshell/start_future_exchange.sh >> crontab.log
-
 # 9) start future broker
 echo "start start_future_broker.sh ... "
 sh ${SIM_PLATFORM_HOME}/appshell/start_future_broker.sh >> crontab.log
 
 # 10) sleep 2 minutes
-sleep 120
+sleep 30
 
 # 11) fire tinit
 echo "start fire_tinit.sh ..."
 sh ${SIM_PLATFORM_HOME}/appshell/fire_tinit.sh >> crontab.log
+
+sleep 30
+
+# 8) start future exchange
+echo "start start_future_exchange.sh ... "
+sh ${SIM_PLATFORM_HOME}/appshell/start_future_exchange.sh >> crontab.log
+
 
 echo "${now_date} crontab_tinit_future.sh finished..." | tee -a crontab.log

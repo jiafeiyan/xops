@@ -354,8 +354,8 @@ class exchange_future_csv:
                                                 if(t1.ValueMode = '2',t1.CloseTodayFeeRatio,'0') as StrikeRatioByVolume
                                             from siminfo.t_instrument t, siminfo.t_transfeeratedetail t1 
                                             where t.SettlementGroupID = t1.SettlementGroupID 
-                                            and t.InstrumentID = t1.InstrumentID 
-                                            and t.ProductClass = '2'
+                                            and t.InstrumentID = t1.InstrumentID
+                                            and t.productclass = '2' 
                                             AND t.SettlementGroupID IN """ +
                                            str(tuple([str(i) for i in self.settlementGroupID])),
                                        quoting=True),

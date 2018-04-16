@@ -1,11 +1,11 @@
 {
-  "simplatform_base" : {
-    "user": "chenyan",
-    "password": "chenyan",
-    "host": "192.168.99.100",
-    "port": 9999,
-    "sid": "xe",
+  "cif" : {
+    "user": "mncg",
+    "password": "mncg",
+    "host": "10.188.15.8",
+    "port": 1521,
+    "sid": "cifbkn",
     "pool_min": 5,
-    "pool_max": 40
+    "pool_max": 20
   }
 }

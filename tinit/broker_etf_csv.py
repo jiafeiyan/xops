@@ -322,22 +322,22 @@ class broker_etf_csv:
                                 WHERE t.InvestorID = t1.InvestorID AND t1.SettlementGroupID =  %s
                                 UNION ALL
                                 SELECT 'broker' AS UserID,'操作员broker' AS UserName,'0' AS UserType,
-                                        '0001' AS DepartmentID,'123456' AS UserPassword,'10' AS LoginLimit,
+                                        '0001' AS DepartmentID,'sim@2018' AS UserPassword,'10' AS LoginLimit,
                                         '3' AS PasswordFailLimit,'3' AS STATUS,'' AS Contacter,'' AS Fax,'' AS Telephone,
                                         '' AS Email,'' AS Address,'' AS ZipCode,'' AS OpenDate,'' AS CloseDate
                                 UNION ALL
                                 SELECT 'broker1' AS UserID,'操作员broker1' AS UserName,'0' AS UserType,
-                                        '0001' AS DepartmentID,'123456' AS UserPassword,'10' AS LoginLimit,
+                                        '0001' AS DepartmentID,'sim@2018' AS UserPassword,'10' AS LoginLimit,
                                         '3' AS PasswordFailLimit,'3' AS STATUS,'' AS Contacter,'' AS Fax,'' AS Telephone,
                                         '' AS Email,'' AS Address,'' AS ZipCode,'' AS OpenDate,'' AS CloseDate
                                 UNION ALL
                                 SELECT 'admin' AS UserID,'管理员admin' AS UserName,'1' AS UserType,
-                                        '0001' AS DepartmentID,'123456' AS UserPassword,'10' AS LoginLimit,
+                                        '0001' AS DepartmentID,'sim@2018' AS UserPassword,'10' AS LoginLimit,
                                         '3' AS PasswordFailLimit,'3' AS STATUS,'' AS Contacter,'' AS Fax,'' AS Telephone,
                                         '' AS Email,'' AS Address,'' AS ZipCode,'' AS OpenDate,'' AS CloseDate
                                 UNION ALL
                                 SELECT 'admin1' AS UserID,'管理员admin1' AS UserName,'1' AS UserType,
-                                        '0001' AS DepartmentID,'123456' AS UserPassword,'10' AS LoginLimit,
+                                        '0001' AS DepartmentID,'sim@2018' AS UserPassword,'10' AS LoginLimit,
                                         '3' AS PasswordFailLimit,'3' AS STATUS,'' AS Contacter,'' AS Fax,'' AS Telephone,
                                         '' AS Email,'' AS Address,'' AS ZipCode,'' AS OpenDate,'' AS CloseDate""",
                       params=(self.settlementGroupID,)),

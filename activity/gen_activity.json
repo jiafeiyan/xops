@@ -5,8 +5,8 @@
     "name": "华鑫股票大赛",
     "type" : "ZQ",
     "balance" : "100000",
-    "begin":"20180319",
-    "end":"20180616",
+    "begin":"20180416",
+    "end":"20180515",
     "settlement_groups" : ["SG01","SG02"]
   }]
 }
