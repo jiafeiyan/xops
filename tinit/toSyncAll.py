@@ -99,7 +99,9 @@ class toSyncAll:
         self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
         delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
         self.logger.info("同步" + table_name + " ==>> sync")
-        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
+        sql = """INSERT INTO sync.""" + table_name + """ 
+                          (TradeSystemID, SettlementGroupID, AccountID, ParticipantID, Currency)
+                          SELECT t2.TradeSystemID,
                           t.SettlementGroupID, t.AccountID, t.ParticipantID, t.Currency
                           FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
                           WHERE t.SettlementGroupID = t2.SettlementGroupID
@@ -113,7 +115,10 @@ class toSyncAll:
         self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
         delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
         self.logger.info("同步" + table_name + " ==>> sync")
-        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
+        sql = """INSERT INTO sync.""" + table_name + """ 
+                           (TradeSystemID,
+                           SettlementGroupID, ParticipantID, AccountID, Reserve)
+                           SELECT t2.TradeSystemID,
                            t.SettlementGroupID, t.ParticipantID, t.AccountID, t.Reserve
                            FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
                            WHERE t.SettlementGroupID = t2.SettlementGroupID 
@@ -127,7 +132,10 @@ class toSyncAll:
         self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
         delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
         self.logger.info("同步" + table_name + " ==>> sync")
-        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
+        sql = """INSERT INTO sync.""" + table_name + """ 
+                        (TradeSystemID,
+                        SettlementGroupID, FunctionCode, OperationType, Description)
+                        SELECT t2.TradeSystemID,
                         t.SettlementGroupID, t.FunctionCode, t.OperationType, t.Description
                         FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
                         WHERE t.SettlementGroupID = t2.SettlementGroupID 
@@ -141,7 +149,10 @@ class toSyncAll:
         self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
         delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
         self.logger.info("同步" + table_name + " ==>> sync")
-        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
+        sql = """INSERT INTO sync.""" + table_name + """ 
+                        (TradeSystemID,
+                        ClearingPartID, ParticipantID)
+                        SELECT t2.TradeSystemID,
                         t.ClearingPartID, t.ParticipantID
                         FROM siminfo.""" + table_name + """ t,siminfo.t_Participant t3,siminfo.t_TradeSystemSettlementGroup t2
                         WHERE t.ParticipantID = t3.ParticipantID AND t3.SettlementGroupID = t2.SettlementGroupID 
@@ -155,7 +166,10 @@ class toSyncAll:
         self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
         delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
         self.logger.info("同步" + table_name + " ==>> sync")
-        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID, 
+        sql = """INSERT INTO sync.""" + table_name + """ 
+                       (TradeSystemID, 
+                       SettlementGroupID, ProductID, ClientID, TradingRight)
+                       SELECT t2.TradeSystemID, 
                        t.SettlementGroupID, t.ProductID, t.ClientID, t.TradingRight
                        FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
                        WHERE t.SettlementGroupID = t2.SettlementGroupID 
@@ -169,7 +183,10 @@ class toSyncAll:
         self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
         delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
         self.logger.info("同步" + table_name + " ==>> sync")
-        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID, 
+        sql = """INSERT INTO sync.""" + table_name + """ 
+                          (TradeSystemID, 
+                          ExchangeID, ExchangeName)
+                          SELECT t2.TradeSystemID, 
                           t.ExchangeID, t.ExchangeName 
                           FROM siminfo.""" + table_name + """ t, siminfo.t_SettlementGroup t3,siminfo.t_TradeSystemSettlementGroup t2
                           WHERE t.ExchangeID = t3.ExchangeID AND t3.SettlementGroupID = t2.SettlementGroupID
@@ -184,9 +201,15 @@ class toSyncAll:
         self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
         delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
         self.logger.info("同步" + table_name + " ==>> sync")
-        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
+        sql = """INSERT INTO sync.""" + table_name + """ 
+                  (TradeSystemID,
+                  SettlementGroupID,ProductID,ProductGroupID,UnderlyingInstrID,
+                  ProductClass,PositionType,PositionDateType,UnderlyingType,StrikeType,StrikePrice,OptionsType,VolumeMultiple,
+                  UnderlyingMultiple,TotalEquity,CirculationEquity,InstrumentID,ExchInstrumentID,InstrumentName,
+                  DeliveryYear,DeliveryMonth,AdvanceMonth,isTrading)
+                  SELECT t2.TradeSystemID,
                   t.SettlementGroupID,t.ProductID,t.ProductGroupID,t.UnderlyingInstrID,
-                  t.ProductClass,t.PositionType,t.UnderlyingType,t.StrikeType,t.StrikePrice,t.OptionsType,t.VolumeMultiple,
+                  t.ProductClass,t.PositionType,t.PositionDateType,t.UnderlyingType,t.StrikeType,t.StrikePrice,t.OptionsType,t.VolumeMultiple,
                   t.UnderlyingMultiple,t.TotalEquity,t.CirculationEquity,t.InstrumentID,t.ExchInstrumentID,t.InstrumentName,
                   t.DeliveryYear,t.DeliveryMonth,t.AdvanceMonth,%s
                   FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
@@ -201,7 +224,10 @@ class toSyncAll:
         self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
         delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
         self.logger.info("同步" + table_name + " ==>> sync")
-        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID, 
+        sql = """INSERT INTO sync.""" + table_name + """ 
+                              (TradeSystemID, 
+                              SettlementGroupID, MarketID, MarketName)
+                              SELECT t2.TradeSystemID, 
                               t.SettlementGroupID, t.MarketID, t.MarketName
                               FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
                               WHERE t.SettlementGroupID = t2.SettlementGroupID 
@@ -215,7 +241,13 @@ class toSyncAll:
         self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
         delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
         self.logger.info("同步" + table_name + " ==>> sync")
-        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID, TradingDay,
+        sql = """INSERT INTO sync.""" + table_name + """ 
+                              (TradeSystemID, TradingDay,
+                              SettlementGroupID,LastPrice,PreSettlementPrice,PreClosePrice,UnderlyingClosePx,PreOpenInterest,
+                              OpenPrice,HighestPrice,LowestPrice,Volume,Turnover,OpenInterest,ClosePrice,
+                              SettlementPrice,UpperLimitPrice,LowerLimitPrice,PreDelta,CurrDelta,
+                              UpdateTime,UpdateMillisec,InstrumentID)
+                              SELECT t2.TradeSystemID, TradingDay,
                               t.SettlementGroupID,t.LastPrice,t.PreSettlementPrice,t.PreClosePrice,t.UnderlyingClosePx,t.PreOpenInterest,
                               t.OpenPrice,t.HighestPrice,t.LowestPrice,t.Volume,t.Turnover,t.OpenInterest,t.ClosePrice,
                               t.SettlementPrice,t.UpperLimitPrice,t.LowerLimitPrice,t.PreDelta,t.CurrDelta,
@@ -232,7 +264,10 @@ class toSyncAll:
         self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
         delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
         self.logger.info("同步" + table_name + " ==>> sync")
-        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
+        sql = """INSERT INTO sync.""" + table_name + """ 
+                              (TradeSystemID,
+                              SettlementGroupID,MarketID,ProductID)
+                              SELECT t2.TradeSystemID,
                               t.SettlementGroupID,t.MarketID,t.ProductID
                               FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
                               WHERE t.SettlementGroupID = t2.SettlementGroupID
@@ -246,7 +281,10 @@ class toSyncAll:
         self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
         delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
         self.logger.info("同步" + table_name + " ==>> sync")
-        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
+        sql = """INSERT INTO sync.""" + table_name + """ 
+                              (TradeSystemID,
+                              SettlementGroupID,MarketID,ProductGroupID)
+                              SELECT t2.TradeSystemID,
                               t.SettlementGroupID,t.MarketID,t.ProductGroupID
                               FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
                               WHERE t.SettlementGroupID = t2.SettlementGroupID 
@@ -260,7 +298,10 @@ class toSyncAll:
         self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
         delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
         self.logger.info("同步" + table_name + " ==>> sync")
-        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
+        sql = """INSERT INTO sync.""" + table_name + """ 
+                              (TradeSystemID,
+                              SettlementGroupID,ProductID,ParticipantID,TradingRight)
+                              SELECT t2.TradeSystemID,
                               t.SettlementGroupID,t.ProductID,t.ParticipantID,t.TradingRight
                               FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
                               WHERE t.SettlementGroupID = t2.SettlementGroupID 
@@ -274,7 +315,10 @@ class toSyncAll:
         self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
         delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
         self.logger.info("同步" + table_name + " ==>> sync")
-        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
+        sql = """INSERT INTO sync.""" + table_name + """ 
+                              (TradeSystemID,
+                              SettlementGroupID,ParticipantID,ProductID,TradingRole)
+                              SELECT t2.TradeSystemID,
                               t.SettlementGroupID,t.ParticipantID,t.ProductID,t.TradingRole
                               FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
                               WHERE t.SettlementGroupID = t2.SettlementGroupID 
@@ -288,7 +332,10 @@ class toSyncAll:
         self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
         delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
         self.logger.info("同步" + table_name + " ==>> sync")
-        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
+        sql = """INSERT INTO sync.""" + table_name + """ 
+                              (TradeSystemID,
+                              SettlementGroupID,ParticipantID,TradingRole,AccountID)
+                              SELECT t2.TradeSystemID,
                               t.SettlementGroupID,t.ParticipantID,t.TradingRole,t.AccountID
                               FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
                               WHERE t.SettlementGroupID = t2.SettlementGroupID 
@@ -302,7 +349,11 @@ class toSyncAll:
         self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
         delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
         self.logger.info("同步" + table_name + " ==>> sync")
-        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
+        sql = """INSERT INTO sync.""" + table_name + """ 
+                              (TradeSystemID,
+                              SettlementGroupID,ParticipantID,ParticipantName,ParticipantAbbr,
+                              MemberType,IsActive)
+                              SELECT t2.TradeSystemID,
                               t.SettlementGroupID,t.ParticipantID,t.ParticipantName,t.ParticipantAbbr,
                               t.MemberType,t.IsActive
                               FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
@@ -317,7 +368,11 @@ class toSyncAll:
         self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
         delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
         self.logger.info("同步" + table_name + " ==>> sync")
-        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
+        sql = """INSERT INTO sync.""" + table_name + """ 
+                              (TradeSystemID,
+                              SettlementGroupID,SettlementGroupName,ExchangeID,
+                              SettlementGroupType,Currency)
+                              SELECT t2.TradeSystemID,
                               t.SettlementGroupID,t.SettlementGroupName,t.ExchangeID,
                               t.SettlementGroupType,t.Currency
                               FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
@@ -332,7 +387,9 @@ class toSyncAll:
         self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
         delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
         self.logger.info("同步" + table_name + " ==>> sync")
-        sql = """INSERT INTO sync.""" + table_name + """ SELECT t.TradeSystemID,t.BrokerSystemID
+        sql = """INSERT INTO sync.""" + table_name + """ 
+                              (TradeSystemID,BrokerSystemID)
+                              SELECT t.TradeSystemID,t.BrokerSystemID
                               FROM siminfo.""" + table_name + """ t
                               WHERE  t.TradeSystemID=%s"""
         trans = [dict(sql=delete, params=(self.tradeSystemID,)),
@@ -344,7 +401,11 @@ class toSyncAll:
         self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
         delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
         self.logger.info("同步" + table_name + " ==>> sync")
-        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
+        sql = """INSERT INTO sync.""" + table_name + """ 
+                              (TradeSystemID,
+                              SettlementGroupID,PreBalance,CurrMargin,CloseProfit,Premium,Deposit,Withdraw,
+                              Balance,Available,AccountID,FrozenMargin,FrozenPremium)
+                              SELECT t2.TradeSystemID,
                               t.SettlementGroupID,PreBalance,CurrMargin,CloseProfit,Premium,Deposit,Withdraw,
                               Balance,Available,AccountID,FrozenMargin,FrozenPremium
                               FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
@@ -359,7 +420,12 @@ class toSyncAll:
         self.logger.info("删除sync.t_CurrInstrumentProperty下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
         delete = "DELETE FROM sync.t_Curr" + table_name + " WHERE TradeSystemID=%s"
         self.logger.info("同步siminfo.t_InstrumentProperty ==>> sync.t_CurrInstrumentProperty")
-        sql = """INSERT INTO sync.t_Curr""" + table_name + """ SELECT t2.TradeSystemID,
+        sql = """INSERT INTO sync.t_Curr""" + table_name + """ 
+                              (TradeSystemID,
+                              SettlementGroupID,CreateDate,OpenDate,ExpireDate,StartDelivDate,EndDelivDate,StrikeDate,
+                                BasisPrice,MaxMarketOrderVolume,MinMarketOrderVolume,MaxLimitOrderVolume,
+                                MinLimitOrderVolume,PriceTick,AllowDelivPersonOpen,InstrumentID,InstLifePhase,IsFirstTradingDay)
+                              SELECT t2.TradeSystemID,
                               t.SettlementGroupID,CreateDate,OpenDate,ExpireDate,StartDelivDate,EndDelivDate,StrikeDate,
                                 BasisPrice,MaxMarketOrderVolume,MinMarketOrderVolume,MaxLimitOrderVolume,
                                 MinLimitOrderVolume,PriceTick,AllowDelivPersonOpen,InstrumentID,InstLifePhase,%s
@@ -375,7 +441,10 @@ class toSyncAll:
         self.logger.info("删除sync.t_CurrMarginRate下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
         delete = "DELETE FROM sync.t_Curr" + table_name + " WHERE TradeSystemID=%s"
         self.logger.info("同步siminfo.t_MarginRate ==>> sync.t_CurrMarginRate")
-        sql = """INSERT INTO sync.t_Curr""" + table_name + """ SELECT t2.TradeSystemID,
+        sql = """INSERT INTO sync.t_Curr""" + table_name + """ 
+                              (TradeSystemID,
+                              SettlementGroupID,MarginCalcID,InstrumentID,ParticipantID)
+                              SELECT t2.TradeSystemID,
                               t.SettlementGroupID,MarginCalcID,InstrumentID,ParticipantID
                               FROM siminfo.t_""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
                               WHERE t.SettlementGroupID = t2.SettlementGroupID 
@@ -389,7 +458,11 @@ class toSyncAll:
         self.logger.info("删除sync.t_CurrMarginRateDetail下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
         delete = "DELETE FROM sync.t_Curr" + table_name + " WHERE TradeSystemID=%s"
         self.logger.info("同步siminfo.t_MarginRateDetail ==>> sync.t_CurrMarginRateDetail")
-        sql = """INSERT INTO sync.t_Curr""" + table_name + """ SELECT t2.TradeSystemID,
+        sql = """INSERT INTO sync.t_Curr""" + table_name + """ 
+                             (TradeSystemID,
+                             SettlementGroupID,TradingRole,HedgeFlag,ValueMode,LongMarginRatio,
+                             ShortMarginRatio,AdjustRatio1,AdjustRatio2,InstrumentID,ParticipantID,ClientID)
+                              SELECT t2.TradeSystemID,
                              t.SettlementGroupID,TradingRole,HedgeFlag,ValueMode,LongMarginRatio,
                              ShortMarginRatio,AdjustRatio1,AdjustRatio2,InstrumentID,ParticipantID,ClientID
                              FROM siminfo.t_""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
@@ -404,7 +477,13 @@ class toSyncAll:
         self.logger.info("删除sync.t_CurrTradingSegmentAttr下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
         delete = "DELETE FROM sync.t_Curr" + table_name + " WHERE TradeSystemID=%s"
         self.logger.info("同步siminfo.t_TradingSegmentAttr ==>> sync.t_CurrTradingSegmentAttr")
-        sql = """INSERT INTO sync.t_Curr""" + table_name + """ SELECT t2.TradeSystemID, 
+        sql = """INSERT INTO sync.t_Curr""" + table_name + """ 
+                              (TradeSystemID, 
+                     SettlementGroupID,TradingSegmentSN,TradingSegmentName,
+                     StartTime,InstrumentStatus,
+                     DayOffset,
+                     InstrumentID)
+                              SELECT t2.TradeSystemID, 
                      t.SettlementGroupID,TradingSegmentSN,TradingSegmentName,
                      StartTime,InstrumentStatus,
                      CASE WHEN DayOffset = -1 THEN IF(DATEDIFF(DATE_FORMAT(NOW(), '%Y%m%d'), 
@@ -428,7 +507,10 @@ class toSyncAll:
         self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
         delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
         self.logger.info("同步" + table_name + " ==>> sync")
-        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
+        sql = """INSERT INTO sync.""" + table_name + """ 
+                              (TradeSystemID,
+                          SettlementGroupID,InstrumentID,InstrumentGroupID)
+                              SELECT t2.TradeSystemID,
                           t.SettlementGroupID,t.InstrumentID,t.InstrumentGroupID
                           FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
                           WHERE t.SettlementGroupID = t2.SettlementGroupID 
@@ -442,7 +524,11 @@ class toSyncAll:
         self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
         delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
         self.logger.info("同步" + table_name + " ==>> sync")
-        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
+        sql = """INSERT INTO sync.""" + table_name + """ 
+                              (TradeSystemID,
+                             SettlementGroupID,TopicID,TopicName,MarketID,SnapShotFeq,
+                             MarketDataDepth,DelaySeconds,MarketDataMode)
+                              SELECT t2.TradeSystemID,
                              t.SettlementGroupID,t.TopicID,t.TopicName,t.MarketID,t.SnapShotFeq,
                              t.MarketDataDepth,t.DelaySeconds,t.MarketDataMode
                              FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
@@ -457,7 +543,10 @@ class toSyncAll:
         self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
         delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
         self.logger.info("同步" + table_name + " ==>> sync")
-        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
+        sql = """INSERT INTO sync.""" + table_name + """ 
+                              (TradeSystemID,
+                           SettlementGroupID,ProductID,InstrumentStatus,MdPubStatus)
+                              SELECT t2.TradeSystemID,
                            t.SettlementGroupID,t.ProductID,t.InstrumentStatus,t.MdPubStatus
                            FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
                            WHERE t.SettlementGroupID = t2.SettlementGroupID 
@@ -471,7 +560,10 @@ class toSyncAll:
         self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
         delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
         self.logger.info("同步" + table_name + " ==>> sync")
-        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
+        sql = """INSERT INTO sync.""" + table_name + """ 
+                              (TradeSystemID,
+                           SettlementGroupID,ClientID,ParticipantID)
+                              SELECT t2.TradeSystemID,
                            t.SettlementGroupID,t.ClientID,t.ParticipantID
                            FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
                            WHERE t.SettlementGroupID = t2.SettlementGroupID 
@@ -485,7 +577,12 @@ class toSyncAll:
         self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
         delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
         self.logger.info("同步" + table_name + " ==>> sync")
-        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
+        sql = """INSERT INTO sync.""" + table_name + """ 
+                             (TradeSystemID,
+                           TradingDay,SettlementGroupID,SettlementID,HedgeFlag,PosiDirection,
+                           YdPosition,Position,LongFrozen,ShortFrozen,YdLongFrozen,
+                           YdShortFrozen,InstrumentID,ParticipantID,TradingRole)
+                              SELECT t2.TradeSystemID,
                            t.TradingDay,t.SettlementGroupID,t.SettlementID,t.HedgeFlag,t.PosiDirection,
                            t.YdPosition,t.Position,t.LongFrozen,t.ShortFrozen,t.YdLongFrozen,
                            t.YdShortFrozen,t.InstrumentID,t.ParticipantID,t.TradingRole
@@ -501,7 +598,10 @@ class toSyncAll:
         self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
         delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
         self.logger.info("同步" + table_name + " ==>> sync")
-        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
+        sql = """INSERT INTO sync.""" + table_name + """ 
+                              (TradeSystemID,
+                           SettlementGroupID,ParticipantID,ParticipantType,TopicID)
+                              SELECT t2.TradeSystemID,
                            t.SettlementGroupID,t.ParticipantID,t.ParticipantType,t.TopicID
                            FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
                            WHERE t.SettlementGroupID = t2.SettlementGroupID 
@@ -515,7 +615,10 @@ class toSyncAll:
         self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
         delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
         self.logger.info("同步" + table_name + " ==>> sync")
-        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
+        sql = """INSERT INTO sync.""" + table_name + """ 
+                              (TradeSystemID,
+                           SettlementGroupID,ParticipantID,UserID,UserType,Password,IsActive)
+                              SELECT t2.TradeSystemID,
                            t.SettlementGroupID,t.ParticipantID,t.UserID,t.UserType,t.Password,t.IsActive
                            FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
                            WHERE t.SettlementGroupID = t2.SettlementGroupID 
@@ -529,7 +632,10 @@ class toSyncAll:
         self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
         delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
         self.logger.info("同步" + table_name + " ==>> sync")
-        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
+        sql = """INSERT INTO sync.""" + table_name + """ 
+                              (TradeSystemID,
+                           SettlementGroupID,UserID,FunctionCode)
+                              SELECT t2.TradeSystemID,
                            t.SettlementGroupID,t.UserID,t.FunctionCode
                            FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
                            WHERE t.SettlementGroupID = t2.SettlementGroupID 
@@ -543,7 +649,10 @@ class toSyncAll:
         self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
         delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
         self.logger.info("同步" + table_name + " ==>> sync")
-        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
+        sql = """INSERT INTO sync.""" + table_name + """ 
+                              (TradeSystemID,
+                           SettlementGroupID,UserID,IPAddress,IPMask)
+                              SELECT t2.TradeSystemID,
                            t.SettlementGroupID,t.UserID,t.IPAddress,t.IPMask
                            FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
                            WHERE t.SettlementGroupID = t2.SettlementGroupID 
@@ -557,7 +666,11 @@ class toSyncAll:
         self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
         delete = "DELETE FROM sync.t_Curr" + table_name + " WHERE TradeSystemID=%s"
         self.logger.info("同步" + table_name + " ==>> sync")
-        sql = """INSERT INTO sync.t_Curr""" + table_name + """ SELECT t2.TradeSystemID,
+        sql = """INSERT INTO sync.t_Curr""" + table_name + """ 
+                              (TradeSystemID,
+                           SettlementGroupID,PriceLimitType,ValueMode,RoundingMode,
+                           UpperValue,LowerValue,InstrumentID,TradingSegmentSN)
+                              SELECT t2.TradeSystemID,
                            t.SettlementGroupID,t.PriceLimitType,t.ValueMode,t.RoundingMode,
                            t.UpperValue,t.LowerValue,t.InstrumentID,t.TradingSegmentSN
                            FROM siminfo.t_""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
@@ -572,7 +685,11 @@ class toSyncAll:
         self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
         delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
         self.logger.info("同步" + table_name + " ==>> sync")
-        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
+        sql = """INSERT INTO sync.""" + table_name + """ 
+                              (TradeSystemID,
+                           SettlementGroupID,ClientID,ClientName,IdentifiedCardType,IdentifiedCardNo,
+                           TradingRole,ClientType,IsActive,HedgeFlag)
+                              SELECT t2.TradeSystemID,
                            t.SettlementGroupID,t.ClientID,t.ClientName,t.IdentifiedCardType,t.IdentifiedCardNo,
                            t.TradingRole,t.ClientType,t.IsActive,t.HedgeFlag
                            FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2
@@ -587,7 +704,14 @@ class toSyncAll:
         self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
         delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
         self.logger.info("同步" + table_name + " ==>> sync")
-        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,
+        sql = """INSERT INTO sync.""" + table_name + """ 
+                              (TradeSystemID,
+                           TradingDay,SettlementGroupID,SettlementID,HedgeFlag,PosiDirection,YdPosition,
+                           Position,LongFrozen,ShortFrozen,YdLongFrozen,YdShortFrozen,BuyTradeVolume,
+                           SellTradeVolume,PositionCost,YdPositionCost,UseMargin,FrozenMargin,
+                           LongFrozenMargin,ShortFrozenMargin,FrozenPremium,InstrumentID,
+                           ParticipantID,ClientID)
+                              SELECT t2.TradeSystemID,
                            t.TradingDay,t.SettlementGroupID,t.SettlementID,t.HedgeFlag,t.PosiDirection,t.YdPosition,
                            t.Position,t.LongFrozen,t.ShortFrozen,t.YdLongFrozen,t.YdShortFrozen,t.BuyTradeVolume,
                            t.SellTradeVolume,t.PositionCost,t.YdPositionCost,t.UseMargin,t.FrozenMargin,
@@ -605,15 +729,25 @@ class toSyncAll:
         self.logger.info("删除" + table_name + "下TradeSystemID为" + str(self.tradeSystemID) + "的数据")
         delete = "DELETE FROM sync." + table_name + " WHERE TradeSystemID=%s"
         self.logger.info("同步" + table_name + " ==>> sync")
-        sql = """INSERT INTO sync.""" + table_name + """ SELECT t2.TradeSystemID,t.TradingDay,t.SettlementGroupID,
-                                                          t.SettlementID,t.InstrumentID,t.ParticipantID,t.ClientID,
-                                                          t.HedgeFlag,t.Direction,t.OpenDate,t.TradeID,t.Volume,
-                                                          t.OpenPrice,t.TradeType,t.CombInstrumentID,t.ExchangeID,
-                                                          t.CloseProfitByDate,t.CloseProfitByTrade,
-                                                          t.PositionProfitByDate,t.PositionProfitByTrade,t.Margin,
-                                                          t.ExchMargin,t.MarginRateByMoney,t.MarginRateByVolume,
-                                                          t.LastSettlementPrice,t.SettlementPrice,t.CloseVolume,
-                                                          t.CloseAmount,t3.InvestorID
+        sql = """INSERT INTO sync.""" + table_name + """ 
+                          (TradeSystemID,TradingDay,SettlementGroupID,
+                          SettlementID,InstrumentID,ParticipantID,ClientID,
+                          HedgeFlag,Direction,OpenDate,TradeID,Volume,
+                          OpenPrice,TradeType,CombInstrumentID,ExchangeID,
+                          CloseProfitByDate,CloseProfitByTrade,
+                          PositionProfitByDate,PositionProfitByTrade,Margin,
+                          ExchMargin,MarginRateByMoney,MarginRateByVolume,
+                          LastSettlementPrice,SettlementPrice,CloseVolume,
+                          CloseAmount,InvestorID)
+                          SELECT t2.TradeSystemID,t.TradingDay,t.SettlementGroupID,
+                          t.SettlementID,t.InstrumentID,t.ParticipantID,t.ClientID,
+                          t.HedgeFlag,t.Direction,t.OpenDate,t.TradeID,t.Volume,
+                          t.OpenPrice,t.TradeType,t.CombInstrumentID,t.ExchangeID,
+                          t.CloseProfitByDate,t.CloseProfitByTrade,
+                          t.PositionProfitByDate,t.PositionProfitByTrade,t.Margin,
+                          t.ExchMargin,t.MarginRateByMoney,t.MarginRateByVolume,
+                          t.LastSettlementPrice,t.SettlementPrice,t.CloseVolume,
+                          t.CloseAmount,t3.InvestorID
                           FROM siminfo.""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2, siminfo.t_investorclient t3
                            WHERE t.SettlementGroupID = t2.SettlementGroupID 
                              and t.SettlementGroupID = t3.SettlementGroupID

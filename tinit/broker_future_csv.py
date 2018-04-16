@@ -79,7 +79,7 @@ class exchange_future_csv:
                                     t.DeliveryMonth,t1.MaxMarketOrderVolume,t1.MinMarketOrderVolume,
                                     t1.MaxLimitOrderVolume,t1.MinLimitOrderVolume,t.VolumeMultiple,t1.PriceTick,
                                     t1.CreateDate,t1.OpenDate,t1.ExpireDate,t1.StartDelivDate,t1.EndDelivDate,
-                                    t1.InstLifePhase,	'1' AS IsTrading,t.PositionType,'1' AS PositionDateType,
+                                    t1.InstLifePhase,	'1' AS IsTrading,t.PositionType,t.PositionDateType,
                                     t2.LongMarginRatio,t2.ShortMarginRatio,'1' AS MaxMarginSideAlgorithm,
                                     t.UnderlyingInstrID AS tUnderlyingInstrID,t.StrikePrice,t.OptionsType,
                                     t.UnderlyingMultiple,'0' AS CombinationType

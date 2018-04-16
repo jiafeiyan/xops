@@ -90,12 +90,12 @@ class trans_futureinfo:
             sql_insert_futures = """INSERT INTO siminfo.t_Instrument(
                                                SettlementGroupID,ProductID,
                                                ProductGroupID,UnderlyingInstrID,
-                                               ProductClass,PositionType,
+                                               ProductClass,PositionType,PositionDateType,
                                                StrikePrice,OptionsType,
                                                VolumeMultiple,UnderlyingMultiple,
                                                InstrumentID,InstrumentName,
                                                DeliveryYear,DeliveryMonth,AdvanceMonth
-                                           )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
+                                           )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s, %s)"""
             sql_insert_params = []
             for future in islice(csv_file, 1, None):
                 # 去除组合合约
@@ -125,7 +125,7 @@ class trans_futureinfo:
                     DeliveryMonth = future["UnderlyingInstrID"][-2:]
                 sql_insert_params.append((SGID, ProductID,
                                           ProductID, UnderlyingInstrID,
-                                          ProductClass, future["PositionType"],
+                                          ProductClass, future["PositionType"], future["PositionDateType"],
                                           future["StrikePrice"], OptionsType,
                                           future["VolumeMultiple"],
                                           "0" if future["UnderlyingMultiple"] is None else future["UnderlyingMultiple"],
