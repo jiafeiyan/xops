@@ -409,9 +409,11 @@ class toSyncAll:
                      StartTime,InstrumentStatus,
                      CASE WHEN DayOffset = -1 THEN IF(DATEDIFF(DATE_FORMAT(NOW(), '%Y%m%d'), 
                         t3.TradingDay
-                        ) = 0, DayOffset, DATEDIFF(DATE_FORMAT(NOW(), '%Y%m%d'), 
+                        ) = 0, DayOffset, DATEDIFF(DATE_FORMAT(NOW(), '%Y%m%d'), t3.TradingDay))
+                    WHEN DayOffset = 1 THEN IF(DATEDIFF(DATE_FORMAT(NOW(), '%Y%m%d'), 
                         t3.TradingDay
-                    )) ELSE DayOffset END as DayOffset,
+                        ) = 0, 0, DATEDIFF(DATE_FORMAT(NOW(), '%Y%m%d'), t3.TradingDay) + DayOffset) 
+                    ELSE DayOffset END as DayOffset,
                      InstrumentID
                      FROM siminfo.t_""" + table_name + """ t, siminfo.t_TradeSystemSettlementGroup t2 , siminfo.t_tradesystemtradingday t3  
                      WHERE t.SettlementGroupID = t2.SettlementGroupID
