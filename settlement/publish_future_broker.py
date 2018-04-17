@@ -255,7 +255,7 @@ def publish_future(context, conf):
                         select TradingDay,SettlementGroupID,SettlementID,InstrumentID,ParticipantID,ClientID,HedgeFlag,Direction,OpenDate,TradeID,Volume,OpenPrice,TradeType,CombInstrumentID,ExchangeID,CloseProfitByDate,CloseProfitByTrade,PositionProfitByDate,PositionProfitByTrade,Margin,ExchMargin,MarginRateByMoney,MarginRateByVolume,LastSettlementPrice,SettlementPrice,CloseVolume,CloseAmount
                         from dbclear.t_FuturePositionDtl t 
                         WHERE t.volume !=0 and t.tradingday = %s AND t.settlementgroupid = %s AND t.settlementid = %s"""
-                cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id))
+                cursor.execute(sql, (next_trading_day, settlement_group_id, settlement_id))
 
                 # 更新结算状态
                 logger.info("[update %s settlement status]......" % settlement_group_id)
