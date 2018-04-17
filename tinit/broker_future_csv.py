@@ -75,22 +75,21 @@ class exchange_future_csv:
                                        "MaxMarginSideAlgorithm", "UnderlyingInstrID", "StrikePrice",
                                        "OptionsType", "UnderlyingMultiple", "CombinationType"),
                               sql="""SELECT t.InstrumentID,t3.ExchangeID AS ExchangeID,t.InstrumentName,
-                                    t.InstrumentID AS ExchangeInstID,t.ProductID,t.ProductClass,t.DeliveryYear,
-                                    t.DeliveryMonth,t1.MaxMarketOrderVolume,t1.MinMarketOrderVolume,
-                                    t1.MaxLimitOrderVolume,t1.MinLimitOrderVolume,t.VolumeMultiple,t1.PriceTick,
-                                    t1.CreateDate,t1.OpenDate,t1.ExpireDate,t1.StartDelivDate,t1.EndDelivDate,
-                                    t1.InstLifePhase,	'1' AS IsTrading,t.PositionType,t.PositionDateType,
-                                    t2.LongMarginRatio,t2.ShortMarginRatio,'1' AS MaxMarginSideAlgorithm,
-                                    t.UnderlyingInstrID AS tUnderlyingInstrID,t.StrikePrice,t.OptionsType,
-                                    t.UnderlyingMultiple,'0' AS CombinationType
-                                FROM siminfo.t_Instrument t,siminfo.t_InstrumentProperty t1,
-                                    siminfo.t_MarginRateDetail t2,siminfo.t_SettlementGroup t3
-                                WHERE t.SettlementGroupID = t1.SettlementGroupID
-                                AND t.InstrumentID = t1.InstrumentID
-                                AND t.SettlementGroupID = t2.SettlementGroupID
-                                AND t.InstrumentID = t2.InstrumentID
-                                AND t.SettlementGroupID = t3.SettlementGroupID
-                                AND t.SettlementGroupID in """ +
+                                            t.InstrumentID AS ExchangeInstID,t.ProductID,t.ProductClass,t.DeliveryYear,
+                                            t.DeliveryMonth,t1.MaxMarketOrderVolume,t1.MinMarketOrderVolume,
+                                            t1.MaxLimitOrderVolume,t1.MinLimitOrderVolume,t.VolumeMultiple,t1.PriceTick,
+                                            t1.CreateDate,t1.OpenDate,t1.ExpireDate,t1.StartDelivDate,t1.EndDelivDate,
+                                            t1.InstLifePhase,	'1' AS IsTrading,t.PositionType,t.PositionDateType,
+                                            t2.LongMarginRatio,t2.ShortMarginRatio,'1' AS MaxMarginSideAlgorithm,
+                                            t.UnderlyingInstrID AS tUnderlyingInstrID,t.StrikePrice,t.OptionsType,
+                                            t.UnderlyingMultiple,'0' AS CombinationType
+                                    FROM siminfo.t_Instrument t INNER JOIN siminfo.t_instrumentproperty t1 on 
+                                    t.SettlementGroupID = t1.SettlementGroupID and t.InstrumentID = t1.InstrumentID
+                                    AND t.SettlementGroupID in  """ + str(tuple([str(i) for i in self.settlementGroupID])) + """
+                                    INNER JOIN siminfo.t_settlementgroup t3 on t.SettlementGroupID = t3.SettlementGroupID
+                                    AND t.SettlementGroupID in  """ + str(tuple([str(i) for i in self.settlementGroupID])) + """
+                                    LEFT JOIN siminfo.t_marginratedetail t2 on t.SettlementGroupID = t2.SettlementGroupID 
+                                    and t.InstrumentID = t2.InstrumentID AND t.SettlementGroupID in """ +
                                   str(tuple([str(i) for i in self.settlementGroupID])),
                               quoting=True),
             t_DepthMarketData=dict(columns=("TradingDay", "InstrumentID", "ExchangeID", "ExchangeInstID", "LastPrice",

@@ -338,7 +338,7 @@ class trans_futureinfo:
             sql_insert_params = []
             for future in islice(marginrate, 1, None):
                 for k, v in product_sgid.iteritems():
-                    if k in str(future['InstrumentID']):
+                    if k == filter(lambda x: x not in '0123456789', str(future['InstrumentID'])):
                         sql_insert_params.append((v, '1', future['HedgeFlag'], '1',
                                                   future['LongMarginRatioByMoney'], future['ShortMarginRatioByMoney'],
                                                   future['InstrumentID'], '00000000', '00000000'))
