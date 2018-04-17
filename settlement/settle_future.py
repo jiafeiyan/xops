@@ -184,10 +184,10 @@ def settle_future(context, conf):
             cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id))
             # 5）更新premium
             sql = """insert into dbclear.t_clientfund (TradingDay,SettlementGroupID,SettlementID,ParticipantID,ClientID,AccountID,TransFee,DelivFee,PositionMargin,Profit,available,StockValue)
-                                                  (select t.tradingday,t.settlementgroupid,t.settlementid,t.participantid,t.clientid,t.accountid,0,0,0,0,0,sum( t.Premium ) AS StockValue
+                                                  (select t.tradingday,t.settlementgroupid,t.settlementid,t.participantid,t.clientid,t.accountid,0,0,0,0,sum( t.Premium ) AS available,0
                                                 from dbclear.t_clientpositionpremium t where t.tradingday = %s and t.settlementgroupid = %s and t.settlementid = %s
                                                 group by t.tradingday,t.settlementgroupid,t.settlementid,t.participantid,t.clientid,t.accountid)
-                                                ON DUPLICATE KEY UPDATE dbclear.t_clientfund.StockValue = values(StockValue)"""
+                                                ON DUPLICATE KEY UPDATE dbclear.t_clientfund.available = values(available)"""
             cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id))
             # 更新结算状态
             logger.info("[update settlement status] is processing......")
