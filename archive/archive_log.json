@@ -3,7 +3,7 @@
         "host" : "stock_exchange",
         "items" : [{
           "basedir" :"${HOME}",
-          "sources" : "run/arb/log run/front1/log/*.log.* run/mdfront1/log/*.log.* run/qkernel1/log/*.log.* run/tinit/log/*.log.* run/tkernel1/log/*.log.* run/mdimport/log/*.log.* run/mdreceiver/log/*.log.*",
+          "sources" : "run/arb/log/*.log.* run/front1/log/*.log.* run/mdfront1/log/*.log.* run/qkernel1/log/*.log.* run/tinit/log/*.log.* run/tkernel1/log/*.log.* run/mdimport/log/*.log.* run/mdreceiver/log/*.log.*",
           "target" : "sysdatabackup/stock_exchange_log_`date +%Y%m%d`.tar.gz"
         }]
     },
@@ -19,7 +19,7 @@
         "host" : "stock_broker",
         "items" : [{
           "basedir" :"${HOME}",
-          "sources" : "run/dbsync/log/*.log.* run/hx_adapter/log/*.log.* run/ssecffexmdserver/log/*.log.* run/ssecffexoffer/log/*.log.* run/szsecffexmdserver/log/*.log.* run/szsecffexoffer/log/*.log.* run/tinit/log run/tradeserver/log/*.log.*",
+          "sources" : "run/dbsync/log/*.log.* run/hx_adapter/log/*.log.* run/ssecffexmdserver/log/*.log.* run/ssecffexoffer/log/*.log.* run/szsecffexmdserver/log/*.log.* run/szsecffexoffer/log/*.log.* run/tinit/log/*.log.* run/tradeserver/log/*.log.*",
           "target" : "sysdatabackup/stock_broker_log_`date +%Y%m%d`.tar.gz"
         }]
     },

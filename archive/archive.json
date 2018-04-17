@@ -3,7 +3,7 @@
         "host" : "stock_exchange",
         "items" : [{
           "basedir" :"${HOME}",
-          "sources" : "run/arb/log run/front1/log/*.log.* run/mdfront1/log/*.log.* run/qkernel1/log/*.log.* run/tinit/log/*.log.* run/tkernel1/log/*.log.* run/mdimport/log/*.log.* run/mdreceiver/log/*.log.*",
+          "sources" : "run/arb/log/*.log.* run/front1/log/*.log.* run/mdfront1/log/*.log.* run/qkernel1/log/*.log.* run/tinit/log/*.log.* run/tkernel1/log/*.log.* run/mdimport/log/*.log.* run/mdreceiver/log/*.log.*",
           "target" : "sysdatabackup/stock_exchange_log_`date +%Y%m%d`.tar.gz"
         }]
     },
