@@ -1,0 +1,6 @@
+{
+    "sourceMQ": "xmq_sse_client_recv",
+    "targetMQ": "xmq_sse_client_send",
+    "targetExchangeId": "stock_exchange",
+    "clientId": "A00000001"
+}

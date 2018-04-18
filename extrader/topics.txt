@@ -1,0 +1,12 @@
+报单消息：报单机器人发布，trader订阅，格式：
+交易所:TRADER:{"type":"order","data":{}}
+
+查询合约交易状态消息：报单机器人发布，trader订阅，格式：
+交易所:TRADER:{"type":"qry_insstatus","data":{}}
+
+
+合约状态变更消息：trader发布，报单机器人订阅，格式：
+交易所:CLIENT:{"type":"istatus","data":{}}
+报单机器人只在可报单状态报单：集合竞价报单，连续交易
+
+
