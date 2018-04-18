@@ -70,15 +70,17 @@ def join_activity(mysql_conn, parameters):
             row = cursor.fetchone()
 
             if row is None:
-                sql = """SELECT t1.activityid, t1.investorid FROM siminfo.t_activityinvestor t1, siminfo.t_activity t2 
-                                            WHERE t1.activityid = t2.activityid 
-                                                AND t2.activitytype = (SELECT activitytype FROM siminfo.t_activity WHERE (activitystatus = '0' or activitystatus = '1') and activityid = %s)
-                                                AND t1.investorid = %s"""
+                sql = """SELECT settlementgroupid FROM siminfo.t_activitysettlementgroup 
+                                        WHERE activityid = %s AND settlementgroupid IN(
+                                        SELECT DISTINCT settlementgroupid FROM siminfo.t_activitysettlementgroup t 
+                                        WHERE t.activityid IN 
+                                        (SELECT t1.activityid FROM siminfo.t_activityinvestor t1, siminfo.t_activity t2 
+                                        WHERE t1.investorid = %s AND t1.activityid = t2.activityid AND (t2.activitystatus = '0' OR t2.activitystatus = '1')))"""
                 cursor.execute(sql, (activity, investor_id))
                 cursor.fetchall()
                 if cursor.rowcount > 0:
                     code = "-1"
-                    error = "投资者已参加其他同类型赛事活动"
+                    error = "投资者已参加其他相似类型赛事活动"
 
                     response.update({"error": error})
                     result.update({"code": code, "response": response})
