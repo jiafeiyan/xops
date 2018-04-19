@@ -80,6 +80,14 @@ class SHFETraderHandler(shfetraderapi.CShfeFtdcTraderSpi):
             msg = {"type": "istatus", "data": {"InstrumentID": pInstrumentStatus.InstrumentID, "InstrumentStatus": pInstrumentStatus.InstrumentStatus}}
             self.msg_puber.send(msg)
 
+    def OnRspOrderInsert(self, pInputOrder, pRspInfo, nRequestID, bIsLast):
+        self.logger.info("OnRspOrderInsert")
+
+        if pRspInfo is not None and pRspInfo.ErrorID != 0:
+            self.logger.error("login failed : %s" % pRspInfo.ErrorMsg.decode("GBK").encode("UTF-8"))
+        else:
+            print(pInputOrder)
+
 
 
 
