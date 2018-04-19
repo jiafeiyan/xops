@@ -1,4 +1,4 @@
-#-*- coding: UTF-8 -*-
+# -*- coding: UTF-8 -*-
 
 import json
 import time
@@ -6,12 +6,14 @@ import time
 from xmq import xmq_puber, xmq_resolving_suber, xmq_msg_resolver
 from utils import Configuration, parse_conf_args, log
 
+
 class InstrumentStatusMsgResolver(xmq_msg_resolver):
     def __init__(self):
         xmq_msg_resolver.__init__(self)
 
     def resolve_msg(self, msg):
         print(msg)
+
 
 def random_order(context, conf):
     logger = log.get_logger(category="OrderPolicyRandom")
@@ -36,11 +38,21 @@ def random_order(context, conf):
 
     count = 0
     while True:
-        msg_target_puber.send({"type": "order", "data": {"k1": "v1", "c": count}})
+        # 随机报单
+        input_params= {"InstrumentID": "600000",
+                       "LimitPrice": 12,
+                       "VolumeTotalOriginal": 1,
+                       "Direction": 1,
+                       "count": count}
+        msg_target_puber.send({"type": "order", "data": input_params})
         count += 1
-        msg_target_puber.send({"type": "qry_marketdata", "data": {"k1": "v1", "c": count}})
-        count += 1
+        # msg_target_puber.send({"type": "qry_marketdata", "data": {"k1": "v1", "c": count}})
+        # count += 1
         time.sleep(3)
+
+
+def load_marked_data():
+    pass
 
 
 def main():

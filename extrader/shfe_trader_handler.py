@@ -81,3 +81,5 @@ class SHFETraderHandler(shfetraderapi.CShfeFtdcTraderSpi):
             self.msg_puber.send(msg)
 
 
+
+
