@@ -12,6 +12,7 @@ def settle_future(context, conf):
     settlement_group_id = conf.get("settlementGroupId")
     settlement_id = conf.get("settlementId")
     exchange_id = conf.get("exchangeId")
+    marginSingleBigSide = conf.get("marginSingleBigSide")
 
     logger.info("[settle future %s] begin" % (json.dumps(conf, encoding="UTF-8", ensure_ascii=False)))
     mysql_pool = mysql(configs=context.get("mysql").get(conf.get("mysqlId")))
@@ -155,12 +156,72 @@ def settle_future(context, conf):
             # 计算客户资金
             logger.info("[Calculate ClientFund] is processing......")
             # 1）更新positionmargin
-            sql = """insert into dbclear.t_clientfund (TradingDay,SettlementGroupID,SettlementID,ParticipantID,ClientID,AccountID,TransFee,DelivFee,PositionMargin,Profit,available,StockValue)
+            if marginSingleBigSide :
+                sql = """insert into dbclear.t_clientfund (TradingDay,SettlementGroupID,SettlementID,ParticipantID,ClientID,AccountID,TransFee,DelivFee,PositionMargin,Profit,available,StockValue)
+                              (select t.tradingday,
+                                           t.settlementgroupid,
+                                           t.settlementid,
+                                           t.participantid,
+                                           t.clientid,
+                                           t.accountid,
+                                           0,
+                                           0,
+                                           sum(t.positionmargin) as positionmargin,
+                                           0,
+                                           0,
+                                           0
+                                    from (select t.tradingday,
+                                                   t.settlementgroupid,
+                                                   t.settlementid,
+                                                   t.participantid,
+                                                   t.clientid,
+                                                   t.accountid,
+                                                   t.productid,
+                                                   max(t.positionmargin) as positionmargin
+                                            from (select t.tradingday,
+                                                           t.settlementgroupid,
+                                                           t.settlementid,
+                                                           t.participantid,
+                                                           t.clientid,
+                                                           t.accountid,
+                                                           t.productid,
+                                                           t.posidirection,
+                                                           sum(t.positionmargin) as positionmargin
+                                                    from t_clientpositionmargin t
+                                                   where t.tradingday = %s
+                                                       and t.settlementgroupid = %s
+                                                       and t.settlementid = %s
+                                                   group by t.tradingday,
+                                                            t.settlementgroupid,
+                                                            t.settlementid,
+                                                            t.participantid,
+                                                            t.clientid,
+                                                            t.accountid,
+                                                            t.productid,
+                                                            t.posidirection) t
+                                           group by t.tradingday,
+                                                    t.settlementgroupid,
+                                                    t.settlementid,
+                                                    t.participantid,
+                                                    t.clientid,
+                                                    t.accountid,
+                                                    t.productid) t
+                                   group by t.tradingday,
+                                            t.settlementgroupid,
+                                            t.settlementid,
+                                            t.participantid,
+                                            t.clientid,
+                                            t.accountid) 
+                              ON DUPLICATE KEY UPDATE dbclear.t_clientfund.positionmargin = values(positionmargin)"""
+                cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id))
+            else:
+                sql = """insert into dbclear.t_clientfund (TradingDay,SettlementGroupID,SettlementID,ParticipantID,ClientID,AccountID,TransFee,DelivFee,PositionMargin,Profit,available,StockValue)
                                            (select t.tradingday,t.settlementgroupid,t.settlementid,t.participantid,t.clientid,t.accountid,0,0,sum(t.positionmargin) as positionmargin,0,0,0
                                            from dbclear.t_clientpositionmargin t where t.tradingday = %s and t.settlementgroupid = %s and t.settlementid = %s
                                            group by t.tradingday,t.settlementgroupid,t.settlementid,t.participantid,t.clientid,t.accountid) 
                                            ON DUPLICATE KEY UPDATE dbclear.t_clientfund.positionmargin = values(positionmargin)"""
-            cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id))
+                cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id))
+
             # 2）更新transfee
             sql = """insert into dbclear.t_clientfund (TradingDay,SettlementGroupID,SettlementID,ParticipantID,ClientID,AccountID,TransFee,DelivFee,PositionMargin,Profit,available,StockValue)
                                            (select t.tradingday,t.settlementgroupid,t.settlementid,t.participantid,t.clientid,t.accountid,sum(t.transfee) as transfee,0,0,0,0,0

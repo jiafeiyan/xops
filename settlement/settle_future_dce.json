@@ -2,5 +2,6 @@
   "mysqlId" : "simplatform_base",
   "exchangeId" : "DCE",
   "settlementGroupId" : "SG04",
-  "settlementId" : "1"
+  "settlementId" : "1",
+  "marginSingleBigSide": false
 }
