@@ -5,7 +5,6 @@ import datetime
 import json
 import csv
 
-from itertools import islice
 from utils import parse_conf_args, Configuration, path, mysql, log
 
 
@@ -31,8 +30,8 @@ class trans_futureinfo:
     # 通过交易所查询结算组代码
     def __get_exchange(self):
         sql = """select ExchangeID, t.SettlementGroupID from siminfo.t_settlementgroup t, siminfo.t_tradesystemsettlementgroup t1
-                  where t.SettlementGroupID = t1.SettlementGroupID and t1.TradeSystemID = %s"""
-        res = self.mysqlDB.select(sql, ('0002',))
+                  where t.SettlementGroupID = t1.SettlementGroupID and t1.TradeSystemID = %s and t.SettlementGroupID != %s"""
+        res = self.mysqlDB.select(sql, ('0002', 'SG09'))
         exchange_conf = dict()
         for row in res:
             exchange_conf.update({str(row[0]): str(row[1])})
@@ -97,7 +96,7 @@ class trans_futureinfo:
                                                DeliveryYear,DeliveryMonth,AdvanceMonth
                                            )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s, %s)"""
             sql_insert_params = []
-            for future in islice(csv_file, 1, None):
+            for future in csv_file:
                 # 去除组合合约
                 if "&" in future["ProductID"]:
                     continue
@@ -242,7 +241,7 @@ class trans_futureinfo:
             if segment_attr is None:
                 self.logger.error("t_TradingSegmentAttr不存在")
                 return
-            for future in islice(csv_file, 1, None):
+            for future in csv_file:
                 if "&" in future["ProductID"]:
                     continue
                 SGID = self.exchange_conf[future["ExchangeID"]]
@@ -539,7 +538,7 @@ class trans_futureinfo:
                    self.__loadCSV(depthmarketdata), self.__loadCSV(marginrate)
         elif file_name == 'instrument':
             return self.__loadCSV(instrument)
-        elif file_name == 'property':
+        elif file_name == 'product':
             return self.__loadCSV(product)
         elif file_name == 'depthmarketdata':
             return self.__loadCSV(depthmarketdata)
