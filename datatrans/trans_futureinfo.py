@@ -301,7 +301,7 @@ class trans_futureinfo:
                                                  ParticipantID
                                              ) VALUES (%s,%s,%s,%s)"""
             sql_insert_params = []
-            for future in islice(csv_file, 1, None):
+            for future in csv_file:
                 if "&" in future["ProductID"]:
                     continue
                 SGID = self.exchange_conf[future["ExchangeID"]]
@@ -322,7 +322,7 @@ class trans_futureinfo:
             products = args[0]
             # 通过产品文件将产品和结算组挂接
             product_sgid = dict()
-            for product in islice(products, 1, None):
+            for product in products:
                 product_sgid[product['ProductID']] = self.exchange_conf[str(product['ExchangeID']).upper()]
             # 保证金率文件
             marginrate = args[1]
@@ -335,7 +335,7 @@ class trans_futureinfo:
                                         InstrumentID,ParticipantID,ClientID
                                     ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
             sql_insert_params = []
-            for future in islice(marginrate, 1, None):
+            for future in marginrate:
                 for k, v in product_sgid.iteritems():
                     if k == filter(lambda x: x not in '0123456789', str(future['InstrumentID'])):
                         sql_insert_params.append((v, '1', future['HedgeFlag'], '1',
@@ -367,7 +367,7 @@ class trans_futureinfo:
                                     MaxOpenFee,MaxCloseFee,InstrumentID,ParticipantID,
                                     ClientID) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
             sql_insert_params = []
-            for future in islice(csv_file, 1, None):
+            for future in csv_file:
                 if "&" in future["ProductID"]:
                     continue
                 SGID = self.exchange_conf[future["ExchangeID"]]
@@ -416,7 +416,7 @@ class trans_futureinfo:
                                 UpperValue,LowerValue,InstrumentID,TradingSegmentSN
                             ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)"""
             sql_insert_params = []
-            for future in islice(csv_file, 1, None):
+            for future in csv_file:
                 SGID = self.exchange_conf[future["ExchangeID"]]
                 if float(future["PreSettlementPrice"]) != 0:
                     if SGID == 'SG06':
@@ -449,7 +449,7 @@ class trans_futureinfo:
                              AllowDelivPersonOpen,InstrumentID,InstLifePhase
                              )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
             sql_params = []
-            for future in islice(csv_file, 1, None):
+            for future in csv_file:
                 if "&" in future["ProductID"]:
                     continue
                 SGID = self.exchange_conf[future["ExchangeID"]]
@@ -484,7 +484,7 @@ class trans_futureinfo:
                                     CurrDelta,UpdateTime,UpdateMillisec,InstrumentID
                                )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
             sql_params = []
-            for future in islice(csv_file, 1, None):
+            for future in csv_file:
                 SGID = self.exchange_conf[future["ExchangeID"]]
                 sql_params.append(
                     (self.TradingDay, SGID, None, future["PreSettlementPrice"], future["PreClosePrice"],
