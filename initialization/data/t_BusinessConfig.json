@@ -94,5 +94,17 @@
   ["SG08","005-5LEVELMD-TF","YES","0"],
   ["SG08","005-5LEVELMD-TT","YES","0"],
   ["SG08","006-Limit-MinVol","YES","0"],
-  ["SG08","007-FAK","YES","0"]
+  ["SG08","007-FAK","YES","0"],
+  ["SG09","001-FiveLevelPrice-GFD","YES","0"],
+  ["SG09","001-FiveLevelPrice-IOC","YES","0"],
+  ["SG09","002-BestPrice-GFD","YES","0"],
+  ["SG09","002-BestPrice-IOC","YES","0"],
+  ["SG09","003-AnyPrice-GFD","YES","0"],
+  ["SG09","003-AnyPrice-IOC","YES","0"],
+  ["SG09","004-FOK","YES","0"],
+  ["SG09","005-5LEVELMD-T","NO","0"],
+  ["SG09","005-5LEVELMD-TF","YES","0"],
+  ["SG09","005-5LEVELMD-TT","YES","0"],
+  ["SG09","006-Limit-MinVol","YES","0"],
+  ["SG09","007-FAK","YES","0"]
 ]

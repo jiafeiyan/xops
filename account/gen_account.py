@@ -56,6 +56,8 @@ def gen_investors(context, conf):
                                 THEN CONCAT('4', t1.investorid)
                                 WHEN t2.exchangeid = 'INE' 
                                 THEN CONCAT('5', t1.investorid)
+                                WHEN t2.exchangeid = 'SGE' 
+                                THEN CONCAT('6', t1.investorid)
                                 WHEN t2.exchangeid = 'SZSE' 
                                 THEN CONCAT('7', t1.investorid)
                                 WHEN t2.exchangeid = 'SSE' AND t2.settlementgrouptype = '2'

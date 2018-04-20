@@ -6,5 +6,6 @@
   "SG05": ["SG05","0005","InstrumentID","00000000"],
   "SG06": ["SG06","0006","InstrumentID","00000000"],
   "SG07": ["SG07","0007","InstrumentID","00000000"],
-  "SG08": ["SG08","0008","InstrumentID","00000000"]
+  "SG08": ["SG08","0008","InstrumentID","00000000"],
+  "SG09": ["SG09","0009","InstrumentID","00000000"]
 }
