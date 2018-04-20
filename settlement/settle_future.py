@@ -187,7 +187,7 @@ def settle_future(context, conf):
                                                            t.productid,
                                                            t.posidirection,
                                                            sum(t.positionmargin) as positionmargin
-                                                    from t_clientpositionmargin t
+                                                    from dbclear.t_clientpositionmargin t
                                                    where t.tradingday = %s
                                                        and t.settlementgroupid = %s
                                                        and t.settlementid = %s
