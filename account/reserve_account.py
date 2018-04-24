@@ -17,10 +17,10 @@ def reserve_accounts(context, conf):
 
         cursor = mysql_conn.cursor()
 
-        sql = """UPDATE siminfo.t_investor t SET t.investorstatus = '6' WHERE t.investorid < '00001000'"""
+        sql = """UPDATE siminfo.t_investor t SET t.investorstatus = '6' WHERE t.investorstatus = '0' AND t.investorid < '00001000'"""
         cursor.execute(sql)
 
-        sql = """UPDATE siminfo.t_investor t SET t.investorstatus = '6' WHERE t.investorid REGEXP '^0*(1{2,8}|2{2,8}|3{2,8}|5{2,8}|6{2,8}|7{2,8}|8{2,8}|9{2,8})$'"""
+        sql = """UPDATE siminfo.t_investor t SET t.investorstatus = '6' WHERE t.investorstatus = '0' AND t.investorid REGEXP '^0*(1{2,8}|2{2,8}|3{2,8}|5{2,8}|6{2,8}|7{2,8}|8{2,8}|9{2,8})$'"""
         cursor.execute(sql)
 
         mysql_conn.commit()
