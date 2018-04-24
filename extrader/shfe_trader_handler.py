@@ -84,7 +84,7 @@ class SHFETraderHandler(shfetraderapi.CShfeFtdcTraderSpi):
         self.logger.info("OnRspOrderInsert")
 
         if pRspInfo is not None and pRspInfo.ErrorID != 0:
-            self.logger.error("login failed : %s" % pRspInfo.ErrorMsg.decode("GBK").encode("UTF-8"))
+            self.logger.error("OnRspOrderInsert failed : %s" % pRspInfo.ErrorMsg.decode("GBK").encode("UTF-8"))
         else:
             print(pInputOrder)
 

@@ -2,5 +2,9 @@
     "sourceMQ": "xmq_sse_client_recv",
     "targetMQ": "xmq_sse_client_send",
     "targetExchangeId": "stock_exchange",
-    "clientId": "A00000001"
+    "clientId": "800000001",
+    "ParticipantID": "0007",
+    "fileSource": "/Users/chenyan/CompanyProjects/xops/csvfiles/exchange/0001/stock_order_info.csv",
+    "minVolume": 1,
+    "maxVolume": 100
 }

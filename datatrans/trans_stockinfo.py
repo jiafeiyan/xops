@@ -241,7 +241,7 @@ class trans_stockinfo:
             for stock in stock_data:
                 sql_params.append((settlement_group, '99991219', stock.SSRQ,
                                    '99991219', '99991219', '99991219', 0, 1000000, 100,
-                                   1000000, 100, 0.01, 0, stock.ZQDM, 1))
+                                   1000000, 100, 0.01 if stock.JGDW is None else stock.JGDW, 0, stock.ZQDM, 1))
             cursor.executemany(sql_Property, sql_params)
             mysql_conn.commit()
         finally:

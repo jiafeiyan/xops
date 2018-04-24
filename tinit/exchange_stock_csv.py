@@ -61,7 +61,7 @@ class exchange_stock_csv:
         self.tradeSystemID = tradeSystemID
         # 初始化生成CSV文件路径
         output = path.convert(context.get("csv")[configs.get("csv")]['exchange'])
-        self.csv_path = os.path.join(output,  str(configs.get("tradeSystemID")))
+        self.csv_path = os.path.join(output, str(configs.get("tradeSystemID")))
         self.__to_csv()
 
     def __to_csv(self):
@@ -109,8 +109,11 @@ class exchange_stock_csv:
         self.__generate_marketdata("sse", mysqlDB)
         # ================szse.txt===================
         self.__generate_marketdata("szse", mysqlDB)
-        # ================sse_etf.txt====================
+        # ================sse_etf.txt================
         self.__generate_marketdata("sse_etf", mysqlDB)
+
+        # ================stock_order_info===========
+        self.__data_to_csv("stock_order_info", mysqlDB)
 
     def __data_to_csv(self, table_name, mysqlDB):
         table_sqls = dict(
@@ -308,6 +311,19 @@ class exchange_stock_csv:
                           sql="""SELECT DISTINCT UserID,IPAddress,IPMask
                                   FROM sync.t_UserIP WHERE TradeSystemID=%s""",
                           quoting=True),
+            stock_order_info=dict(columns=("InstrumentID", "PreClosePrice", "ValueMode", "LowerValue", "UpperValue", "PriceTick", "VolumeMultiple"),
+                            sql="""SELECT t.InstrumentID,t1.PreClosePrice,t2.ValueMode,t2.LowerValue,t2.UpperValue,t.PriceTick ,t4.VolumeMultiple
+                                    FROM siminfo.t_instrumentproperty t,sync.t_marketdata t1,
+                                        siminfo.t_pricebanding t2,siminfo.t_tradesystemsettlementgroup t3,
+                                        siminfo.t_instrument t4
+                                    WHERE t.InstrumentID = t1.InstrumentID 
+                                        AND t.InstrumentID = t2.InstrumentID 
+                                        AND t.SettlementGroupID = t1.SettlementGroupID 
+                                        AND t.SettlementGroupID = t2.SettlementGroupID 
+                                        AND t.SettlementGroupID = t3.SettlementGroupID
+                                        AND t.InstrumentID = t4.InstrumentID 
+                                        AND t.SettlementGroupID = t4.SettlementGroupID 
+                                        AND t3.TradeSystemID = %s"""),
         )
         # 查询sync数据库数据内容
         csv_data = mysqlDB.select(table_sqls[table_name]["sql"], (self.tradeSystemID,))
@@ -359,6 +375,7 @@ class exchange_stock_csv:
                 ins = str(ins[0])
                 txt_file.write(ins + '\n')
         self.logger.info("%s%s%s" % ("生成 ", file_name, ".txt 文件完成"))
+
 
 if __name__ == '__main__':
     base_dir, config_names, config_files, add_ons = parse_conf_args(__file__, config_names=["mysql", "log", "csv"])
