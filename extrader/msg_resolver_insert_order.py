@@ -1,9 +1,7 @@
 #-*- coding: UTF-8 -*-
 
-from pprint import pprint
 from trader_msg_resolver import TraderMsgResolver
 import shfetraderapi
-
 
 class InsertOrderMsgResolver(TraderMsgResolver):
     def __init__(self, handler):
@@ -16,7 +14,6 @@ class InsertOrderMsgResolver(TraderMsgResolver):
         type = msg.get("type")
         if type == "order":
             data = msg.get("data")
-            pprint(data)
             user = self.handler.userId
             input_order_field = shfetraderapi.CShfeFtdcInputOrderField()
             input_order_field.BusinessUnit = str(user)

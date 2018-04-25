@@ -1,0 +1,7 @@
+{
+    "sourceMQ": "xmq_sse_trader_recv",
+    "targetMQ": "xmq_sse_trader_send",
+    "targetExchangeId": "stock_exchange",
+    "userId": "000201",
+    "password": "111111"
+}

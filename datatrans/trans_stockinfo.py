@@ -94,7 +94,7 @@ class trans_stockinfo:
                                           ProductGroupID,
                                           ProductID,
                                           "4", "2", None, "0",
-                                          1, 1, 0, 0,
+                                          stock.BSLDW, 1, 0, 0,
                                           stock.ZQDM, stock.ZWMC,
                                           2099, 12, "012"))
             cursor.executemany(sql_insert_instrument, sql_insert_params)
@@ -342,6 +342,8 @@ class trans_stockinfo:
                 stock.DFXXJG = \
                 se.getElementsByTagName("PriceLimitSetting")[0].getElementsByTagName("Setting")[1].getElementsByTagName(
                     "LimitDownRate")[0].childNodes[0].data.strip()
+                stock.BSLDW = \
+                se.getElementsByTagName("BuyQtyUnit")[0].childNodes[0].data.strip()
                 stock_list.update({zqdm: stock})
         return stock_list.values()
 

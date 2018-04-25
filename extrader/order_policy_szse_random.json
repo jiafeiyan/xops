@@ -1,0 +1,10 @@
+{
+    "sourceMQ": "xmq_szse_client_recv",
+    "targetMQ": "xmq_szse_client_send",
+    "targetExchangeId": "stock_exchange",
+    "clientId": "700010000",
+    "ParticipantID": "0001",
+    "fileSource": "${SIM_PLATFORM_HOME}/csvfiles/exchange/0001/szse_order_info.csv",
+    "minVolume": 1,
+    "maxVolume": 5
+}

@@ -3,13 +3,13 @@
         "pubAddress": "tcp://*:7777",
         "subAddress": "tcp://*:7788"
     },
-    "xmq_sse_trader_recv": {
-        "address": "tcp://127.0.0.1:7788",
-        "topic": "SSE:TRADER:"
-    },
     "xmq_sse_trader_send": {
         "address": "tcp://127.0.0.1:7777",
         "topic": "SSE:CLIENT:"
+    },
+    "xmq_sse_trader_recv": {
+        "address": "tcp://127.0.0.1:7788",
+        "topic": "SSE:TRADER:"
     },
     "xmq_sse_client_send": {
         "address": "tcp://127.0.0.1:7777",
@@ -18,5 +18,13 @@
     "xmq_sse_client_recv": {
         "address": "tcp://127.0.0.1:7788",
         "topic": "SSE:CLIENT:"
+    },
+    "xmq_sse_md_send":{
+        "address": "tcp://127.0.0.1:7777",
+        "topic": "SSE:MD:"
+    },
+    "xmq_sse_md_recv":{
+        "address": "tcp://127.0.0.1:7788",
+        "topic": "SSE:MD:"
     }
 }
