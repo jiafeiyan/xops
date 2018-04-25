@@ -47,6 +47,7 @@ def publish_future(context, conf):
         # 投资者资金预处理
         sql = """UPDATE siminfo.t_investorfund t1
                                      SET t1.prebalance = t1.balance, 
+                                     t1.available = t1.balance,
                                      t1.prestockvalue = t1.stockvalue, 
                                      t1.PreMargin = t1.CurrMargin,
                                      t1.stockvalue = 0,
