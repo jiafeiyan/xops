@@ -123,6 +123,15 @@ def settle_future(context, conf):
                                                    AND t.SettlementGroupID = %s 
                                                    AND t.SettlementPrice = %s"""
             cursor.execute(sql, (current_trading_day, settlement_id, settlement_group_id, 0))
+            # 收盘价为零赋值为最新价
+            sql = """UPDATE dbclear.t_marketdata t 
+                                               SET t.ClosePrice = t.LastPrice 
+                                               WHERE
+                                                   t.TradingDay = %s
+                                                   AND t.SettlementID = %s
+                                                   AND t.SettlementGroupID = %s 
+                                                   AND t.ClosePrice = %s"""
+            cursor.execute(sql, (current_trading_day, settlement_id, settlement_group_id, 0))
             # 清除数据
             logger.info("[delete t_delivinstrument ... ]")
             sql = "delete from dbclear.t_delivinstrument where settlementgroupid = %s and settlementid = %s and tradingday = %s "
