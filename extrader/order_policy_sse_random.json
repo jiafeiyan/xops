@@ -7,5 +7,5 @@
     "fileSource": "${SIM_PLATFORM_HOME}/csvfiles/exchange/0001/sse_order_info.csv",
     "minVolume": 1,
     "maxVolume": 5,
-    "orderFrequency": 3
+    "frequency": 3
 }

@@ -27,7 +27,7 @@ def random_order(context, conf):
     logger.info("[start random order with %s] begin" % (json.dumps(conf, encoding="UTF-8", ensure_ascii=False)))
 
     # 下单频率
-    order_frequency = conf.get("orderFrequency")
+    order_frequency = conf.get("frequency")
     # 获取数据来源
     file_source = path.convert(conf.get("fileSource"))
     order_source_data = [row for row in csv.DictReader(open(file_source))]
@@ -36,6 +36,7 @@ def random_order(context, conf):
     # 最大下单量
     max_volume = conf.get("maxVolume")
 
+    # 发送报单
     xmq_target_conf = context.get("xmq").get(conf.get("targetMQ"))
     target_mq_addr = xmq_target_conf["address"]
     target_mq_topic = xmq_target_conf["topic"]
@@ -60,7 +61,7 @@ def random_order(context, conf):
         if limit_price is None:
             continue
         input_params = {"InstrumentID": random_data.get("InstrumentID"),
-                        "LimitPrice": round(limit_price, digit),
+                        "LimitPrice": round(float(limit_price), digit),
                         "VolumeTotalOriginal": random.randint(min_volume, max_volume) * int(random_data.get("VolumeMultiple")),
                         "Direction": ord(str(random.randint(0, 1))),
                         "ParticipantID": conf.get("ParticipantID"),
@@ -85,7 +86,7 @@ def get_order_price(random_data, marketdata):
         return None
     # 3）下单策略
     # 1=>报涨停板价 2=>报跌停板价 3=>涨跌停之间 4=>昨收盘价 5=>最新价和涨跌停板之间
-    strategy = random.randint(1, 5)
+    strategy = get_order_type_by_weight()
     if strategy == 1:
         limit_price = upper
     elif strategy == 2:
@@ -98,9 +99,9 @@ def get_order_price(random_data, marketdata):
         # 如果没有最新价用昨结算
         if marketdata.get(random_data.get("InstrumentID")) is None:
             return random_data.get("PreClosePrice")
-        # 获取最新价附近(浮动 -1% ～ 1%)
+        # 获取最新价附近(浮动 -3% ～ 3%)
         last_price = marketdata.get(random_data.get("InstrumentID")).get("LastPrice")
-        last_price = round(last_price * (1 + random.uniform(-1, 1)), dict)
+        last_price = round(float(last_price) * (1.0 + random.uniform(-0.03, 0.03)), digit)
         # 判断涨跌之后是否还在区间内
         if lower <= last_price <= upper:
             limit_price = last_price
@@ -109,6 +110,24 @@ def get_order_price(random_data, marketdata):
     else:
         return None
     return limit_price
+
+def get_order_type_by_weight():
+    # 1=>报涨停板价 2=>报跌停板价 3=>涨跌停之间 4=>昨收盘价 5=>最新价和涨跌停板之间
+    policy = {1: 10,
+              2: 10,
+              3: 10,
+              4: 10,
+              5: 60}
+    total = sum(policy.values())
+    rad = random.randint(1, total)
+    cur_total = 0
+    res = ""
+    for k, v in policy.items():
+            cur_total += v
+            if rad <= cur_total:
+                res = k
+                break
+    return res
 
 
 def get_decimal_digit(decimal):

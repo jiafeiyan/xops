@@ -26,5 +26,205 @@
     "xmq_sse_md_recv":{
         "address": "tcp://127.0.0.1:7788",
         "topic": "SSE:MD:"
+    },
+
+    "xmq_szse_trader_send": {
+        "address": "tcp://127.0.0.1:7777",
+        "topic": "SZSE:CLIENT:"
+    },
+    "xmq_szse_trader_recv": {
+        "address": "tcp://127.0.0.1:7788",
+        "topic": "SZSE:TRADER:"
+    },
+    "xmq_szse_client_send": {
+        "address": "tcp://127.0.0.1:7777",
+        "topic": "SZSE:TRADER:"
+    },
+    "xmq_szse_client_recv": {
+        "address": "tcp://127.0.0.1:7788",
+        "topic": "SZSE:CLIENT:"
+    },
+    "xmq_szse_md_send":{
+        "address": "tcp://127.0.0.1:7777",
+        "topic": "SZSE:MD:"
+    },
+    "xmq_szse_md_recv":{
+        "address": "tcp://127.0.0.1:7788",
+        "topic": "SZSE:MD:"
+    },
+
+    "xmq_shfe_trader_send": {
+        "address": "tcp://127.0.0.1:7777",
+        "topic": "SHFE:CLIENT:"
+    },
+    "xmq_shfe_trader_recv": {
+        "address": "tcp://127.0.0.1:7788",
+        "topic": "SHFE:TRADER:"
+    },
+    "xmq_shfe_client_send": {
+        "address": "tcp://127.0.0.1:7777",
+        "topic": "SHFE:TRADER:"
+    },
+    "xmq_shfe_client_recv": {
+        "address": "tcp://127.0.0.1:7788",
+        "topic": "SHFE:CLIENT:"
+    },
+    "xmq_shfe_md_send":{
+        "address": "tcp://127.0.0.1:7777",
+        "topic": "SHFE:MD:"
+    },
+    "xmq_shfe_md_recv":{
+        "address": "tcp://127.0.0.1:7788",
+        "topic": "SHFE:MD:"
+    },
+
+    "xmq_dce_trader_send": {
+        "address": "tcp://127.0.0.1:7777",
+        "topic": "DCE:CLIENT:"
+    },
+    "xmq_dce_trader_recv": {
+        "address": "tcp://127.0.0.1:7788",
+        "topic": "DCE:TRADER:"
+    },
+    "xmq_dce_client_send": {
+        "address": "tcp://127.0.0.1:7777",
+        "topic": "DCE:TRADER:"
+    },
+    "xmq_dce_client_recv": {
+        "address": "tcp://127.0.0.1:7788",
+        "topic": "DCE:CLIENT:"
+    },
+    "xmq_dce_md_send":{
+        "address": "tcp://127.0.0.1:7777",
+        "topic": "DCE:MD:"
+    },
+    "xmq_dce_md_recv":{
+        "address": "tcp://127.0.0.1:7788",
+        "topic": "DCE:MD:"
+    },
+
+    "xmq_czce_trader_send": {
+        "address": "tcp://127.0.0.1:7777",
+        "topic": "CZCE:CLIENT:"
+    },
+    "xmq_czce_trader_recv": {
+        "address": "tcp://127.0.0.1:7788",
+        "topic": "CZCE:TRADER:"
+    },
+    "xmq_czce_client_send": {
+        "address": "tcp://127.0.0.1:7777",
+        "topic": "CZCE:TRADER:"
+    },
+    "xmq_czce_client_recv": {
+        "address": "tcp://127.0.0.1:7788",
+        "topic": "CZCE:CLIENT:"
+    },
+    "xmq_czce_md_send":{
+        "address": "tcp://127.0.0.1:7777",
+        "topic": "CZCE:MD:"
+    },
+    "xmq_czce_md_recv":{
+        "address": "tcp://127.0.0.1:7788",
+        "topic": "CZCE:MD:"
+    },
+
+    "xmq_cffex_trader_send": {
+        "address": "tcp://127.0.0.1:7777",
+        "topic": "CFFEX:CLIENT:"
+    },
+    "xmq_cffex_trader_recv": {
+        "address": "tcp://127.0.0.1:7788",
+        "topic": "CFFEX:TRADER:"
+    },
+    "xmq_cffex_client_send": {
+        "address": "tcp://127.0.0.1:7777",
+        "topic": "CFFEX:TRADER:"
+    },
+    "xmq_cffex_client_recv": {
+        "address": "tcp://127.0.0.1:7788",
+        "topic": "CFFEX:CLIENT:"
+    },
+    "xmq_cffex_md_send":{
+        "address": "tcp://127.0.0.1:7777",
+        "topic": "CFFEX:MD:"
+    },
+    "xmq_cffex_md_recv":{
+        "address": "tcp://127.0.0.1:7788",
+        "topic": "CFFEX:MD:"
+    },
+
+    "xmq_ine_trader_send": {
+        "address": "tcp://127.0.0.1:7777",
+        "topic": "INE:CLIENT:"
+    },
+    "xmq_ine_trader_recv": {
+        "address": "tcp://127.0.0.1:7788",
+        "topic": "INE:TRADER:"
+    },
+    "xmq_ine_client_send": {
+        "address": "tcp://127.0.0.1:7777",
+        "topic": "INE:TRADER:"
+    },
+    "xmq_ine_client_recv": {
+        "address": "tcp://127.0.0.1:7788",
+        "topic": "INE:CLIENT:"
+    },
+    "xmq_ine_md_send":{
+        "address": "tcp://127.0.0.1:7777",
+        "topic": "INE:MD:"
+    },
+    "xmq_ine_md_recv":{
+        "address": "tcp://127.0.0.1:7788",
+        "topic": "INE:MD:"
+    },
+
+    "xmq_sge_trader_send": {
+        "address": "tcp://127.0.0.1:7777",
+        "topic": "SGE:CLIENT:"
+    },
+    "xmq_sge_trader_recv": {
+        "address": "tcp://127.0.0.1:7788",
+        "topic": "SGE:TRADER:"
+    },
+    "xmq_sge_client_send": {
+        "address": "tcp://127.0.0.1:7777",
+        "topic": "SGE:TRADER:"
+    },
+    "xmq_sge_client_recv": {
+        "address": "tcp://127.0.0.1:7788",
+        "topic": "SGE:CLIENT:"
+    },
+    "xmq_sge_md_send":{
+        "address": "tcp://127.0.0.1:7777",
+        "topic": "SGE:MD:"
+    },
+    "xmq_sge_md_recv":{
+        "address": "tcp://127.0.0.1:7788",
+        "topic": "SGE:MD:"
+    },
+
+    "xmq_etf_trader_send": {
+        "address": "tcp://127.0.0.1:7777",
+        "topic": "ETF:CLIENT:"
+    },
+    "xmq_etf_trader_recv": {
+        "address": "tcp://127.0.0.1:7788",
+        "topic": "ETF:TRADER:"
+    },
+    "xmq_etf_client_send": {
+        "address": "tcp://127.0.0.1:7777",
+        "topic": "ETF:TRADER:"
+    },
+    "xmq_etf_client_recv": {
+        "address": "tcp://127.0.0.1:7788",
+        "topic": "ETF:CLIENT:"
+    },
+    "xmq_etf_md_send":{
+        "address": "tcp://127.0.0.1:7777",
+        "topic": "ETF:MD:"
+    },
+    "xmq_etf_md_recv":{
+        "address": "tcp://127.0.0.1:7788",
+        "topic": "ETF:MD:"
     }
 }

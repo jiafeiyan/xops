@@ -60,9 +60,33 @@ class MdHandler(shfemdapi.CShfeFtdcMduserSpi):
     def OnRtnDepthMarketData(self, pDepthMarketData):
         self.logger.info("OnRtnDepthMarketData")
         if pDepthMarketData is not None:
-            InstrumentID = pDepthMarketData.InstrumentID
-            LastPrice = pDepthMarketData.LastPrice
-            msg = {"type": "marketdata", "data": {InstrumentID: {"InstrumentID": InstrumentID, "LastPrice": LastPrice}}}
+            md_info = dict({"InstrumentID": pDepthMarketData.InstrumentID,
+                            "LastPrice": pDepthMarketData.LastPrice,
+                            "UpperLimitPrice": pDepthMarketData.UpperLimitPrice,
+                            "LowerLimitPrice": pDepthMarketData.LowerLimitPrice,
+                            "Volume": pDepthMarketData.Volume,
+                            "BidPrice1": pDepthMarketData.BidPrice1,
+                            "BidVolume1": pDepthMarketData.BidVolume1,
+                            "AskPrice1": pDepthMarketData.AskPrice1,
+                            "AskVolume1": pDepthMarketData.AskVolume1,
+                            "BidPrice2": pDepthMarketData.BidPrice2,
+                            "BidVolume2": pDepthMarketData.BidVolume2,
+                            "AskPrice2": pDepthMarketData.AskPrice2,
+                            "AskVolume2": pDepthMarketData.AskVolume2,
+                            "BidPrice3": pDepthMarketData.BidPrice3,
+                            "BidVolume3": pDepthMarketData.BidVolume3,
+                            "AskPrice3": pDepthMarketData.AskPrice3,
+                            "AskVolume3": pDepthMarketData.AskVolume3,
+                            "BidPrice4": pDepthMarketData.BidPrice4,
+                            "BidVolume4": pDepthMarketData.BidVolume4,
+                            "AskPrice4": pDepthMarketData.AskPrice4,
+                            "AskVolume4": pDepthMarketData.AskVolume4,
+                            "BidPrice5": pDepthMarketData.BidPrice5,
+                            "BidVolume5": pDepthMarketData.BidVolume5,
+                            "AskPrice5": pDepthMarketData.AskPrice5,
+                            "AskVolume5": pDepthMarketData.AskVolume5})
+            msg = {"type": "marketdata",
+                   "data": {pDepthMarketData.InstrumentID: md_info}}
             self.msg_puber.send(msg)
 
     def get_request_id(self):
