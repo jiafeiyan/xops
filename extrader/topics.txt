@@ -9,4 +9,12 @@
 交易所:CLIENT:{"type":"istatus","data":{}}
 报单机器人只在可报单状态报单：集合竞价报单，连续交易
 
+行情信息消息：md发布，报单机器人订阅，格式：
+交易所:MD:{"type":"marketdata","data": {instrumentid : {}}}
 
+
+
+SettlementGroupId =>> RG01
+ParticipantId ==> R0001
+UserID ==> TRADE01 交易worker  TRADE02 行情worker
+ClientID ==>

@@ -1,10 +1,10 @@
 {
-    "sourceMQ": "xmq_sse_client_recv",
-    "targetMQ": "xmq_sse_client_send",
-    "targetExchangeId": "stock_exchange",
-    "clientId": "800000001",
-    "ParticipantID": "0007",
-    "fileSource": "/Users/chenyan/CompanyProjects/xops/csvfiles/exchange/0001/stock_order_info.csv",
+    "targetMQ": "xmq_client_send",
+    "mdSourceMQ": "xmq_md_recv",
+    "clientId": "A00010000",
+    "ParticipantID": "0001",
+    "fileSource": "${SIM_PLATFORM_HOME}/csvfiles/exchange/0001/sse_order_info.csv",
     "minVolume": 1,
-    "maxVolume": 100
+    "maxVolume": 5,
+    "frequency": 3
 }

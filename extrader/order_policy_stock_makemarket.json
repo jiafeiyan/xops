@@ -1,0 +1,6 @@
+{
+    "targetMQ": "xmq_sse_client_send",
+    "mdSourceMQ": "xmq_sse_md_recv",
+    "clientId": "A00010000",
+    "ParticipantID": "0001"
+}
