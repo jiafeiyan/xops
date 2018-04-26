@@ -14,3 +14,7 @@
 
 
 
+SettlementGroupId =>> RG01
+ParticipantId ==> R0001
+UserID ==> TRADE01 交易worker  TRADE02 行情worker
+ClientID ==>

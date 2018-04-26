@@ -19,7 +19,7 @@ def start_md_service(context, conf):
 
     user_id = conf["userId"]
     password = conf["password"]
-    topic_id = conf["topicId"]
+    topic_id_list = conf["topicId"]
 
     xmq_target_conf = context.get("xmq").get(conf.get("targetMQ"))
 
@@ -30,7 +30,10 @@ def start_md_service(context, conf):
 
     md_api = shfemdapi.CShfeFtdcMduserApi_CreateFtdcMduserApi()
     md_handler = MdHandler(md_api, user_id, password)
-    md_api.SubscribeMarketDataTopic(topic_id, shfemdapi.TERT_RESTART)
+
+    for topic_id in topic_id_list:
+        md_api.SubscribeMarketDataTopic(topic_id, shfemdapi.TERT_RESTART)
+
     md_api.RegisterFront(exchange_front_addr)
     md_api.RegisterSpi(md_handler)
 

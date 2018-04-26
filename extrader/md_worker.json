@@ -1,0 +1,7 @@
+{
+    "targetMQ": "xmq_md_send",
+    "targetExchangeId": "stock_exchange",
+    "userId": "TRADE02",
+    "password": "111111",
+    "topicId": [111, 211, 311, 411, 511, 611, 711, 811, 911]
+}
