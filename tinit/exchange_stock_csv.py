@@ -112,13 +112,6 @@ class exchange_stock_csv:
         # ================sse_etf.txt================
         self.__generate_marketdata("sse_etf", mysqlDB)
 
-        # ================ sse_order_info ============
-        self.__gen_robot_csv("sse_order_info", "SG01", mysqlDB)
-        # ================ szse_order_info ===========
-        self.__gen_robot_csv("szse_order_info", "SG02", mysqlDB)
-        # ================ etf_order_info ============
-        self.__gen_robot_csv("etf_order_info", "SG07", mysqlDB)
-
     def __data_to_csv(self, table_name, mysqlDB):
         table_sqls = dict(
             t_Account=dict(columns=("SettlementGroupID", "AccountID", "ParticipantID", "Currency"),
@@ -320,23 +313,6 @@ class exchange_stock_csv:
         csv_data = mysqlDB.select(table_sqls[table_name]["sql"], (self.tradeSystemID,))
         # 生成csv文件
         self.__produce_csv(table_name, table_sqls[table_name], csv_data)
-
-    def __gen_robot_csv(self, table_name, SettlementGroupID ,mysqlDB):
-        sql = """SELECT t.SettlementGroupID,t.InstrumentID,t1.PreClosePrice,t2.ValueMode,
-                                t2.LowerValue,t2.UpperValue,t.PriceTick ,t4.VolumeMultiple
-                    FROM siminfo.t_instrumentproperty t,sync.t_marketdata t1,
-                            siminfo.t_pricebanding t2,siminfo.t_instrument t4
-                    WHERE t.InstrumentID = t1.InstrumentID 
-                            AND t.InstrumentID = t2.InstrumentID 
-                            AND t.SettlementGroupID = t1.SettlementGroupID 
-                            AND t.SettlementGroupID = t2.SettlementGroupID
-                            AND t.InstrumentID = t4.InstrumentID 
-                            AND t.SettlementGroupID = t4.SettlementGroupID
-                            AND t.SettlementGroupID = %s"""
-        columns = dict(columns=("SettlementGroupID", "InstrumentID", "PreClosePrice", "ValueMode", "LowerValue", "UpperValue", "PriceTick", "VolumeMultiple"))
-        csv_data = mysqlDB.select(sql, (SettlementGroupID,))
-        # 生成csv文件
-        self.__produce_csv(table_name, columns, csv_data)
 
     def __generate_marketdata(self, exchange, mysqlDB):
         if exchange == "sse":

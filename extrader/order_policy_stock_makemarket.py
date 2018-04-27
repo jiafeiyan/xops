@@ -38,8 +38,8 @@ def makemarket_order(context, conf):
                             "Direction": ord(result.get("Direction")),
                             "ParticipantID": conf.get("ParticipantID"),
                             "ClientID": conf.get("clientId")}
+            logger.info(input_params)
             msg_target_puber.send({"type": "order", "data": input_params})
-        time.sleep(1)
 
 
 class MakeMarketMsgResolver(xmq_msg_resolver):
@@ -82,9 +82,6 @@ class MakeMarketMsgResolver(xmq_msg_resolver):
         security_id = str(target_market["InstrumentID"])
         target_price = self.__to_float(target_market["LastPrice"])
         source_price = self.__to_float(source_market["LastPrice"])
-
-        print target_price
-        print source_price
 
         upper_price = self.__to_float(source_market["UpperLimitPrice"])
         lower_price = self.__to_float(source_market["LowerLimitPrice"])
