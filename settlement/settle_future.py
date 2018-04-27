@@ -1414,8 +1414,8 @@ def calc_future_posdtl(logger, cursor, current_trading_day, settlement_group_id,
                         close_volume = 0
                     else:
                         curr_close_volume = open_volume
-                        open_volume = 0
                         close_volume -= open_volume
+                        open_volume = 0
 
                 total_close_volume += curr_close_volume
                 total_close_amount += round(close_price * curr_close_volume * volume_multiple, 2)
