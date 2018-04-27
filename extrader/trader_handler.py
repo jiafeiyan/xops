@@ -81,7 +81,7 @@ class TraderHandler(shfetraderapi.CShfeFtdcTraderSpi):
         if pRspInfo is not None and pRspInfo.ErrorID != 0:
             self.logger.error("OnRspOrderInsert failed : %s" % pRspInfo.ErrorMsg.decode("GBK").encode("UTF-8"))
         else:
-            print(pInputOrder)
+            pass
 
 
 

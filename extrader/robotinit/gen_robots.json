@@ -1,0 +1,8 @@
+{
+    "mysqlId" : "simplatform_base",
+    "settlementGroupId" : "RG01",
+    "participantId" : "R0001",
+    "prefix" : "robot",
+    "start": 1,
+    "count": 1
+}

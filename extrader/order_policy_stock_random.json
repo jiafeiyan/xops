@@ -1,9 +1,9 @@
 {
     "targetMQ": "xmq_client_send",
     "mdSourceMQ": "xmq_md_recv",
-    "clientId": "A00010000",
-    "ParticipantID": "0001",
-    "fileSource": "${SIM_PLATFORM_HOME}/csvfiles/exchange/0001/sse_order_info.csv",
+    "clientId": "robot00001",
+    "ParticipantID": "R0001",
+    "fileSource": "${SIM_PLATFORM_HOME}/csvfiles/exchange/0001/order_info.csv",
     "minVolume": 1,
     "maxVolume": 5,
     "frequency": 3
