@@ -3,5 +3,6 @@
   "tradeSystemID": "0001",
   "mysqlId": "simplatform_base",
   "logId": "default",
-  "csv": "csv_base"
+  "csv": "csv_base",
+  "initialfunds": "1000000"
 }

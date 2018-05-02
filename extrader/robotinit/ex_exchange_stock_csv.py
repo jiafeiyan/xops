@@ -27,6 +27,7 @@ class ex_exchange_stock_csv:
     def __init__(self, context, configs):
         self.TradeSystemID = configs.get("tradeSystemID")
         self.SettlementGroupID = configs.get("settlementGroupID")
+        self.initialfunds = configs.get("initialfunds")
         log_conf = None if context.get("log") is None else context.get("log").get(configs.get("logId"))
         # 初始化日志
         self.logger = log.get_logger(category="exchange_stock_csv", configs=log_conf)
@@ -107,7 +108,7 @@ class ex_exchange_stock_csv:
                                         '1' AS SettlementID,
                                         '1' AS HedgeFlag,
                                         '3' AS PosiDirection,
-                                        '10000' AS YdPosition,
+                                        %s AS YdPosition,
                                         '0' AS Position,
                                         '0' AS LongFrozen,
                                         '0' AS ShortFrozen,
@@ -135,14 +136,14 @@ class ex_exchange_stock_csv:
                                         AND t1.TradeSystemID = t2.TradeSystemID 
                                         AND t3.SettlementGroupID = %s 
                                         AND t1.TradeSystemID = %s""",
-                                  params=(self.SettlementGroupID, self.TradeSystemID)),
+                                  params=(self.initialfunds, self.SettlementGroupID, self.TradeSystemID)),
             t_PartPosition=dict(sql="""select 
                                           t2.TradingDay,
                                             'SG01' AS SettlementGroupID,
                                             '1' as SettlementID,
                                             '1' as HedgeFlag,
                                             '3' as PosiDirection,
-                                            '10000' as YdPosition,
+                                            %s as YdPosition,
                                             '0' as Position,
                                             '0' as LongFrozen,
                                             '0' as ShortFrozen,
@@ -161,7 +162,7 @@ class ex_exchange_stock_csv:
                                             AND t1.TradeSystemID = t2.TradeSystemID 
                                             AND t3.SettlementGroupID = %s
                                             AND t1.TradeSystemID = %s""",
-                                    params=(self.SettlementGroupID, self.TradeSystemID)),
+                                    params=(self.initialfunds, self.SettlementGroupID, self.TradeSystemID)),
         )
 
         csv_data = self.mysqlDB.select(table_sqls[table_name]["sql"],
