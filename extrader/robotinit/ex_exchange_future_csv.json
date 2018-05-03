@@ -1,0 +1,8 @@
+{
+  "settlementGroupID": "RG01",
+  "tradeSystemID": "0002",
+  "mysqlId": "simplatform_base",
+  "logId": "default",
+  "csv": "csv_base",
+  "initialfunds": "1000000"
+}

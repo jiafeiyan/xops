@@ -1,0 +1,6 @@
+{
+    "targetMQ": "xmq_client_send",
+    "mdSourceMQ": "xmq_md_recv",
+    "clientId": "robot00001",
+    "ParticipantID": "R0001"
+}

@@ -39,7 +39,7 @@ def makemarket_order(context, conf):
                             "ParticipantID": conf.get("ParticipantID"),
                             "ClientID": conf.get("clientId")}
             logger.info(input_params)
-            msg_target_puber.send({"type": "stock_order", "data": input_params})
+            msg_target_puber.send({"type": "future_order", "data": input_params})
 
 
 class MakeMarketMsgResolver(xmq_msg_resolver):
