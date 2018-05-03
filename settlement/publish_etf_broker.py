@@ -205,7 +205,7 @@ def publish_etf(context, conf):
                                                 AND t2.settlementid = %s
                                             ) t2 
                                             SET t1.balance = t1.balance + t2.available - t2.transfee - t2.DelivFee,
-                                            t1.available = t1.balance + t2.available - t2.transfee - t2.DelivFee - t2.positionmargin,
+                                            t1.available = t1.available + t2.available - t2.transfee - t2.DelivFee - t2.positionmargin,
                                             t1.fee = t1.fee + t2.transfee,
                                             t1.currmargin = t1.currmargin + t2.positionmargin,
                                             t1.premium = t1.premium + t2.available
