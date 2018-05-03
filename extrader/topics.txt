@@ -1,5 +1,5 @@
 报单消息：报单机器人发布，trader订阅，格式：
-交易所:TRADER:{"type":"order","data":{}}
+交易所:TRADER:{"type":"stock_order","data":{}}
 
 查询合约交易状态消息：报单机器人发布，trader订阅，格式：
 交易所:TRADER:{"type":"qry_insstatus","data":{}}

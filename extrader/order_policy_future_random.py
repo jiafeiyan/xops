@@ -53,7 +53,7 @@ def random_order(context, conf):
 
     count = 0
     while True:
-        # 随机选择一只股票
+        # 随机选择一只期货
         random_data = order_source_data[random.randint(0, len(order_source_data) - 1)]
         digit = get_decimal_digit(float(random_data.get("PriceTick")))
         # 获取报单价格
@@ -62,12 +62,12 @@ def random_order(context, conf):
             continue
         input_params = {"InstrumentID": random_data.get("InstrumentID"),
                         "LimitPrice": round(float(limit_price), digit),
-                        "VolumeTotalOriginal": random.randint(min_volume, max_volume) * int(random_data.get("VolumeMultiple")),
+                        "VolumeTotalOriginal": random.randint(min_volume, max_volume),
                         "Direction": ord(str(random.randint(0, 1))),
                         "ParticipantID": conf.get("ParticipantID"),
                         "ClientID": conf.get("clientId"),
                         "count": count}
-        msg_target_puber.send({"type": "stock_order", "data": input_params})
+        msg_target_puber.send({"type": "future_order", "data": input_params})
         count += 1
         # msg_target_puber.send({"type": "qry_marketdata", "data": {"k1": "v1", "c": count}})
         # count += 1
