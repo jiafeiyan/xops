@@ -2,6 +2,7 @@
 
 import time
 import json
+import thread
 
 import shfetraderapi
 
@@ -59,8 +60,16 @@ def start_trader_service(context, conf):
     msg_source_suber.add_resolver(InsertOrderMsgResolver(trader_handler))
     msg_source_suber.add_resolver(QryMarketDataMsgResolver(trader_handler))
 
+    # 定时检查合约交易状态
+    thread.start_new(function=check_ins_status(trader_handler))
+
     trader_api.Join()
 
+def check_ins_status(trader_handler):
+    while True:
+        print "start check instrument status !"
+        trader_handler.ReqQryInstrumentStatus()
+        time.sleep(20)
 
 def main():
     base_dir, config_names, config_files, add_ons = parse_conf_args(__file__, config_names=["exchange", "xmq"])

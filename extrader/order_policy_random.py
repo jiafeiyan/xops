@@ -21,6 +21,19 @@ class MarketDataMsgResolver(xmq_msg_resolver):
             data = msg.get("data")
             self.marketdata.update(data)
 
+class InsStatusMsgResolver(xmq_msg_resolver):
+    def __init__(self):
+        self.istatus = dict()
+        xmq_msg_resolver.__init__(self)
+
+    def resolve_msg(self, msg):
+        if msg is None or msg.get("type") is None:
+            return
+
+        if msg.get("type") == "istatus":
+            data = msg.get("data")
+            self.istatus.update(data)
+
 def random_order(context, conf):
     logger = log.get_logger(category="OrderPolicyRandom")
 
@@ -51,27 +64,41 @@ def random_order(context, conf):
     md_resolver = MarketDataMsgResolver()
     msg_source_suber.add_resolver(md_resolver)
 
+    # 接收行情状态信息
+    xmq_source_conf = context.get("xmq").get(conf.get("sourceMQ"))
+    source_mq_addr = xmq_source_conf["address"]
+    source_mq_topic = xmq_source_conf["topic"]
+    msg_source_suber_status = xmq_resolving_suber(source_mq_addr, source_mq_topic)
+
+    md_resolver_status = InsStatusMsgResolver()
+    msg_source_suber_status.add_resolver(md_resolver_status)
+
     count = 0
     while True:
         # 随机选择一只股票
         random_data = order_source_data[random.randint(0, len(order_source_data) - 1)]
-        digit = get_decimal_digit(float(random_data.get("PriceTick")))
-        # 获取报单价格
-        limit_price = get_order_price(random_data, md_resolver.marketdata)
-        if limit_price is None:
+        # 查看合约状态
+        if random_data.get("InstrumentID") not in md_resolver_status.istatus:
+            time.sleep(order_frequency)
             continue
-        input_params = {"InstrumentID": random_data.get("InstrumentID"),
-                        "LimitPrice": round(float(limit_price), digit),
-                        "VolumeTotalOriginal": random.randint(min_volume, max_volume) * int(random_data.get("VolumeMultiple")),
-                        "Direction": ord(str(random.randint(0, 1))),
-                        "ParticipantID": conf.get("ParticipantID"),
-                        "ClientID": conf.get("clientId"),
-                        "count": count}
-        msg_target_puber.send({"type": "order", "data": input_params, "ProductClass": str(random_data.get("ProductClass"))})
-        count += 1
-        # msg_target_puber.send({"type": "qry_marketdata", "data": {"k1": "v1", "c": count}})
-        # count += 1
-        time.sleep(order_frequency)
+        if '2' == str(md_resolver_status.istatus.get(random_data.get("InstrumentID")).get("InstrumentStatus")):
+            digit = get_decimal_digit(float(random_data.get("PriceTick")))
+            # 获取报单价格
+            limit_price = get_order_price(random_data, md_resolver.marketdata)
+            if limit_price is None:
+                continue
+            input_params = {"InstrumentID": random_data.get("InstrumentID"),
+                            "LimitPrice": round(float(limit_price), digit),
+                            "VolumeTotalOriginal": random.randint(min_volume, max_volume) * int(random_data.get("VolumeMultiple")),
+                            "Direction": ord(str(random.randint(0, 1))),
+                            "ParticipantID": conf.get("ParticipantID"),
+                            "ClientID": conf.get("clientId"),
+                            "count": count}
+            msg_target_puber.send({"type": "order", "data": input_params, "ProductClass": str(random_data.get("ProductClass"))})
+            count += 1
+            # msg_target_puber.send({"type": "qry_marketdata", "data": {"k1": "v1", "c": count}})
+            # count += 1
+            time.sleep(order_frequency)
 
 def get_order_price(random_data, marketdata):
     # 1）获取计算涨跌停板价格
