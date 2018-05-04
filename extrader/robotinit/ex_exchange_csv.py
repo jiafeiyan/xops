@@ -186,7 +186,7 @@ class ex_exchange_stock_csv:
             self.logger.info("%s%s%s" % ("追加 [", table_name, "] 数据完成"))
 
     def __gen_robot_csv(self, table_name):
-        sql = """SELECT t.SettlementGroupID,t.InstrumentID,t1.PreClosePrice,t2.ValueMode,
+        sql = """SELECT t.SettlementGroupID,t.InstrumentID,t4.ProductClass,t1.PreClosePrice,t2.ValueMode,
                                 t2.LowerValue,t2.UpperValue,t.PriceTick ,t4.VolumeMultiple
                     FROM siminfo.t_instrumentproperty t,siminfo.t_marketdata t1,
                             siminfo.t_pricebanding t2,siminfo.t_instrument t4,
@@ -199,7 +199,8 @@ class ex_exchange_stock_csv:
                             AND t.SettlementGroupID = t4.SettlementGroupID
                             and t.SettlementGroupID = t5.SettlementGroupID
                             and t5.TradeSystemID = %s"""
-        columns = dict(columns=("SettlementGroupID", "InstrumentID", "PreClosePrice", "ValueMode", "LowerValue", "UpperValue", "PriceTick", "VolumeMultiple"))
+        columns = dict(columns=("SettlementGroupID", "InstrumentID", "ProductClass", "PreClosePrice", "ValueMode",
+                                "LowerValue", "UpperValue", "PriceTick", "VolumeMultiple"))
         csv_data = self.mysqlDB.select(sql, (self.TradeSystemID,))
         # 生成csv文件
         self.__produce_csv(table_name, columns, csv_data)

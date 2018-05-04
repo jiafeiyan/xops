@@ -67,7 +67,7 @@ def random_order(context, conf):
                         "ParticipantID": conf.get("ParticipantID"),
                         "ClientID": conf.get("clientId"),
                         "count": count}
-        msg_target_puber.send({"type": "stock_order", "data": input_params})
+        msg_target_puber.send({"type": "order", "data": input_params, "ProductClass": str(random_data.get("ProductClass"))})
         count += 1
         # msg_target_puber.send({"type": "qry_marketdata", "data": {"k1": "v1", "c": count}})
         # count += 1
