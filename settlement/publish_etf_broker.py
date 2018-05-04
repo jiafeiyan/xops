@@ -23,7 +23,7 @@ def publish_etf(context, conf):
 
         logger.info("[get current trading day]......")
 
-        sql = """SELECT DISTINCT t1.tradingday 
+        sql = """SELECT DISTINCT t1.tradingday, t1.lasttradingday
                    FROM siminfo.t_tradesystemtradingday t1,
                         siminfo.t_tradesystemsettlementgroup t2,
                         siminfo.t_brokersystemsettlementgroup t3 
@@ -34,7 +34,8 @@ def publish_etf(context, conf):
         row = cursor.fetchone()
 
         current_trading_day = str(row[0])
-        logger.info("[get current trading day] current_trading_day = %s" % current_trading_day)
+        last_trading_day = str(row[1])
+        logger.info("[get current trading day] current_trading_day = %s, last_trading_day = %s" % (current_trading_day, last_trading_day))
 
         logger.info("[get next trading day]......")
         sql = """SELECT DAY FROM siminfo.t_TradingCalendar t WHERE t.day > %s AND t.tra = '1' ORDER BY DAY LIMIT 1"""
@@ -47,15 +48,18 @@ def publish_etf(context, conf):
         # 投资者资金预处理
         sql = """UPDATE siminfo.t_investorfund t1
                        SET t1.prebalance = t1.balance, 
-                       t1.available = t1.balance, 
                        t1.prestockvalue = t1.stockvalue, 
                        t1.PreMargin = t1.CurrMargin,
                        t1.stockvalue = 0,
                        t1.premium = 0,
                        t1.currmargin = 0, 
-                       t1.fee = 0
+                       t1.fee = 0,
+                       t1.premonthasset = IF(MONTH(%s) - MONTH(%s) = 0, t1.premonthasset, t1.currentasset),
+                       t1.preweekasset = IF(WEEK(%s, 1) - WEEK(%s, 1) = 0, t1.preweekasset, t1.currentasset),
+                       t1.preasset = t1.currentasset,
+                       t1.currentasset = t1.balance
                      WHERE t1.brokersystemid = %s"""
-        cursor.execute(sql, (broker_system_id,))
+        cursor.execute(sql, (current_trading_day, last_trading_day, current_trading_day, last_trading_day, broker_system_id,))
 
         for settlement_groups in conf.get("settlementGroups"):
             settlement_group_id = settlement_groups.get("settlementGroupId")
@@ -205,10 +209,11 @@ def publish_etf(context, conf):
                                                 AND t2.settlementid = %s
                                             ) t2 
                                             SET t1.balance = t1.balance + t2.available - t2.transfee - t2.DelivFee,
-                                            t1.available = t1.available + t2.available - t2.transfee - t2.DelivFee - t2.positionmargin,
+                                            t1.available = t1.balance + t2.available - t2.transfee - t2.DelivFee - t2.positionmargin,
                                             t1.fee = t1.fee + t2.transfee,
                                             t1.currmargin = t1.currmargin + t2.positionmargin,
-                                            t1.premium = t1.premium + t2.available
+                                            t1.premium = t1.premium + t2.available,
+                                            t1.currentasset = t1.balance + t2.available - t2.transfee - t2.DelivFee
                                         WHERE
                                             t1.brokersystemid = t2.brokersystemid 
                                             AND t1.investorid = t2.investorid"""

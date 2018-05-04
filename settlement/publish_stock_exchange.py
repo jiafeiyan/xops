@@ -44,9 +44,9 @@ def publish_stock(context, conf):
         # 更新交易所系统交易日
         logger.info("[update trade system tradingday]......")
         sql = """UPDATE siminfo.t_tradesystemtradingday t1
-                              SET t1.tradingday = %s
+                              SET t1.tradingday = %s, t1.lasttradingday = %s
                             WHERE t1.tradingday = %s AND t1.tradesystemid = %s"""
-        cursor.execute(sql, (next_trading_day, current_trading_day, trade_system_id))
+        cursor.execute(sql, (next_trading_day, current_trading_day, current_trading_day, trade_system_id))
 
         mysql_conn.commit()
     except Exception as e:
