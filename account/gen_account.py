@@ -8,7 +8,7 @@ def gen_investors(context, conf):
 
     logger = log.get_logger(category="GenAccount")
 
-    total_balance = conf["balance"]
+    balance_conf = conf["balance"]
     id_int = conf["start"]
     count = conf["count"]
 
@@ -92,11 +92,26 @@ def gen_investors(context, conf):
                             WHERE t1.settlementgroupid = t2.settlementgroupid AND t2.investorid = t3.investorid AND t3.investorstatus = '9' '''
         cursor.execute(sql)
 
-        sql = '''INSERT INTO siminfo.t_investorfund(BrokerSystemID,InvestorID,PreBalance,CurrMargin,CloseProfit,Premium,Deposit,Withdraw,Balance,Available,PreMargin,FuturesMargin,OptionsMargin,PositionProfit,Profit,Interest,Fee,TotalCollateral,CollateralForMargin,PreAccmulateInterest,AccumulateInterest,AccumulateFee,ForzenDeposit,AccountStatus,PreStockValue,StockValue)
-                            SELECT t1.brokersystemid,t2.investorid,0,0,0,0,0,0,%s,%s,0,0,0,0,0,0,0,0,0,0,0,0,0,'0',0,0
-                            FROM siminfo.t_brokersystem t1, siminfo.t_investor t2
-                            WHERE t2.investorstatus = '9' '''
-        cursor.execute(sql, (total_balance, total_balance))
+        config_brokers = ""
+        for broker_system_id in balance_conf.keys():
+            if broker_system_id != "default":
+                broker_system_balance = balance_conf[broker_system_id]
+                sql = '''INSERT INTO siminfo.t_investorfund(BrokerSystemID,InvestorID,PreBalance,CurrMargin,CloseProfit,Premium,Deposit,Withdraw,Balance,Available,PreMargin,FuturesMargin,OptionsMargin,PositionProfit,Profit,Interest,Fee,
+                                          TotalCollateral,CollateralForMargin,PreAccmulateInterest,AccumulateInterest,AccumulateFee,ForzenDeposit,AccountStatus,InitialAsset,PreMonthAsset,PreWeekAsset,PreAsset,CurrentAsset,PreStockValue,StockValue)
+                                    SELECT %s,t2.investorid,%s,0,0,0,0,0,0,%s,%s,0,0,0,0,0,0,0,0,0,0,0,0,'0',%s,%s,%s,%s,%s,0,0
+                                    FROM siminfo.t_investor t2
+                                    WHERE t2.investorstatus = '9' '''
+                cursor.execute(sql, (broker_system_id, broker_system_balance, broker_system_balance, broker_system_balance, broker_system_balance, broker_system_balance, broker_system_balance, broker_system_balance, broker_system_balance))
+                config_brokers = "'%s'" % broker_system_id if len(config_brokers) == 0 else "%s,'%s'" % (config_brokers, broker_system_id)
+
+        if len(config_brokers) > 0:
+            broker_system_balance = balance_conf["default"]
+            sql = '''INSERT INTO siminfo.t_investorfund(BrokerSystemID,InvestorID,PreBalance,CurrMargin,CloseProfit,Premium,Deposit,Withdraw,Balance,Available,PreMargin,FuturesMargin,OptionsMargin,PositionProfit,Profit,Interest,Fee,
+                                                      TotalCollateral,CollateralForMargin,PreAccmulateInterest,AccumulateInterest,AccumulateFee,ForzenDeposit,AccountStatus,InitialAsset,PreMonthAsset,PreWeekAsset,PreAsset,CurrentAsset,PreStockValue,StockValue)
+                                                SELECT t1.brokersystemid,t2.investorid,%s,0,0,0,0,0,0,%s,%s,0,0,0,0,0,0,0,0,0,0,0,0,'0',%s,%s,%s,%s,%s,0,0
+                                                FROM siminfo.t_brokersystem t1, siminfo.t_investor t2
+                                                WHERE t2.investorstatus = '9' AND t1.brokersystemid not in(''' + config_brokers +''')'''
+            cursor.execute(sql, (broker_system_balance, broker_system_balance, broker_system_balance, broker_system_balance, broker_system_balance, broker_system_balance, broker_system_balance, broker_system_balance))
 
         sql = '''UPDATE siminfo.t_investor SET investorstatus = '0' WHERE investorstatus = '9' '''
         cursor.execute(sql)

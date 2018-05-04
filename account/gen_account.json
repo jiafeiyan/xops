@@ -1,6 +1,6 @@
 {
     "mysqlId" : "simplatform_base",
-    "balance" : "100000",
+    "balance" : {"default": "100000", "0001": "100000", "0002": "1000000", "0003": "1000000"},
     "start": 10000,
     "count": 10000
 }

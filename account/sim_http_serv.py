@@ -7,8 +7,7 @@ import tornado.ioloop
 import tornado.web
 import tornado.log
 
-from account_handler import open_account
-from activity_handler import join_activity, query_activity_ranking, query_activity_joinstatus
+from http_request_handler import open_account, open_vip_account, join_activity, query_activity_ranking, query_activity_joinstatus
 
 from utils import Configuration, mysql, parse_conf_args, log
 
@@ -46,6 +45,42 @@ class OpenAccountHandler(tornado.web.RequestHandler):
         self.write(result_json)
 
         self.logger.info("openAccount end [ result= %s ]", result_json)
+
+
+class OpenVIPAccountHandler(tornado.web.RequestHandler):
+    def initialize(self, database, logger):
+        self.database = database
+        self.logger = logger
+
+    def get(self):
+        return self.do_service()
+
+    def post(self):
+        return self.do_service()
+
+    def do_service(self):
+        open_id = self.get_argument("id", None)
+        open_name = self.get_argument("name", None)
+        activity_id = self.get_argument("activity", None)
+        account = self.get_argument("account", None)
+
+        result = {"kind": "openVIPAccount", "code": "-1", "response": {"id": open_id, "activity": activity_id, "account": account, "error": "系统内部错误"}}
+
+        self.logger.info("openVIPAccount begin [ id=%s, name=%s, activity=%s, account=%s ]", open_id, open_name, activity_id, account)
+
+        conn = self.database.get_cnx()
+        try:
+            result = open_vip_account(conn, {"id": open_id, "name":  open_name, "activity": activity_id, "account" : account})
+        except:
+            self.logger.error(sys.exc_info()[0])
+        finally:
+            conn.close()
+
+        result_json = json.dumps(result, encoding="UTF-8", ensure_ascii=False)
+        self.set_header("Content-Type", "text/json;charset=UTF-8")
+        self.write(result_json)
+
+        self.logger.info("openVIPAccount end [ result= %s ]", result_json)
 
 
 class JoinActivityHandler(tornado.web.RequestHandler):
@@ -159,6 +194,7 @@ def start_http_server(context, conf):
 
     app = tornado.web.Application([
         (r"/openAccount", OpenAccountHandler, dict(database=mysql_pool, logger=logger)),
+        (r"/openVIPAccount", OpenVIPAccountHandler, dict(database=mysql_pool, logger=logger)),
         (r"/joinActivity", JoinActivityHandler, dict(database=mysql_pool, logger=logger)),
         (r"/queryActivityRanking", QueryActivityRankingHandler, dict(database=mysql_pool, logger=logger)),
         (r"/queryActivityJoinStatus", QueryActivityJoinStatusHandler, dict(database=mysql_pool, logger=logger)),

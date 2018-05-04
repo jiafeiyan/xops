@@ -4,7 +4,7 @@ import json
 import mysql.connector
 
 from activity_handler import join_activity
-from account_handler import open_account
+from http_request_handler import open_account
 
 
 def test_account():

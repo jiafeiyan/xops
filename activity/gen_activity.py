@@ -25,11 +25,13 @@ def gen_activity(context, conf):
             name = activity["name"]
             atype = activity["type"]
             initial_balance = activity["balance"]
+            join_mode = activity["joinMode"]
+            ranking_rule = activity["rankingRule"]
             begin = activity["begin"]
             end = activity["end"]
             settlement_groups = activity["settlement_groups"]
 
-            logger.info("[gen activity with {code=%s, name=%s, type= %s, begin=%s, end=%s, settlementgroups=%s}]......" % (code, name, atype, begin, end, settlement_groups))
+            logger.info("[gen activity with {code=%s, name=%s, type= %s, balance=%s, joinMode=%s, rankingRule=%s, begin=%s, end=%s, settlementgroups=%s}]......" % (code, name, atype, initial_balance, join_mode, ranking_rule, begin, end, settlement_groups))
 
             sql = '''SELECT activityid FROM siminfo.t_activity WHERE activityid = %s'''
             cursor.execute(sql, (code,))
@@ -37,11 +39,11 @@ def gen_activity(context, conf):
 
             if row is not None:
                 sys.stderr.write("Error: Activity %s is existed.\n" % (code,))
-                logger.error("[gen activity with {code=%s, name=%s, type= %s, begin=%s, end=%s, settlementgroups=%s}] Error: Activity %s is existed." % (code, name, atype, begin, end, settlement_groups, code))
+                logger.error("[gen activity with {code=%s, name=%s, type= %s, balance=%s, joinMode=%s, rankingRule=%s, begin=%s, end=%s, settlementgroups=%s}] Error: Activity %s is existed." % (code, name, atype, initial_balance, join_mode, ranking_rule, begin, end, settlement_groups, code))
             else:
-                sql = '''INSERT INTO siminfo.t_activity(activityid, activityname, activitytype, activitystatus, initialbalance, createdate, createtime, begindate, enddate, updatedate, updatetime)
-                                    VALUES (%s, %s, %s, '0', %s, DATE_FORMAT(NOW(), '%Y%m%d'), DATE_FORMAT(NOW(), '%H:%i:%S'), %s, %s, DATE_FORMAT(NOW(), '%Y%m%d'), DATE_FORMAT(NOW(), '%H:%i:%S'))'''
-                cursor.execute(sql, (code, name, atype, initial_balance, begin, end,))
+                sql = '''INSERT INTO siminfo.t_activity(activityid, activityname, activitytype, activitystatus, initialbalance, joinmode, rankingrule, createdate, createtime, begindate, enddate, updatedate, updatetime)
+                                    VALUES (%s, %s, %s, '0', %s, %s, %s, DATE_FORMAT(NOW(), '%Y%m%d'), DATE_FORMAT(NOW(), '%H:%i:%S'), %s, %s, DATE_FORMAT(NOW(), '%Y%m%d'), DATE_FORMAT(NOW(), '%H:%i:%S'))'''
+                cursor.execute(sql, (code, name, atype, initial_balance, join_mode, ranking_rule, begin, end,))
 
                 relations = []
                 for settlement_group_id in settlement_groups:
