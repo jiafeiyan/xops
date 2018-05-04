@@ -33,6 +33,12 @@ class TraderHandler(shfetraderapi.CShfeFtdcTraderSpi):
         self.lock.release()
         return req_id
 
+    def ReqQryInstrumentStatus(self):
+        req_status_field = shfetraderapi.CShfeFtdcQryInstrumentStatusField()
+        req_status_field.InstIDStart = "1"
+        req_status_field.InstIDEnd = "999999999"
+        self.trader_api.ReqQryInstrumentStatus(req_status_field, self.get_request_id())
+
     def OnFrontConnected(self):
         self.logger.info("OnFrontConnected")
         self.is_connected = True
@@ -64,7 +70,7 @@ class TraderHandler(shfetraderapi.CShfeFtdcTraderSpi):
         else:
             if pInstrumentStatus is not None:
                 self.logger.info("instrument[%s] current status is [%s]" % (pInstrumentStatus.InstrumentID, pInstrumentStatus.InstrumentStatus))
-                msg = {"type": "istatus", "data": {"InstrumentID": pInstrumentStatus.InstrumentID, "InstrumentStatus": pInstrumentStatus.InstrumentStatus}}
+                msg = {"type": "istatus", "data": {pInstrumentStatus.InstrumentID: {"InstrumentID": pInstrumentStatus.InstrumentID, "InstrumentStatus": pInstrumentStatus.InstrumentStatus}}}
                 self.msg_puber.send(msg)
 
     def OnRtnInstrumentStatus(self, pInstrumentStatus):
@@ -72,7 +78,9 @@ class TraderHandler(shfetraderapi.CShfeFtdcTraderSpi):
 
         if pInstrumentStatus is not None:
             self.logger.info("instrument[%s] current status is [%s]" % (pInstrumentStatus.InstrumentID, pInstrumentStatus.InstrumentStatus))
-            msg = {"type": "istatus", "data": {"InstrumentID": pInstrumentStatus.InstrumentID, "InstrumentStatus": pInstrumentStatus.InstrumentStatus}}
+            msg = {"type": "istatus", "data": {
+                pInstrumentStatus.InstrumentID: {"InstrumentID": pInstrumentStatus.InstrumentID,
+                                                 "InstrumentStatus": pInstrumentStatus.InstrumentStatus}}}
             self.msg_puber.send(msg)
 
     def OnRspOrderInsert(self, pInputOrder, pRspInfo, nRequestID, bIsLast):
