@@ -69,7 +69,8 @@ def check_ins_status(trader_handler):
     while True:
         print "start check instrument status !"
         trader_handler.ReqQryInstrumentStatus()
-        time.sleep(20)
+        # 设置状态检查时间
+        time.sleep(60)
 
 def main():
     base_dir, config_names, config_files, add_ons = parse_conf_args(__file__, config_names=["exchange", "xmq"])
