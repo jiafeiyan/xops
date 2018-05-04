@@ -35,8 +35,6 @@ class TraderHandler(shfetraderapi.CShfeFtdcTraderSpi):
 
     def ReqQryInstrumentStatus(self):
         req_status_field = shfetraderapi.CShfeFtdcQryInstrumentStatusField()
-        req_status_field.InstIDStart = "1"
-        req_status_field.InstIDEnd = "999999999"
         self.trader_api.ReqQryInstrumentStatus(req_status_field, self.get_request_id())
 
     def OnFrontConnected(self):
