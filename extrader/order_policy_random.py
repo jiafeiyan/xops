@@ -89,7 +89,8 @@ def random_order(context, conf):
                 continue
             input_params = {"InstrumentID": random_data.get("InstrumentID"),
                             "LimitPrice": round(float(limit_price), digit),
-                            "VolumeTotalOriginal": random.randint(min_volume, max_volume) * int(random_data.get("VolumeMultiple")),
+                            "VolumeTotalOriginal": random.randint(min_volume, max_volume) *
+                                                   (int(random_data.get("VolumeMultiple")) if conf.get("VolumeMultiple") else 1),
                             "Direction": ord(str(random.randint(0, 1))),
                             "ParticipantID": conf.get("ParticipantID"),
                             "ClientID": conf.get("clientId"),
