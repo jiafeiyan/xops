@@ -139,7 +139,7 @@ class exchange_future_csv:
                            sql="""SELECT t.ProductID,t3.ProductName,t2.ExchangeID,t.ProductClass,t.VolumeMultiple,
                                         t1.PriceTick,t1.MaxMarketOrderVolume,t1.MinMarketOrderVolume,
                                         t1.MaxLimitOrderVolume,t1.MinLimitOrderVolume,t.PositionType,
-                                        '1' AS PositionDateType,'0' AS CloseDealType,t2.Currency AS TradeCurrencyID,
+                                        '2' AS PositionDateType,'0' AS CloseDealType,t2.Currency AS TradeCurrencyID,
                                         '0' AS MortgageFundUseRange,'' AS ExchangeProductID,t.UnderlyingMultiple
                                     FROM siminfo.t_Instrument t,siminfo.t_InstrumentProperty t1,
                                         siminfo.t_SettlementGroup t2,siminfo.t_Product t3

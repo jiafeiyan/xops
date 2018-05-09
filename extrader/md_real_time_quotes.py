@@ -30,6 +30,9 @@ def start_get_md_quotes(context, conf):
         logger.info("real time quotes had send %s messages", str(send_quantity))
         pointer = pointer + send_quantity
         time.sleep(frequency)
+        # 设置是否循环
+        if conf.get("is_loop") and send_quantity == 0:
+            pointer = 1
 
 def handle_file(md_source, start, end, pub):
     count = 0
