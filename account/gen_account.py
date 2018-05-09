@@ -98,7 +98,7 @@ def gen_investors(context, conf):
                 broker_system_balance = balance_conf[broker_system_id]
                 sql = '''INSERT INTO siminfo.t_investorfund(BrokerSystemID,InvestorID,PreBalance,CurrMargin,CloseProfit,Premium,Deposit,Withdraw,Balance,Available,PreMargin,FuturesMargin,OptionsMargin,PositionProfit,Profit,Interest,Fee,
                                           TotalCollateral,CollateralForMargin,PreAccmulateInterest,AccumulateInterest,AccumulateFee,ForzenDeposit,AccountStatus,InitialAsset,PreMonthAsset,PreWeekAsset,PreAsset,CurrentAsset,PreStockValue,StockValue)
-                                    SELECT %s,t2.investorid,%s,0,0,0,0,0,0,%s,%s,0,0,0,0,0,0,0,0,0,0,0,0,'0',%s,%s,%s,%s,%s,0,0
+                                    SELECT %s,t2.investorid,%s,0,0,0,0,0,%s,%s,0,0,0,0,0,0,0,0,0,0,0,0,0,'0',%s,%s,%s,%s,%s,0,0
                                     FROM siminfo.t_investor t2
                                     WHERE t2.investorstatus = '9' '''
                 cursor.execute(sql, (broker_system_id, broker_system_balance, broker_system_balance, broker_system_balance, broker_system_balance, broker_system_balance, broker_system_balance, broker_system_balance, broker_system_balance))
@@ -108,7 +108,7 @@ def gen_investors(context, conf):
             broker_system_balance = balance_conf["default"]
             sql = '''INSERT INTO siminfo.t_investorfund(BrokerSystemID,InvestorID,PreBalance,CurrMargin,CloseProfit,Premium,Deposit,Withdraw,Balance,Available,PreMargin,FuturesMargin,OptionsMargin,PositionProfit,Profit,Interest,Fee,
                                                       TotalCollateral,CollateralForMargin,PreAccmulateInterest,AccumulateInterest,AccumulateFee,ForzenDeposit,AccountStatus,InitialAsset,PreMonthAsset,PreWeekAsset,PreAsset,CurrentAsset,PreStockValue,StockValue)
-                                                SELECT t1.brokersystemid,t2.investorid,%s,0,0,0,0,0,0,%s,%s,0,0,0,0,0,0,0,0,0,0,0,0,'0',%s,%s,%s,%s,%s,0,0
+                                                SELECT t1.brokersystemid,t2.investorid,%s,0,0,0,0,0,%s,%s,0,0,0,0,0,0,0,0,0,0,0,0,0,'0',%s,%s,%s,%s,%s,0,0
                                                 FROM siminfo.t_brokersystem t1, siminfo.t_investor t2
                                                 WHERE t2.investorstatus = '9' AND t1.brokersystemid not in(''' + config_brokers +''')'''
             cursor.execute(sql, (broker_system_balance, broker_system_balance, broker_system_balance, broker_system_balance, broker_system_balance, broker_system_balance, broker_system_balance, broker_system_balance))

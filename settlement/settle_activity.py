@@ -76,13 +76,14 @@ def settle_activity(context, conf):
             if activity_type == '0':
                 # 默认赛事投资者数据
                 logger.info("[insert default activity investor]......")
-                sql = """INSERT INTO siminfo.t_activityinvestor(activityid, investorid, joinstatus)
-                                                SELECT %s, t.investorid, '0'
+                sql = """INSERT INTO siminfo.t_activityinvestor(activityid, investorid, joindate, joinstatus)
+                                                SELECT %s, t.investorid, DATE_FORMAT(NOW(), '%Y%m%d'), '0'
                                                 FROM siminfo.t_investor t
                                                 WHERE t.investoraccounttype = '0' and t.investorstatus = '1'
                                                     AND (t.investorid > (SELECT MAX(investorid) FROM siminfo.t_activityinvestor t1 WHERE t1.activityid = %s)
-                                                        OR t.investorid < (SELECT MIN(investorid) FROM siminfo.t_activityinvestor t2 WHERE t2.activityid = %s))"""
-                cursor.execute(sql, (activity_id, activity_id, activity_id))
+                                                        OR t.investorid < (SELECT MIN(investorid) FROM siminfo.t_activityinvestor t2 WHERE t2.activityid = %s)
+                                                        OR (SELECT count(investorid) FROM siminfo.t_activityinvestor t2 WHERE t2.activityid = %s) = 0)"""
+                cursor.execute(sql, (activity_id, activity_id, activity_id, activity_id))
 
             if join_mode == '2':
                 # 赛事新参与投资者数据重置
@@ -229,7 +230,7 @@ def settle_activity(context, conf):
         result_code = -1
     finally:
         mysql_conn.close()
-        logger.info("[settle activity] end")
+    	logger.info("[settle activity] end")
     return result_code
 
 
