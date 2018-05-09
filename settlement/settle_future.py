@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 
 import json
+from bs_module import *
 
 from utils import Configuration, mysql, log, parse_conf_args, process_assert
 
@@ -57,72 +58,6 @@ def settle_future(context, conf):
             logger.error("[settle future] Error: Settlement for %s-%s has done." % (settlement_group_id, settlement_id))
             result_code = -1
         else:
-            # 计算结算价
-            logger.info("[calculate settlement price] is processing......")
-            sql = """UPDATE dbclear.t_marketdata tm,
-                                               (
-                                                   select t1.tradingday,
-                                                          t1.settlementgroupid,
-                                                          t1.settlementid,
-                                                          t1.instrumentid,
-                                                          case
-                                                            when abs(mod((t1.settlementprice - t3.presettlementprice), t2.pricetick)) <
-                                                                 (t2.pricetick / 2) then
-                                                             t3.presettlementprice +
-                                                             if(sign(t1.settlementprice - t3.presettlementprice)=1,
-                                                                    floor((t1.settlementprice - t3.presettlementprice) /
-                                                                          t2.pricetick),
-                                                                    ceil((t1.settlementprice - t3.presettlementprice) /
-                                                                         t2.pricetick)) * t2.pricetick
-                                                            else
-                                                             t3.presettlementprice +
-                                                             if(sign(t1.settlementprice - t3.presettlementprice)=1,
-                                                                    ceil((t1.settlementprice - t3.presettlementprice) /
-                                                                         t2.pricetick),
-                                                                    floor((t1.settlementprice - t3.presettlementprice) /
-                                                                          t2.pricetick)) * t2.pricetick
-                                                          end as settlementprice
-                                                     from (SELECT
-                                                                   t.tradingday,
-                                                                   t.settlementgroupid,
-                                                                   t.settlementid,
-                                                                   t.instrumentid,
-                                                           CASE
-                                                                   WHEN t.Volume = 0 THEN
-                                                                           0 ELSE round( t.Turnover / t.Volume / t1.VolumeMultiple, 2 ) 
-                                                                   END AS settlementprice 
-                                                           FROM
-                                                                   dbclear.t_marketdata t, siminfo.t_instrument t1
-                                                           WHERE
-                                                                   t.tradingday = %s
-                                                                   AND t.settlementgroupid = %s
-                                                                   AND t.settlementid = %s
-                                                                   AND t.instrumentid = t1.instrumentid
-                                                                   AND t.settlementgroupid = t1.settlementgroupid) t1,
-                                                          siminfo.t_instrumentproperty t2, dbclear.t_marketdata t3
-                                                    where t1.settlementgroupid = t2.settlementgroupid
-                                                      and t1.instrumentid = t2.instrumentid
-                                                      and t1.tradingday = t3.tradingday
-                                                      and t1.settlementgroupid = t3.settlementgroupid
-                                                      and t1.settlementid = t3.settlementid
-                                                      and t1.instrumentid = t3.instrumentid) tt 
-                                                   SET tm.settlementprice = tt.settlementprice 
-                                               WHERE
-                                                   tm.settlementgroupid = tt.settlementgroupid 
-                                                   AND tm.settlementid = tt.settlementid 
-                                                   AND tm.instrumentid = tt.instrumentid 
-                                                   AND tm.tradingday = tt.tradingday
-                                                   AND tm.settlementprice = 0"""
-            cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id))
-            # 结算价为零赋值为昨结算
-            sql = """UPDATE dbclear.t_marketdata t 
-                                               SET t.SettlementPrice = t.PreSettlementPrice 
-                                               WHERE
-                                                   t.TradingDay = %s
-                                                   AND t.SettlementID = %s
-                                                   AND t.SettlementGroupID = %s 
-                                                   AND t.SettlementPrice = %s"""
-            cursor.execute(sql, (current_trading_day, settlement_id, settlement_group_id, 0))
             # 收盘价为零赋值为最新价
             sql = """UPDATE dbclear.t_marketdata t 
                                                SET t.ClosePrice = t.LastPrice 
@@ -165,7 +100,7 @@ def settle_future(context, conf):
             # 计算客户资金
             logger.info("[Calculate ClientFund] is processing......")
             # 1）更新positionmargin
-            if marginSingleBigSide :
+            if marginSingleBigSide:
                 sql = """insert into dbclear.t_clientfund (TradingDay,SettlementGroupID,SettlementID,ParticipantID,ClientID,AccountID,TransFee,DelivFee,PositionMargin,Profit,available,StockValue)
                               (select t.tradingday,
                                            t.settlementgroupid,
@@ -275,6 +210,72 @@ def settle_future(context, conf):
 
 
 def sett_future(logger, cursor, current_trading_day, next_trading_day, settlement_group_id, settlement_id):
+    # 计算结算价
+    logger.info("[calculate settlement price] is processing......")
+    sql = """UPDATE dbclear.t_marketdata tm,
+                                                   (
+                                                       select t1.tradingday,
+                                                              t1.settlementgroupid,
+                                                              t1.settlementid,
+                                                              t1.instrumentid,
+                                                              case
+                                                                when abs(mod((t1.settlementprice - t3.presettlementprice), t2.pricetick)) <
+                                                                     (t2.pricetick / 2) then
+                                                                 t3.presettlementprice +
+                                                                 if(sign(t1.settlementprice - t3.presettlementprice)=1,
+                                                                        floor((t1.settlementprice - t3.presettlementprice) /
+                                                                              t2.pricetick),
+                                                                        ceil((t1.settlementprice - t3.presettlementprice) /
+                                                                             t2.pricetick)) * t2.pricetick
+                                                                else
+                                                                 t3.presettlementprice +
+                                                                 if(sign(t1.settlementprice - t3.presettlementprice)=1,
+                                                                        ceil((t1.settlementprice - t3.presettlementprice) /
+                                                                             t2.pricetick),
+                                                                        floor((t1.settlementprice - t3.presettlementprice) /
+                                                                              t2.pricetick)) * t2.pricetick
+                                                              end as settlementprice
+                                                         from (SELECT
+                                                                       t.tradingday,
+                                                                       t.settlementgroupid,
+                                                                       t.settlementid,
+                                                                       t.instrumentid,
+                                                               CASE
+                                                                       WHEN t.Volume = 0 THEN
+                                                                               0 ELSE round( t.Turnover / t.Volume / t1.VolumeMultiple, 2 ) 
+                                                                       END AS settlementprice 
+                                                               FROM
+                                                                       dbclear.t_marketdata t, siminfo.t_instrument t1
+                                                               WHERE
+                                                                       t.tradingday = %s
+                                                                       AND t.settlementgroupid = %s
+                                                                       AND t.settlementid = %s
+                                                                       AND t.instrumentid = t1.instrumentid
+                                                                       AND t.settlementgroupid = t1.settlementgroupid) t1,
+                                                              siminfo.t_instrumentproperty t2, dbclear.t_marketdata t3
+                                                        where t1.settlementgroupid = t2.settlementgroupid
+                                                          and t1.instrumentid = t2.instrumentid
+                                                          and t1.tradingday = t3.tradingday
+                                                          and t1.settlementgroupid = t3.settlementgroupid
+                                                          and t1.settlementid = t3.settlementid
+                                                          and t1.instrumentid = t3.instrumentid) tt 
+                                                       SET tm.settlementprice = tt.settlementprice 
+                                                   WHERE
+                                                       tm.settlementgroupid = tt.settlementgroupid 
+                                                       AND tm.settlementid = tt.settlementid 
+                                                       AND tm.instrumentid = tt.instrumentid 
+                                                       AND tm.tradingday = tt.tradingday
+                                                       AND tm.settlementprice = 0"""
+    cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id))
+    # 结算价为零赋值为昨结算
+    sql = """UPDATE dbclear.t_marketdata t 
+                                                   SET t.SettlementPrice = t.PreSettlementPrice 
+                                                   WHERE
+                                                       t.TradingDay = %s
+                                                       AND t.SettlementID = %s
+                                                       AND t.SettlementGroupID = %s 
+                                                       AND t.SettlementPrice = %s"""
+    cursor.execute(sql, (current_trading_day, settlement_id, settlement_group_id, 0))
     # 计算盈亏
     logger.info("[Calculate ClientProfit] is processing......")
     sql = """insert into dbclear.t_clienttradeprofit(TradingDay, SettlementGroupID, SettlementID, ParticipantID, ClientID, AccountID, InstrumentID, TradeID, Direction, OffsetFlag, Price, Volume, Profit)
@@ -995,6 +996,114 @@ def sett_future(logger, cursor, current_trading_day, next_trading_day, settlemen
 
 
 def sett_future_option(logger, cursor, current_trading_day, next_trading_day, settlement_group_id, settlement_id):
+    # 计算结算价
+    riskfree_interest = 0.02
+    sql = """SELECT t1.instrumentid, t1.underlyinginstrid, t1.optionstype, t1.strikeprice, t2.lastprice AS optionprice, t3.settlementprice AS underlyingprice, t2.volume, 
+                                  DATEDIFF(t4.expiredate, %s) + 1 AS duration, t4.pricetick
+                                FROM siminfo.t_instrument t1, dbclear.t_marketdata t2, dbclear.t_marketdata t3, siminfo.t_instrumentproperty t4
+                                WHERE t1.settlementgroupid = %s AND t1.OptionsType != '0' 
+                                AND t1.settlementgroupid = t2.settlementgroupid AND t1.instrumentid = t2.instrumentid
+                                AND t1.settlementgroupid = t3.settlementgroupid AND t1.underlyinginstrid = t3.instrumentid
+                                AND t1.settlementgroupid = t4.settlementgroupid AND t1.instrumentid = t4.instrumentid
+                                AND t2.tradingday = %s AND t2.settlementid = %s
+                                AND t3.tradingday = %s AND t3.settlementid = %s
+                                ORDER BY t1.underlyinginstrid, t1.instrumentid, t1.optionstype"""
+    cursor.execute(sql, (
+        current_trading_day, settlement_group_id, current_trading_day, settlement_id, current_trading_day,
+        settlement_id))
+    rows = cursor.fetchall()
+
+    dce_bs = DCE_BLACKSCHOLES()
+    op = Option(UNDERLYING_FUTURE, OPTIONTYPE_EUROPEAN, CALLPUT_CALL, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00)
+
+    ins_list = []
+    md_dict = {}
+    for row in rows:
+        underlying_id = str(row[1])
+        instrument_id = str(row[0])
+        options_type = str(row[2])
+        strike_price = float(str(row[3]))
+        option_price = float(str(row[4]))
+        underlying_price = float(str(row[5]))
+        trade_volume = int(str(row[6]))
+        duration = int(str(row[7]))
+        price_tick = float(str(row[8]))
+
+        ins = {"instrumentID": instrument_id, "underlyingInsID": underlying_id, "optionsType": options_type,
+               "strikePrice": strike_price,
+               "optionPrice": option_price, "underlyingPrice": underlying_price, "duration": duration,
+               "priceTick": price_tick}
+
+        ins_list.append(ins)
+
+        op.call_put = CALLPUT_CALL if options_type == "1" else CALLPUT_PUT
+        op.strike_price = strike_price
+        op.underlying_price = underlying_price
+        op.t = duration
+        op.r = riskfree_interest
+        sigma = dce_bs.calc_sigma(op, option_price)
+
+        total_sigma = trade_volume * sigma
+        sum_sigma = sigma
+        total_volume = trade_volume
+        sum_count = 1
+        if underlying_id in md_dict.keys():
+            total_sigma += md_dict[underlying_id]["totalSigma"]
+            total_volume += md_dict[underlying_id]["totalVolume"]
+            sum_sigma += md_dict[underlying_id]["sumSigma"]
+            sum_count += md_dict[underlying_id]["sumCount"]
+
+        md_dict.update({underlying_id: {"totalSigma": total_sigma, "totalVolume": total_volume, "sumSigma": sum_sigma,
+                                        "sumCount": sum_count}})
+
+    for underlying_id in md_dict.keys():
+        total_sigma = md_dict[underlying_id]["totalSigma"]
+        total_volume = md_dict[underlying_id]["totalVolume"]
+        sum_sigma = md_dict[underlying_id]["sumSigma"]
+        sum_count = md_dict[underlying_id]["sumCount"]
+
+        settle_sigma = 0
+        if trade_volume == 0:
+            settle_sigma = round(sum_sigma / sum_count, 4)
+        else:
+            settle_sigma = round(total_sigma / total_volume, 4)
+        md_dict[underlying_id].update({"sigma": settle_sigma})
+
+    sql = """update dbclear.t_marketdata t 
+              SET t.SettlementPrice = %s
+			  WHERE t.TradingDay = %s
+              AND t.SettlementID = %s
+              AND t.SettlementGroupID = %s 
+              AND t.InstrumentID = %s"""
+    sql_params = []
+    for ins in ins_list:
+        instrument_id = ins["instrumentID"]
+        underlying_id = ins["underlyingInsID"]
+        price_tick = ins["priceTick"]
+        sigma = md_dict[underlying_id]["sigma"]
+
+        op.call_put = CALLPUT_CALL if ins["optionsType"] == "1" else CALLPUT_PUT
+        op.strike_price = ins["strikePrice"]
+        op.underlying_price = ins["underlyingPrice"]
+        op.t = ins["duration"]
+        op.r = riskfree_interest
+        op.sigma = sigma
+        settle_price = dce_bs.calc_price(op)
+        a, b = divmod(settle_price, price_tick)
+        settle_price = price_tick * a + (0 if b < price_tick / 2 else price_tick)
+        sql_params.append((settle_price, current_trading_day, settlement_id, settlement_group_id, instrument_id))
+    cursor.executemany(sql, sql_params)
+
+    # 结算价为零赋值为昨结算
+    sql = """UPDATE dbclear.t_marketdata t 
+            SET t.SettlementPrice = t.PreSettlementPrice 
+            WHERE
+                t.TradingDay = %s
+                AND t.SettlementID = %s
+                AND t.SettlementGroupID = %s 
+                AND t.SettlementPrice = %s"""
+    cursor.execute(sql, (current_trading_day, settlement_id, settlement_group_id, 0))
+
     # 交收持仓处理
     logger.info("[Move Options DelivPosition] is processing......")
     # 1）插入到t_delivinstrument表

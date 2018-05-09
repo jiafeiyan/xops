@@ -33,7 +33,8 @@ def settle_activity(context, conf):
             sql = """SELECT DISTINCT t1.tradingday, t1.lasttradingday FROM siminfo.t_tradesystemtradingday t1, siminfo.t_tradesystemsettlementgroup t2, siminfo.t_activitysettlementgroup t3
                         WHERE t1.tradesystemid = t2.tradesystemid AND t2.settlementgroupid = t3.settlementgroupid AND t3.activityid = %s"""
             cursor.execute(sql, (activity_id,))
-            row = cursor.fetchone()
+            rows = cursor.fetchall()
+            row = rows[0]
 
             current_trading_day = str(row[0])
             last_trading_day = str(row[1])
@@ -78,9 +79,9 @@ def settle_activity(context, conf):
                 sql = """INSERT INTO siminfo.t_activityinvestor(activityid, investorid, joinstatus)
                                                 SELECT %s, t.investorid, '0'
                                                 FROM siminfo.t_investor t
-                                                WHERE t.investoraccounttype = '0' 
+                                                WHERE t.investoraccounttype = '0' and t.investorstatus = '1'
                                                     AND (t.investorid > (SELECT MAX(investorid) FROM siminfo.t_activityinvestor t1 WHERE t1.activityid = %s)
-                                                        OR t.investorid < (SELECT MIN(investorid) FROM siminfo.t_activityinvestor t1 WHERE t1.activityid = %s))"""
+                                                        OR t.investorid < (SELECT MIN(investorid) FROM siminfo.t_activityinvestor t2 WHERE t2.activityid = %s))"""
                 cursor.execute(sql, (activity_id, activity_id, activity_id))
 
             if join_mode == '2':
@@ -172,7 +173,7 @@ def settle_activity(context, conf):
                                             SET t1.totalreturnrate = IF(t1.initialasset =0 , 0, round((t1.currentasset - t1.initialasset) / t1.initialasset, 4)), 
                                                   t1.returnrateof1day = IF(t1.preasset = 0, 0, round((t1.currentasset - t1.preasset) / t1.preasset, 4)),                               
                                                   t1.returnrateofmonth = IF(MONTH(%s) - MONTH(%s) = 0, t1.returnrateofmonth, IF(t1.premonthasset = 0, 0, round((t1.currentasset - t1.premonthasset) / t1.premonthasset, 4))),
-                                                  t1.returnrateofweek = IF(WEEK(%s, 1) - WEEK(%s, 1) = 0, t1.returnrateofweek, IF(t1.preweekasset = 0, 0, round((t1.currentasset - t1.preweekasset) / t1.preweekasset, 4))),
+                                                  t1.returnrateofweek = IF(WEEK(%s, 1) - WEEK(%s, 1) = 0, t1.returnrateofweek, IF(t1.preweekasset = 0, 0, round((t1.currentasset - t1.preweekasset) / t1.preweekasset, 4)))
                                             WHERE t1.activityid = %s"""
             cursor.execute(sql, (current_trading_day, last_trading_day, current_trading_day, last_trading_day, activity_id,))
 
@@ -228,7 +229,7 @@ def settle_activity(context, conf):
         result_code = -1
     finally:
         mysql_conn.close()
-    logger.info("[settle activity] end")
+        logger.info("[settle activity] end")
     return result_code
 
 

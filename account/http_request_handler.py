@@ -21,8 +21,10 @@ def open_account(mysql_conn, parameters):
         code = "-1"
         error = "手机号格式错误"
 
+    set_open_name = True
     if open_name is None or open_name == "":
         open_name = open_id
+        set_open_name = False
     elif len(open_name) > 20:
         code = "-1"
         error = "姓名超长"
@@ -76,11 +78,15 @@ def open_account(mysql_conn, parameters):
                 account = str(row[0])
                 password = str(row[3])
 
+                if set_open_name:
+                    sql = '''UPDATE siminfo.t_investor SET investorname = %s WHERE investorid = %s'''
+                    cursor.execute(sql,(open_name, account))
+
                 response.update({"account": account, "password": password})
                 result.update({"response": response})
             else:
-                sql = '''UPDATE siminfo.t_investor SET investorname = IF(investorname is NULL, %s, investorname), openid = %s, investorstatus = '1' WHERE investorid = %s'''
-                cursor.execute(sql,(open_name, open_id, account))
+                sql = '''UPDATE siminfo.t_investor SET investorname = IF(investorname is NULL, %s, IF(%s = %s, investorname, %s)), openid = %s, investorstatus = '1' WHERE investorid = %s'''
+                cursor.execute(sql,(open_name, open_id, open_name, open_name, open_id, account))
 
                 if cursor.rowcount == 1:
                     response.update({"account": account, "password": password})
