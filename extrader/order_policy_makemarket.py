@@ -3,10 +3,10 @@
 import json
 import Queue
 import sys
-import time
+import csv
 
 from xmq import xmq_puber, xmq_resolving_suber, xmq_msg_resolver
-from utils import Configuration, parse_conf_args, log
+from utils import Configuration, parse_conf_args, log, path
 
 class InsStatusMsgResolver(xmq_msg_resolver):
     def __init__(self):
@@ -52,6 +52,11 @@ def makemarket_order(context, conf):
     md_resolver_status = InsStatusMsgResolver()
     msg_source_suber_status.add_resolver(md_resolver_status)
 
+    # 获取数据来源
+    file_source = path.convert(conf.get("fileSource"))
+    order_source_data = [row for row in csv.DictReader(open(file_source))]
+    load_marketdata(order_source_data, md_resolver)
+
     while True:
         while not md_resolver.result_queue.empty():
             result = md_resolver.result_queue.get()
@@ -68,6 +73,61 @@ def makemarket_order(context, conf):
                 logger.info(input_params)
                 msg_target_puber.send({"type": "order", "data": input_params, "ProductClass": str(conf.get("ProductClass"))})
 
+
+def load_marketdata(marketdata, MakeMarketMsgResolver):
+    for data in marketdata:
+        digit = get_decimal_digit(float(data.get("PriceTick")))
+        if data.get("ValueMode") == '1':
+            lower = round((1 - float(data.get("LowerValue"))) * float(data.get("PreClosePrice")), digit)
+            upper = round((1 + float(data.get("UpperValue"))) * float(data.get("PreClosePrice")), digit)
+        elif data.get("ValueMode") == '2':
+            lower = float(data.get("PreClosePrice")) - float(data.get("LowerValue"))
+            upper = float(data.get("UpperValue")) + float(data.get("PreClosePrice"))
+        else:
+            continue
+        InstrumentID = data.get("InstrumentID")
+        PreClosePrice = data.get("PreClosePrice")
+        one_row = dict({
+                        InstrumentID: {
+                            'BidPrice5': '0.00000',
+                            'BidPrice4': '0.00000',
+                            'BidPrice1': '0.00000',
+                            'BidPrice3': '0.00000',
+                            'BidPrice2': '0.00000',
+                            'LowerLimitPrice': lower,
+                            'AskPrice5': '0.00000',
+                            'AskPrice4': '0.00000',
+                            'AskPrice3': '0.00000',
+                            'AskPrice2': '0.00000',
+                            'AskPrice1': '0.00000',
+                            'BidVolume5': '0',
+                            'BidVolume4': '0',
+                            'BidVolume3': '0',
+                            'BidVolume2': '0',
+                            'BidVolume1': '0',
+                            'Volume': '0',
+                            'AskVolume1': '0',
+                            'AskVolume2': '0',
+                            'AskVolume3': '0',
+                            'AskVolume4': '0',
+                            'AskVolume5': '0',
+                            'UpperLimitPrice': upper,
+                            'InstrumentID': InstrumentID,
+                            'LastPrice': PreClosePrice
+                        }
+                   })
+        MakeMarketMsgResolver.make_target(one_row)
+
+
+def get_decimal_digit(decimal):
+    digit = 0
+    while True:
+        if decimal == int(decimal):
+            break
+        else:
+            decimal = decimal * 10
+            digit = digit + 1
+    return digit
 
 class MakeMarketMsgResolver(xmq_msg_resolver):
     def __init__(self):

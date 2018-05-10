@@ -27,7 +27,6 @@ class xmq_puber:
 
     def send(self, msg):
         msg_text = self.topic + json.dumps(msg, encoding="UTF-8", ensure_ascii=False)
-        print(msg_text)
         self.my_xmq.send_string(msg_text)
 
 

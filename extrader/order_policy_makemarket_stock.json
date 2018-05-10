@@ -2,6 +2,7 @@
     "targetMQ": "xmq_client_send",
     "mdSourceMQ": "xmq_md_recv",
     "sourceMQ": "xmq_client_recv",
+    "fileSource": "${SIM_PLATFORM_HOME}/csvfiles/exchange/0001/order_info.csv",
     "clientId": "robot00001",
     "ParticipantID": "R0001",
     "ProductClass": "4"
