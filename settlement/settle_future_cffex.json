@@ -3,5 +3,6 @@
   "exchangeId" : "CFFEX",
   "settlementGroupId" : "SG06",
   "settlementId" : "1",
-  "marginSingleBigSide": true
+  "marginSingleBigSide": true,
+  "close_posi_ydposi": true
 }
