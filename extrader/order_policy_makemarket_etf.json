@@ -1,6 +1,7 @@
 {
     "targetMQ": "xmq_client_send",
     "mdSourceMQ": "xmq_md_recv",
+    "sourceMQ": "xmq_client_recv",
     "clientId": "robot00001",
     "ParticipantID": "R0001",
     "ProductClass": "2"

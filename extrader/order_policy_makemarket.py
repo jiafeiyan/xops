@@ -8,6 +8,19 @@ import time
 from xmq import xmq_puber, xmq_resolving_suber, xmq_msg_resolver
 from utils import Configuration, parse_conf_args, log
 
+class InsStatusMsgResolver(xmq_msg_resolver):
+    def __init__(self):
+        self.istatus = dict()
+        xmq_msg_resolver.__init__(self)
+
+    def resolve_msg(self, msg):
+        if msg is None or msg.get("type") is None:
+            return
+
+        if msg.get("type") == "istatus":
+            data = msg.get("data")
+            self.istatus.update(data)
+
 
 def makemarket_order(context, conf):
     logger = log.get_logger(category="OrderMakeMarket")
@@ -29,17 +42,31 @@ def makemarket_order(context, conf):
 
     md_resolver = MakeMarketMsgResolver()
     msg_source_suber.add_resolver(md_resolver)
+
+    # 接收行情状态信息
+    xmq_source_conf = context.get("xmq").get(conf.get("sourceMQ"))
+    source_mq_addr = xmq_source_conf["address"]
+    source_mq_topic = xmq_source_conf["topic"]
+    msg_source_suber_status = xmq_resolving_suber(source_mq_addr, source_mq_topic)
+
+    md_resolver_status = InsStatusMsgResolver()
+    msg_source_suber_status.add_resolver(md_resolver_status)
+
     while True:
         while not md_resolver.result_queue.empty():
             result = md_resolver.result_queue.get()
-            input_params = {"InstrumentID": result.get("SecurityID"),
-                            "LimitPrice": result.get("LimitPrice"),
-                            "VolumeTotalOriginal": result.get("VolumeTotalOriginal"),
-                            "Direction": ord(result.get("Direction")),
-                            "ParticipantID": conf.get("ParticipantID"),
-                            "ClientID": conf.get("clientId")}
-            logger.info(input_params)
-            msg_target_puber.send({"type": "order", "data": input_params, "ProductClass": str(conf.get("ProductClass"))})
+            # 查看合约状态
+            if result.get("SecurityID") not in md_resolver_status.istatus:
+                continue
+            if '2' == str(md_resolver_status.istatus.get(result.get("SecurityID")).get("InstrumentStatus")):
+                input_params = {"InstrumentID": result.get("SecurityID"),
+                                "LimitPrice": result.get("LimitPrice"),
+                                "VolumeTotalOriginal": result.get("VolumeTotalOriginal"),
+                                "Direction": ord(result.get("Direction")),
+                                "ParticipantID": conf.get("ParticipantID"),
+                                "ClientID": conf.get("clientId")}
+                logger.info(input_params)
+                msg_target_puber.send({"type": "order", "data": input_params, "ProductClass": str(conf.get("ProductClass"))})
 
 
 class MakeMarketMsgResolver(xmq_msg_resolver):
