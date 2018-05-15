@@ -5,7 +5,7 @@ import Queue
 import sys
 import csv
 
-from xmq import xmq_puber, xmq_resolving_suber, xmq_msg_resolver
+from xmq import xmq_pusher, xmq_resolving_suber, xmq_msg_resolver
 from utils import Configuration, parse_conf_args, log, path
 
 class InsStatusMsgResolver(xmq_msg_resolver):
@@ -32,7 +32,7 @@ def makemarket_order(context, conf):
     xmq_target_conf = context.get("xmq").get(conf.get("targetMQ"))
     target_mq_addr = xmq_target_conf["address"]
     target_mq_topic = xmq_target_conf["topic"]
-    msg_target_puber = xmq_puber(target_mq_addr, target_mq_topic)
+    msg_target_pusher = xmq_pusher(target_mq_addr, target_mq_topic)
 
     # 接收行情信息
     xmq_source_conf = context.get("xmq").get(conf.get("mdSourceMQ"))
@@ -63,15 +63,15 @@ def makemarket_order(context, conf):
             # 查看合约状态
             if result.get("SecurityID") not in md_resolver_status.istatus:
                 continue
-            if '2' == str(md_resolver_status.istatus.get(result.get("SecurityID")).get("InstrumentStatus")):
+            if str(md_resolver_status.istatus.get(result.get("SecurityID")).get("InstrumentStatus")) in ('2', '3'):
                 input_params = {"InstrumentID": result.get("SecurityID"),
                                 "LimitPrice": result.get("LimitPrice"),
-                                "VolumeTotalOriginal": result.get("VolumeTotalOriginal"),
+                                "VolumeTotalOriginal": int(result.get("VolumeTotalOriginal")),
                                 "Direction": ord(result.get("Direction")),
                                 "ParticipantID": conf.get("ParticipantID"),
                                 "ClientID": conf.get("clientId")}
                 logger.info(input_params)
-                msg_target_puber.send({"type": "order", "data": input_params, "ProductClass": str(conf.get("ProductClass"))})
+                msg_target_pusher.send({"type": "order", "data": input_params, "ProductClass": str(conf.get("ProductClass"))})
 
 
 def load_marketdata(marketdata, MakeMarketMsgResolver):

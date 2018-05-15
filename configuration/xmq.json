@@ -1,7 +1,11 @@
 {
-    "xmq_stock_robots_server": {
+    "xmq_robots_pubsub_server": {
         "pubAddress": "tcp://*:7777",
         "subAddress": "tcp://*:7788"
+    },
+    "xmq_robots_pushpull_server": {
+        "pushAddress": "tcp://*:5555",
+        "pullAddress": "tcp://*:5566"
     },
     "xmq_trader_send": {
         "address": "tcp://127.0.0.1:7777",
@@ -19,12 +23,20 @@
         "address": "tcp://127.0.0.1:7788",
         "topic": "EX:CLIENT:"
     },
-    "xmq_md_send":{
+    "xmq_md_send": {
         "address": "tcp://127.0.0.1:7777",
         "topic": "EX:MD:"
     },
-    "xmq_md_recv":{
+    "xmq_md_recv": {
         "address": "tcp://127.0.0.1:7788",
         "topic": "EX:MD:"
+    },
+    "xmq_client_send_push": {
+        "address": "tcp://127.0.0.1:5555",
+        "topic": "EX:TRADER:"
+    },
+    "xmq_trader_recv_pull": {
+        "address": "tcp://127.0.0.1:5566",
+        "topic": "EX:TRADER:"
     }
 }

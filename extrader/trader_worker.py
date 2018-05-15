@@ -10,7 +10,7 @@ from trader_handler import TraderHandler
 from msg_resolver_qry_marketdata import QryMarketDataMsgResolver
 from msg_resolver_insert_order import InsertOrderMsgResolver
 
-from xmq import xmq_resolving_suber, xmq_queue_puber
+from xmq import xmq_resolving_puller, xmq_queue_puber
 from utils import Configuration, parse_conf_args, log
 
 
@@ -55,10 +55,10 @@ def start_trader_service(context, conf):
     source_mq_addr = xmq_source_conf["address"]
     source_mq_topic = xmq_source_conf["topic"]
 
-    msg_source_suber = xmq_resolving_suber(source_mq_addr, source_mq_topic)
+    msg_source_puller = xmq_resolving_puller(source_mq_addr, source_mq_topic)
 
-    msg_source_suber.add_resolver(InsertOrderMsgResolver(trader_handler))
-    msg_source_suber.add_resolver(QryMarketDataMsgResolver(trader_handler))
+    msg_source_puller.add_resolver(InsertOrderMsgResolver(trader_handler))
+    msg_source_puller.add_resolver(QryMarketDataMsgResolver(trader_handler))
 
     # 定时检查合约交易状态
     thread.start_new(function=check_ins_status(trader_handler))

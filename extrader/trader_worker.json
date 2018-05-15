@@ -1,5 +1,5 @@
 {
-    "sourceMQ": "xmq_trader_recv",
+    "sourceMQ": "xmq_trader_recv_pull",
     "targetMQ": "xmq_trader_send",
     "targetExchangeId": "stock_exchange",
     "userId": "R000101",
