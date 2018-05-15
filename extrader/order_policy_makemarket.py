@@ -71,7 +71,7 @@ def makemarket_order(context, conf):
                                 "ParticipantID": conf.get("ParticipantID"),
                                 "ClientID": conf.get("clientId")}
                 logger.info(input_params)
-                msg_target_pusher.send({"type": "order", "data": input_params, "ProductClass": str(conf.get("ProductClass"))})
+                msg_target_pusher.send({"type": "order", "data": input_params})
 
 
 def load_marketdata(marketdata, MakeMarketMsgResolver):

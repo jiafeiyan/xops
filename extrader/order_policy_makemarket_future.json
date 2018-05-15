@@ -5,5 +5,4 @@
     "fileSource": "${SIM_PLATFORM_HOME}/csvfiles/exchange/0002/order_info.csv",
     "clientId": "robot00001",
     "ParticipantID": "R0001",
-    "ProductClass": "1"
 }
