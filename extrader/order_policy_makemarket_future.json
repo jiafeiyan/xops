@@ -1,5 +1,5 @@
 {
-    "targetMQ": "xmq_client_send",
+    "targetMQ": "xmq_client_send_push",
     "mdSourceMQ": "xmq_md_recv",
     "sourceMQ": "xmq_client_recv",
     "fileSource": "${SIM_PLATFORM_HOME}/csvfiles/exchange/0002/order_info.csv",

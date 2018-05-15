@@ -4,8 +4,9 @@ import json
 import time
 import csv
 import random
+import math
 
-from xmq import xmq_puber, xmq_resolving_suber, xmq_msg_resolver
+from xmq import xmq_resolving_suber, xmq_msg_resolver, xmq_pusher
 from utils import Configuration, parse_conf_args, log, path
 
 class MarketDataMsgResolver(xmq_msg_resolver):
@@ -53,7 +54,7 @@ def random_order(context, conf):
     xmq_target_conf = context.get("xmq").get(conf.get("targetMQ"))
     target_mq_addr = xmq_target_conf["address"]
     target_mq_topic = xmq_target_conf["topic"]
-    msg_target_puber = xmq_puber(target_mq_addr, target_mq_topic)
+    msg_target_pusher = xmq_pusher(target_mq_addr, target_mq_topic)
 
     # 接收行情信息
     xmq_source_conf = context.get("xmq").get(conf.get("mdSourceMQ"))
@@ -81,24 +82,30 @@ def random_order(context, conf):
         if random_data.get("InstrumentID") not in md_resolver_status.istatus:
             time.sleep(order_frequency)
             continue
-        if '2' == str(md_resolver_status.istatus.get(random_data.get("InstrumentID")).get("InstrumentStatus")):
-            digit = get_decimal_digit(float(random_data.get("PriceTick")))
+        # 集合竞价报单和连续交易
+        if str(md_resolver_status.istatus.get(random_data.get("InstrumentID")).get("InstrumentStatus")) in ('2', '3'):
+            price_tick = float(random_data.get("PriceTick"))
+            digit = get_decimal_digit(price_tick)
             # 获取报单价格
-            limit_price = get_order_price(random_data, md_resolver.marketdata)
+            limit_price = float(get_order_price(random_data, md_resolver.marketdata))
+            # 判断价格是否为空
             if limit_price is None:
                 continue
+            # 通过tick计算报单价格
+            if divmod(limit_price, price_tick)[1] < price_tick / 2:
+                limit_price = math.floor(limit_price / price_tick) * price_tick
+            else:
+                limit_price = math.ceil(limit_price / price_tick) * price_tick
             input_params = {"InstrumentID": random_data.get("InstrumentID"),
                             "LimitPrice": round(float(limit_price), digit),
-                            "VolumeTotalOriginal": random.randint(min_volume, max_volume) *
-                                                   (int(random_data.get("VolumeMultiple")) if conf.get("VolumeMultiple") else 1),
+                            "VolumeTotalOriginal": int(random.randint(min_volume, max_volume) *
+                                                   (int(random_data.get("VolumeMultiple")) if conf.get("VolumeMultiple") else 1)),
                             "Direction": ord(str(random.randint(0, 1))),
                             "ParticipantID": conf.get("ParticipantID"),
                             "ClientID": conf.get("clientId"),
                             "count": count}
-            msg_target_puber.send({"type": "order", "data": input_params, "ProductClass": str(random_data.get("ProductClass"))})
+            msg_target_pusher.send({"type": "order", "data": input_params, "ProductClass": str(random_data.get("ProductClass"))})
             count += 1
-            # msg_target_puber.send({"type": "qry_marketdata", "data": {"k1": "v1", "c": count}})
-            # count += 1
             time.sleep(order_frequency)
 
 def get_order_price(random_data, marketdata):
@@ -127,9 +134,9 @@ def get_order_price(random_data, marketdata):
         # 如果没有最新价用昨结算
         if marketdata.get(random_data.get("InstrumentID")) is None:
             return random_data.get("PreClosePrice")
-        # 获取最新价附近(浮动 -3% ～ 3%)
+        # 获取最新价附近(浮动 -1% ～ 1%)
         last_price = marketdata.get(random_data.get("InstrumentID")).get("LastPrice")
-        last_price = round(float(last_price) * (1.0 + random.uniform(-0.03, 0.03)), digit)
+        last_price = round(float(last_price) * (1.0 + random.uniform(-0.01, 0.01)), digit)
         # 判断涨跌之后是否还在区间内
         if lower <= last_price <= upper:
             limit_price = last_price
