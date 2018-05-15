@@ -9,11 +9,10 @@ class InsertOrderMsgResolver(TraderMsgResolver):
         TraderMsgResolver.__init__(self, handler)
 
     def resolve_msg(self, msg):
-        if msg is None or msg.get("type") is None or msg.get("ProductClass") is None:
+        if msg is None or msg.get("type") is None:
             return -1
 
         type = msg.get("type")
-        ProductClass = msg.get("ProductClass")
         if type == "order":
             try:
                 data = msg.get("data")
@@ -42,10 +41,8 @@ class InsertOrderMsgResolver(TraderMsgResolver):
                 # 非强平SHFE_FTDC_FCC_NotForceClose '0'
                 input_order_field.ForceCloseReason = ord('0')
                 request_id = self.handler.get_request_id()
-                # 期货设置平开仓属性
-                if ProductClass != "4":
-                    # 0 开仓 1 平仓
-                    input_order_field.CombOffsetFlag = '0'
+                # 0 开仓 1 平仓
+                input_order_field.CombOffsetFlag = '0'
                 self.handler.trader_api.ReqOrderInsert(input_order_field, request_id)
             except Exception as err:
                 print err
