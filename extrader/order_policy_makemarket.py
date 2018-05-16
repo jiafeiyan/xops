@@ -87,6 +87,7 @@ def load_marketdata(marketdata, MakeMarketMsgResolver):
             continue
         InstrumentID = data.get("InstrumentID")
         PreClosePrice = data.get("PreClosePrice")
+        MaxLimitOrderVolume = data.get("MaxLimitOrderVolume")
         one_row = dict({
                         InstrumentID: {
                             'BidPrice5': 0.00000,
@@ -117,6 +118,8 @@ def load_marketdata(marketdata, MakeMarketMsgResolver):
                         }
                    })
         MakeMarketMsgResolver.make_target(one_row)
+        # 缓存最大下单量
+        MakeMarketMsgResolver.max_volume.update({InstrumentID: int(MaxLimitOrderVolume)})
 
 
 def get_decimal_digit(decimal):
@@ -133,6 +136,7 @@ class MakeMarketMsgResolver(xmq_msg_resolver):
     def __init__(self):
         self.target_market_context = {}
         self.source_market_context = {}
+        self.max_volume = dict()
         self.instrument_id = None
         self.result_queue = Queue.Queue()
         xmq_msg_resolver.__init__(self)
@@ -212,8 +216,9 @@ class MakeMarketMsgResolver(xmq_msg_resolver):
                 order1["VolumeTotalOriginal"] = s_a1_v
 
             if order1["VolumeTotalOriginal"] == 0:
-                order1["VolumeTotalOriginal"] = 100
-                order2 = {"SecurityID": security_id, "Direction": "1", "VolumeTotalOriginal": 100,
+                v = 100 if self.max_volume.get(security_id) > 100 else self.max_volume.get(security_id)
+                order1["VolumeTotalOriginal"] = v
+                order2 = {"SecurityID": security_id, "Direction": "1", "VolumeTotalOriginal": v,
                           "LimitPrice": target_price}
                 orders.append(order2)
             orders.append(order1)
@@ -242,8 +247,9 @@ class MakeMarketMsgResolver(xmq_msg_resolver):
                 order1["VolumeTotalOriginal"] = s_b1_v
 
             if order1["VolumeTotalOriginal"] == 0:
-                order1["VolumeTotalOriginal"] = 100
-                order2 = {"SecurityID": security_id, "Direction": "0", "VolumeTotalOriginal": 100,
+                v = 100 if self.max_volume.get(security_id) > 100 else self.max_volume.get(security_id)
+                order1["VolumeTotalOriginal"] = v
+                order2 = {"SecurityID": security_id, "Direction": "0", "VolumeTotalOriginal": v,
                           "LimitPrice": target_price}
                 orders.append(order2)
             orders.append(order1)

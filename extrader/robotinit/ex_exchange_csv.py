@@ -187,7 +187,7 @@ class ex_exchange_stock_csv:
 
     def __gen_robot_csv(self, table_name):
         sql = """SELECT t.SettlementGroupID,t.InstrumentID,t4.ProductClass,t1.PreSettlementPrice as PreClosePrice,t2.ValueMode,
-                                t2.LowerValue,t2.UpperValue,t.PriceTick ,t4.VolumeMultiple
+                                t2.LowerValue,t2.UpperValue,t.PriceTick ,t4.VolumeMultiple, t.MaxLimitOrderVolume
                     FROM siminfo.t_instrumentproperty t,siminfo.t_marketdata t1,
                             siminfo.t_pricebanding t2,siminfo.t_instrument t4,
                             siminfo.t_tradesystemsettlementgroup t5

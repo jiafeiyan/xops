@@ -1,42 +1,42 @@
 {
     "xmq_robots_pubsub_server": {
-        "pubAddress": "tcp://*:7777",
-        "subAddress": "tcp://*:7788"
+        "pubAddress": "ipc://pub.ipc",
+        "subAddress": "ipc://sub.ipc"
     },
     "xmq_robots_pushpull_server": {
-        "pushAddress": "tcp://*:5555",
-        "pullAddress": "tcp://*:5566"
+        "pushAddress": "ipc://push.ipc",
+        "pullAddress": "ipc://pull.ipc"
     },
     "xmq_trader_send": {
-        "address": "tcp://127.0.0.1:7777",
+        "address": "ipc://pub.ipc",
         "topic": "EX:CLIENT:"
     },
     "xmq_trader_recv": {
-        "address": "tcp://127.0.0.1:7788",
+        "address": "ipc://sub.ipc",
         "topic": "EX:TRADER:"
     },
     "xmq_client_send": {
-        "address": "tcp://127.0.0.1:7777",
+        "address": "ipc://pub.ipc",
         "topic": "EX:TRADER:"
     },
     "xmq_client_recv": {
-        "address": "tcp://127.0.0.1:7788",
+        "address": "ipc://sub.ipc",
         "topic": "EX:CLIENT:"
     },
     "xmq_md_send": {
-        "address": "tcp://127.0.0.1:7777",
+        "address": "ipc://pub.ipc",
         "topic": "EX:MD:"
     },
     "xmq_md_recv": {
-        "address": "tcp://127.0.0.1:7788",
+        "address": "ipc://sub.ipc",
         "topic": "EX:MD:"
     },
     "xmq_client_send_push": {
-        "address": "tcp://127.0.0.1:5555",
+        "address": "ipc://push.ipc",
         "topic": "EX:TRADER:"
     },
     "xmq_trader_recv_pull": {
-        "address": "tcp://127.0.0.1:5566",
+        "address": "ipc://pull.ipc",
         "topic": "EX:TRADER:"
     }
 }

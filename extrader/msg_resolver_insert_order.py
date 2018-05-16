@@ -2,6 +2,7 @@
 
 from trader_msg_resolver import TraderMsgResolver
 import shfetraderapi
+import traceback
 
 
 class InsertOrderMsgResolver(TraderMsgResolver):
@@ -45,6 +46,7 @@ class InsertOrderMsgResolver(TraderMsgResolver):
                 input_order_field.CombOffsetFlag = '0'
                 self.handler.trader_api.ReqOrderInsert(input_order_field, request_id)
             except Exception as err:
+                traceback.print_exc()
                 print err
             finally:
                 return 0
