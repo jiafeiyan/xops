@@ -4,6 +4,7 @@ import json
 import Queue
 import sys
 import csv
+import os
 
 from xmq import xmq_pusher, xmq_resolving_suber, xmq_msg_resolver
 from utils import Configuration, parse_conf_args, log, path
@@ -23,6 +24,7 @@ class InsStatusMsgResolver(xmq_msg_resolver):
 
 
 def makemarket_order(context, conf):
+    pid = os.getpid()
     logger = log.get_logger(category="OrderMakeMarket")
 
     logger.info(
@@ -57,6 +59,7 @@ def makemarket_order(context, conf):
     order_source_data = [row for row in csv.DictReader(open(file_source))]
     load_marketdata(order_source_data, md_resolver)
 
+    count = 0
     while True:
         while not md_resolver.result_queue.empty():
             result = md_resolver.result_queue.get()
@@ -71,7 +74,10 @@ def makemarket_order(context, conf):
                                 "ParticipantID": conf.get("ParticipantID"),
                                 "ClientID": conf.get("clientId")}
                 logger.info(input_params)
-                msg_target_pusher.send({"type": "order", "data": input_params})
+                seq = str(pid) + "_" + str(count)
+                msg_target_pusher.send({"type": "order", "data": input_params, "seq": seq})
+                logger.info(seq)
+                count += 1
 
 
 def load_marketdata(marketdata, MakeMarketMsgResolver):

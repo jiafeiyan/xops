@@ -6,6 +6,7 @@ import csv
 import random
 import math
 import traceback
+import os
 
 from xmq import xmq_resolving_suber, xmq_msg_resolver, xmq_pusher
 from utils import Configuration, parse_conf_args, log, path
@@ -37,15 +38,14 @@ class InsStatusMsgResolver(xmq_msg_resolver):
             self.istatus.update(data)
 
 def random_order(context, conf):
+    pid = os.getpid()
     logger = log.get_logger(category="OrderPolicyRandom")
 
     logger.info("[start random order with %s] begin" % (json.dumps(conf, encoding="UTF-8", ensure_ascii=False)))
 
     # 下单频率
     order_frequency = conf.get("frequency")
-    # 获取数据来源
-    file_source = path.convert(conf.get("fileSource"))
-    order_source_data = [row for row in csv.DictReader(open(file_source))]
+
     # 最小下单量
     min_volume = conf.get("minVolume")
     # 最大下单量
@@ -74,6 +74,10 @@ def random_order(context, conf):
 
     md_resolver_status = InsStatusMsgResolver()
     msg_source_suber_status.add_resolver(md_resolver_status)
+
+    # 获取数据来源
+    file_source = path.convert(conf.get("fileSource"))
+    order_source_data = [row for row in csv.DictReader(open(file_source))]
 
     count = 0
     while True:
@@ -118,7 +122,9 @@ def random_order(context, conf):
                                 "ParticipantID": conf.get("ParticipantID"),
                                 "ClientID": conf.get("clientId"),
                                 "count": count}
-                msg_target_pusher.send({"type": "order", "data": input_params, "count": count})
+                seq = str(pid) + "_" + str(count)
+                msg_target_pusher.send({"type": "order", "data": input_params, "seq": seq})
+                logger.info(seq)
                 count += 1
                 time.sleep(order_frequency)
         except Exception as err:
@@ -173,7 +179,7 @@ def get_order_data(random_data, marketdata):
         if lower <= last_price <= upper:
             limit_price = last_price
         else:
-            return marketdata.get("LastPrice")
+            return marketdata.get("LastPrice"), strategy
     else:
         return None
     return limit_price, strategy

@@ -2,6 +2,7 @@
 
 import threading
 import shfetraderapi
+import time
 
 from utils import log
 
@@ -56,6 +57,12 @@ class TraderHandler(shfetraderapi.CShfeFtdcTraderSpi):
 
         if pRspInfo is not None and pRspInfo.ErrorID != 0:
             self.logger.error("login failed : %s" % pRspInfo.ErrorMsg.decode("GBK").encode("UTF-8"))
+            time.sleep(3)
+            req_login_field = shfetraderapi.CShfeFtdcReqUserLoginField()
+            req_login_field.UserID = str(self.userId)
+            req_login_field.Password = str(self.password)
+            self.trader_api.ReqUserLogin(req_login_field, self.get_request_id())
+
         else:
             self.logger.info("login success")
             self.is_logined = True
@@ -82,8 +89,6 @@ class TraderHandler(shfetraderapi.CShfeFtdcTraderSpi):
             self.msg_puber.send(msg)
 
     def OnRspOrderInsert(self, pInputOrder, pRspInfo, nRequestID, bIsLast):
-        self.logger.info("OnRspOrderInsert")
-
         if pRspInfo is not None and pRspInfo.ErrorID != 0:
             self.logger.error("OnRspOrderInsert failed : %s" % pRspInfo.ErrorMsg.decode("GBK").encode("UTF-8"))
         else:

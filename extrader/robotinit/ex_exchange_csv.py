@@ -200,7 +200,7 @@ class ex_exchange_stock_csv:
                             and t.SettlementGroupID = t5.SettlementGroupID
                             and t5.TradeSystemID = %s"""
         columns = dict(columns=("SettlementGroupID", "InstrumentID", "ProductClass", "PreClosePrice", "ValueMode",
-                                "LowerValue", "UpperValue", "PriceTick", "VolumeMultiple"))
+                                "LowerValue", "UpperValue", "PriceTick", "VolumeMultiple", "MaxLimitOrderVolume"))
         csv_data = self.mysqlDB.select(sql, (self.TradeSystemID,))
         # 生成csv文件
         self.__produce_csv(table_name, columns, csv_data)
