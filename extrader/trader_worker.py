@@ -59,9 +59,9 @@ def start_trader_service(context, conf):
 
     msg_source_puller.add_resolver(InsertOrderMsgResolver(trader_handler))
     msg_source_puller.add_resolver(QryMarketDataMsgResolver(trader_handler))
-
-    # 定时检查合约交易状态
-    thread.start_new(function=check_ins_status(trader_handler))
+    if conf.get("send_md_status"):
+        # 定时检查合约交易状态
+        thread.start_new(function=check_ins_status(trader_handler))
 
     trader_api.Join()
 
