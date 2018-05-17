@@ -3,6 +3,5 @@
     "targetMQ": "xmq_trader_send",
     "targetExchangeId": "stock_exchange",
     "userId": "R000101",
-    "password": "111111",
-    "send_md_status": true
+    "password": "111111"
 }

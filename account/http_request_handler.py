@@ -99,68 +99,105 @@ def open_account(mysql_conn, parameters):
                     result.update({"code": code, "response": response})
     else:
         if row is None:
-            sql = """SELECT t1.investorid, t1.investorname, t1.openid, t1.PASSWORD, t1.investorstatus
-                                FROM siminfo.t_investor t1, siminfo.t_activityinvestor t2
-                                WHERE t1.openid = %s
-                                AND t2.activityid = %s AND t1.investorid = t2.investorid"""
-            cursor.execute(sql, (open_id, activity))
+            sql = '''SELECT joinmode FROM siminfo.t_activity WHERE activityid =  %s AND activitystatus in ('0', '1')'''
+            cursor.execute(sql, (activity,))
             row = cursor.fetchone()
-
             if row is None:
                 code = "-1"
-                error = "暂无可用账户"
+                error = "赛事活动不存在或已过期"
 
                 response.update({"error": error})
                 result.update({"code": code, "response": response})
             else:
-                account = str(row[0])
-                password = str(row[3])
+                join_mode = str(row[0])
+                if join_mode == "1":
+                    code = "-1"
+                    error = "暂无可用账户"
 
-                response.update({"account": account, "password": password})
-                result.update({"response": response})
+                    response.update({"error": error})
+                    result.update({"code": code, "response": response})
+                else:
+                    sql = """SELECT investorid, investorname, openid, PASSWORD, investorstatus FROM siminfo.t_investor WHERE openid = %s AND investoraccounttype ='0'"""
+                    cursor.execute(sql, (open_id,))
+                    row = cursor.fetchone()
+
+                    if row is None:
+                        code = "-1"
+                        error = "暂无可用账户"
+
+                        response.update({"error": error})
+                        result.update({"code": code, "response": response})
+                    else:
+                        account = str(row[0])
+                        password = str(row[3])
+
+                        response.update({"account": account, "password": password})
+                        result.update({"response": response})
         else:
             account = str(row[0])
             password = str(row[3])
 
-            sql = '''SELECT t1.investorid, t1.investorname, t1.openid, t1.PASSWORD, t1.investorstatus
-                                FROM siminfo.t_investor t1, siminfo.t_activityinvestor t2
-                                WHERE t1.openid = %s 
-                                AND t2.activityid = %s AND t1.investorid = t2.investorid'''
-            cursor.execute(sql, (open_id, activity))
+            sql = '''SELECT joinmode FROM siminfo.t_activity WHERE activityid =  %s AND activitystatus in ('0', '1')'''
+            cursor.execute(sql, (activity,))
             row = cursor.fetchone()
+            if row is None:
+                code = "-1"
+                error = "赛事活动不存在或已过期"
 
-            if row is not None:
-                account = str(row[0])
-                password = str(row[3])
-
-                response.update({"account": account, "password": password})
-                result.update({"response": response})
+                response.update({"error": error})
+                result.update({"code": code, "response": response})
             else:
-                sql = """SELECT investorid
-                                FROM siminfo.t_investor t1
-                                WHERE t1.openid = %s 
-                                AND t1.investorid != %s
-                                AND t1.investoraccounttype = '0'"""
-                cursor.execute(sql,(open_id, account))
+                join_mode = str(row[0])
+
+                sql = '''SELECT t1.investorid, t1.investorname, t1.openid, t1.PASSWORD, t1.investorstatus
+                                                FROM siminfo.t_investor t1, siminfo.t_activityinvestor t2
+                                                WHERE t1.openid = %s 
+                                                AND t2.activityid = %s AND t1.investorid = t2.investorid'''
+                cursor.execute(sql, (open_id, activity))
                 row = cursor.fetchone()
+                if row is not None:
+                    account = str(row[0])
+                    password = str(row[3])
 
-                account_type = '1'
-                if row is None:
-                    account_type = '0'
-
-                sql = '''UPDATE siminfo.t_investor t SET t.investorname = %s, t.openid = %s, t.investorstatus = '1', 
-                                          t.investoraccounttype = IF((SELECT joinmode from siminfo.t_activity where activityid = %s) = '1', %s, '0') WHERE investorid = %s'''
-                cursor.execute(sql,(open_name, open_id, activity, account_type, account))
-
-                if cursor.rowcount == 1:
                     response.update({"account": account, "password": password})
                     result.update({"response": response})
                 else:
-                    code = "-1"
-                    error = "开户失败：更新投资者信息失败"
+                    sql = """SELECT investorid, investorname, openid, PASSWORD, investorstatus FROM siminfo.t_investor WHERE openid = %s AND investoraccounttype ='0'"""
+                    cursor.execute(sql, (open_id,))
+                    row = cursor.fetchone()
 
-                    response.update({"error": error})
-                    result.update({"code": code, "response": response})
+                    if row is not None and join_mode != "1":
+                        account = str(row[0])
+                        password = str(row[3])
+
+                        response.update({"account": account, "password": password})
+                        result.update({"response": response})
+                    else:
+                        sql = """SELECT investorid
+                                        FROM siminfo.t_investor t1
+                                        WHERE t1.openid = %s 
+                                        AND t1.investorid != %s
+                                        AND t1.investoraccounttype = '0'"""
+                        cursor.execute(sql,(open_id, account))
+                        row = cursor.fetchone()
+
+                        account_type = '1'
+                        if row is None:
+                            account_type = '0'
+
+                        sql = '''UPDATE siminfo.t_investor t SET t.investorname = %s, t.openid = %s, t.investorstatus = '1', 
+                                                  t.investoraccounttype = %s WHERE investorid = %s'''
+                        cursor.execute(sql,(open_name, open_id, account_type, account))
+
+                        if cursor.rowcount == 1:
+                            response.update({"account": account, "password": password})
+                            result.update({"response": response})
+                        else:
+                            code = "-1"
+                            error = "开户失败：更新投资者信息失败"
+
+                            response.update({"error": error})
+                            result.update({"code": code, "response": response})
 
     mysql_conn.commit()
 
@@ -488,13 +525,13 @@ def join_activity_with_account(mysql_conn, parameters):
             result.update({"code": code, "response": response})
     else:
         investor_id = str(row[0])
-        sql = '''SELECT activityid FROM siminfo.t_activity WHERE activityid =  %s'''
+        sql = '''SELECT activityid FROM siminfo.t_activity WHERE activityid =  %s AND activitystatus in ('0', '1')'''
         cursor.execute(sql, (activity,))
         row = cursor.fetchone()
 
         if row is None:
                 code = "-1"
-                error = "赛事活动不存在"
+                error = "赛事活动不存在或已过期"
 
                 response.update({"error": error})
                 result.update({"code": code, "response": response})
@@ -519,13 +556,6 @@ def join_activity_with_account(mysql_conn, parameters):
                     response.update({"error": error})
                     result.update({"code": code, "response": response})
                 else:
-                    # 获取当前交易日
-                    sql = """SELECT DISTINCT t1.tradingday FROM siminfo.t_tradesystemtradingday t1, siminfo.t_tradesystemsettlementgroup t2, siminfo.t_activitysettlementgroup t3
-                                WHERE t1.tradesystemid = t2.tradesystemid AND t2.settlementgroupid = t3.settlementgroupid AND t3.activityid = %s"""
-                    cursor.execute(sql, (activity,))
-                    row = cursor.fetchone()
-                    current_trading_day = str(row[0])
-
                     # 检查赛事活动状态
                     sql = """SELECT activitystatus, joinmode FROM siminfo.t_activity WHERE activityid = %s"""
                     cursor.execute(sql, (activity,))
@@ -537,7 +567,7 @@ def join_activity_with_account(mysql_conn, parameters):
                     # 检查投资者资金 持仓
                     if activity_status == '1':
                         sql = """SELECT t1.investorid FROM siminfo.t_investorfund t1
-                                                    WHERE t1.brokersystemid = (SELECT DISTINCT t2.brokersystemid 
+                                                    WHERE t1.brokersystemid IN (SELECT DISTINCT t2.brokersystemid 
                                                             FROM siminfo.t_activitysettlementgroup t1, siminfo.t_brokersystemsettlementgroup t2 WHERE t1.settlementgroupid = t2.settlementgroupid AND t1.activityid = %s)
                                                         AND t1.investorid = %s AND (t1.currentasset <> t1.initialasset OR t1.preasset <> t1.initialasset OR t1.currmargin <> 0 OR t1.profit <> 0 OR t1.stockvalue <> 0)
                                                     UNION
@@ -547,7 +577,7 @@ def join_activity_with_account(mysql_conn, parameters):
                         cursor.fetchall()
                         if cursor.rowcount == 0 or join_mode == '0' or join_mode == '1':
                             sql = """INSERT INTO siminfo.t_activityinvestorevaluation(ActivityID,InvestorID,InitialAsset,PreMonthAsset,PreWeekAsset,PreAsset,CurrentAsset,TotalReturnRate,ReturnRateOf1Day)
-                                                SELECT t2.activityid, t1.investorid, SUM(t1.initialasset) AS initialasset, SUM(t1.premonthasset) AS premonthasset, SUM(t1.preweekasset) AS preweekasset, SUM(t1.preasset) AS preasset, SUM(t1.currentasset) AS currasset, 0, 0  FROM siminfo.t_investorfund t1,
+                                                SELECT t2.activityid, t1.investorid, SUM(t1.currentasset) AS initialasset, SUM(t1.premonthasset) AS premonthasset, SUM(t1.preweekasset) AS preweekasset, SUM(t1.preasset) AS preasset, SUM(t1.currentasset) AS currasset, 0, 0  FROM siminfo.t_investorfund t1,
                                                         (SELECT DISTINCT t1.activityid, t2.brokersystemid FROM siminfo.t_activitysettlementgroup t1, siminfo.t_brokersystemsettlementgroup t2 WHERE t1.activityid = %s AND t1.settlementgroupid = t2.settlementgroupid) t2
                                                         WHERE t1.investorid = %s AND t1.brokersystemid = t2.brokersystemid
                                                         GROUP BY t2.activityid, t1.investorid"""
@@ -731,13 +761,13 @@ def query_activity_joinstatus(mysql_conn, parameters):
             result.update({"code": code, "response": response})
     else:
         investor_id = str(row[0])
-        sql = '''SELECT activityid FROM siminfo.t_activity WHERE activityid =  %s'''
+        sql = '''SELECT activityid FROM siminfo.t_activity WHERE activityid =  %s AND activitystatus in ('0', '1')'''
         cursor.execute(sql, (activity_id,))
         row = cursor.fetchone()
 
         if row is None:
                 code = "-1"
-                error = "赛事活动不存在"
+                error = "赛事活动不存在或已过期"
 
                 response.update({"error": error})
                 result.update({"code": code, "response": response})

@@ -1,4 +1,4 @@
-#-*- coding: UTF-8 -*-
+# -*- coding: UTF-8 -*-
 
 import threading
 import shfetraderapi
@@ -8,7 +8,7 @@ from utils import log
 
 
 class TraderHandler(shfetraderapi.CShfeFtdcTraderSpi):
-    def __init__(self, trader_api, user_id, password):
+    def __init__(self, trader_api, user_id, password, tradingday):
         self.logger = log.get_logger(category="TraderSpi")
 
         shfetraderapi.CShfeFtdcTraderSpi.__init__(self)
@@ -17,15 +17,22 @@ class TraderHandler(shfetraderapi.CShfeFtdcTraderSpi):
 
         self.userId = user_id
         self.password = password
+        self.tradingday = tradingday
 
         self.is_connected = False
         self.is_logined = False
+
+        self.cache_md_status = dict()
 
         self.request_id = 0
         self.lock = threading.Lock()
 
     def set_msg_puber(self, msg_puber):
         self.msg_puber = msg_puber
+
+    def send_status(self):
+        for md in self.cache_md_status:
+            self.msg_puber.send({"type": "istatus", "data": {md: self.cache_md_status.get(md)}})
 
     def get_request_id(self):
         self.lock.acquire()
@@ -61,6 +68,7 @@ class TraderHandler(shfetraderapi.CShfeFtdcTraderSpi):
             req_login_field = shfetraderapi.CShfeFtdcReqUserLoginField()
             req_login_field.UserID = str(self.userId)
             req_login_field.Password = str(self.password)
+            req_login_field.TradingDay = str(self.TradingDay)
             self.trader_api.ReqUserLogin(req_login_field, self.get_request_id())
 
         else:
@@ -74,18 +82,24 @@ class TraderHandler(shfetraderapi.CShfeFtdcTraderSpi):
             self.logger.error("login failed : %s" % pRspInfo.ErrorMsg.decode("GBK").encode("UTF-8"))
         else:
             if pInstrumentStatus is not None:
-                self.logger.info("instrument[%s] current status is [%s]" % (pInstrumentStatus.InstrumentID, pInstrumentStatus.InstrumentStatus))
-                msg = {"type": "istatus", "data": {pInstrumentStatus.InstrumentID: {"InstrumentID": pInstrumentStatus.InstrumentID, "InstrumentStatus": pInstrumentStatus.InstrumentStatus}}}
+                self.logger.info("instrument[%s] current status is [%s]" % (
+                    pInstrumentStatus.InstrumentID, pInstrumentStatus.InstrumentStatus))
+                msg = {"type": "istatus", "data": {
+                    pInstrumentStatus.InstrumentID: {"InstrumentID": pInstrumentStatus.InstrumentID,
+                                                     "InstrumentStatus": pInstrumentStatus.InstrumentStatus}}}
+                self.cache_md_status.update(msg.get("data"))
                 self.msg_puber.send(msg)
 
     def OnRtnInstrumentStatus(self, pInstrumentStatus):
         self.logger.info("OnRtnInstrumentStatus")
 
         if pInstrumentStatus is not None:
-            self.logger.info("instrument[%s] current status is [%s]" % (pInstrumentStatus.InstrumentID, pInstrumentStatus.InstrumentStatus))
+            self.logger.info("instrument[%s] current status is [%s]" % (
+                pInstrumentStatus.InstrumentID, pInstrumentStatus.InstrumentStatus))
             msg = {"type": "istatus", "data": {
                 pInstrumentStatus.InstrumentID: {"InstrumentID": pInstrumentStatus.InstrumentID,
                                                  "InstrumentStatus": pInstrumentStatus.InstrumentStatus}}}
+            self.cache_md_status.update(msg.get("data"))
             self.msg_puber.send(msg)
 
     def OnRspOrderInsert(self, pInputOrder, pRspInfo, nRequestID, bIsLast):
@@ -93,7 +107,3 @@ class TraderHandler(shfetraderapi.CShfeFtdcTraderSpi):
             self.logger.error("OnRspOrderInsert failed : %s" % pRspInfo.ErrorMsg.decode("GBK").encode("UTF-8"))
         else:
             pass
-
-
-
-

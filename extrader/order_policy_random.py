@@ -26,6 +26,7 @@ class MarketDataMsgResolver(xmq_msg_resolver):
 
 class InsStatusMsgResolver(xmq_msg_resolver):
     def __init__(self):
+        self.status = False
         self.istatus = dict()
         xmq_msg_resolver.__init__(self)
 
@@ -36,6 +37,7 @@ class InsStatusMsgResolver(xmq_msg_resolver):
         if msg.get("type") == "istatus":
             data = msg.get("data")
             self.istatus.update(data)
+            self.status = True
 
 def random_order(context, conf):
     pid = os.getpid()
@@ -56,6 +58,7 @@ def random_order(context, conf):
     target_mq_addr = xmq_target_conf["address"]
     target_mq_topic = xmq_target_conf["topic"]
     msg_target_pusher = xmq_pusher(target_mq_addr, target_mq_topic)
+
 
     # 接收行情信息
     xmq_source_conf = context.get("xmq").get(conf.get("mdSourceMQ"))
@@ -79,54 +82,61 @@ def random_order(context, conf):
     file_source = path.convert(conf.get("fileSource"))
     order_source_data = [row for row in csv.DictReader(open(file_source))]
 
+    # 发送一条获取行情信息
+    while not md_resolver_status.status:
+        msg_target_pusher.send({"type": "get_status"})
+        time.sleep(5)
+
     count = 0
     while True:
         try:
             # 随机选择一只股票
-            random_data = order_source_data[random.randint(0, len(order_source_data) - 1)]
-            # 查看合约状态
-            if random_data.get("InstrumentID") not in md_resolver_status.istatus:
-                time.sleep(order_frequency)
-                continue
-            # 集合竞价报单和连续交易
-            if str(md_resolver_status.istatus.get(random_data.get("InstrumentID")).get("InstrumentStatus")) in ('2', '3'):
-                price_tick = float(random_data.get("PriceTick"))
-                digit = get_decimal_digit(price_tick)
-                # 获取报单价格
-                price_strategy = get_order_data(random_data, md_resolver.marketdata)
-                if price_strategy is None:
+            # random_data = order_source_data[random.randint(0, len(order_source_data) - 1)]
+            # 循环所有报单
+            for random_data in order_source_data:
+                # 查看合约状态
+                if random_data.get("InstrumentID") not in md_resolver_status.istatus:
+                    # time.sleep(order_frequency)
                     continue
-                limit_price = float(price_strategy[0])
-                strategy = price_strategy[1]
-                # 判断价格是否为空
-                if limit_price is None:
-                    continue
-                # 通过tick计算报单价格
-                if divmod(limit_price, price_tick)[1] < price_tick / 2:
-                    limit_price = math.floor(limit_price / price_tick) * price_tick
-                else:
-                    limit_price = math.ceil(limit_price / price_tick) * price_tick
-                if 1 == strategy:
-                    # 涨停只报卖
-                    direction = "1"
-                elif 2 == strategy:
-                    # 跌停只报买
-                    direction = "0"
-                else:
-                    direction = str(random.randint(0, 1))
-                input_params = {"InstrumentID": random_data.get("InstrumentID"),
-                                "LimitPrice": round(float(limit_price), digit),
-                                "VolumeTotalOriginal": int(random.randint(min_volume, max_volume) *
-                                                       (int(random_data.get("VolumeMultiple")) if conf.get("VolumeMultiple") else 1)),
-                                "Direction": ord(direction),
-                                "ParticipantID": conf.get("ParticipantID"),
-                                "ClientID": conf.get("clientId"),
-                                "count": count}
-                seq = str(pid) + "_" + str(count)
-                msg_target_pusher.send({"type": "order", "data": input_params, "seq": seq})
-                logger.info(seq)
-                count += 1
-                time.sleep(order_frequency)
+                # 集合竞价报单和连续交易
+                if str(md_resolver_status.istatus.get(random_data.get("InstrumentID")).get("InstrumentStatus")) in ('2', '3'):
+                    price_tick = float(random_data.get("PriceTick"))
+                    digit = get_decimal_digit(price_tick)
+                    # 获取报单价格
+                    price_strategy = get_order_data(random_data, md_resolver.marketdata)
+                    if price_strategy is None:
+                        continue
+                    limit_price = float(price_strategy[0])
+                    strategy = price_strategy[1]
+                    # 判断价格是否为空
+                    if limit_price is None:
+                        continue
+                    # 通过tick计算报单价格
+                    if divmod(limit_price, price_tick)[1] < price_tick / 2:
+                        limit_price = math.floor(limit_price / price_tick) * price_tick
+                    else:
+                        limit_price = math.ceil(limit_price / price_tick) * price_tick
+                    if 1 == strategy:
+                        # 涨停只报卖
+                        direction = "1"
+                    elif 2 == strategy:
+                        # 跌停只报买
+                        direction = "0"
+                    else:
+                        direction = str(random.randint(0, 1))
+                    input_params = {"InstrumentID": random_data.get("InstrumentID"),
+                                    "LimitPrice": round(float(limit_price), digit),
+                                    "VolumeTotalOriginal": int(random.randint(min_volume, max_volume) *
+                                                           (int(random_data.get("VolumeMultiple")) if conf.get("VolumeMultiple") else 1)),
+                                    "Direction": ord(direction),
+                                    "ParticipantID": conf.get("ParticipantID"),
+                                    "ClientID": conf.get("clientId"),
+                                    "count": count}
+                    seq = str(pid) + "_" + str(count)
+                    msg_target_pusher.send({"type": "order", "data": input_params, "seq": seq})
+                    logger.info(seq)
+                    count += 1
+            time.sleep(order_frequency)
         except Exception as err:
             traceback.print_exc()
             print(err)
