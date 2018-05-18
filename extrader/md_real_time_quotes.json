@@ -1,5 +1,7 @@
 {
     "targetMQ": "xmq_md_send",
+    "sourceMQ": "xmq_client_recv",
+    "sTargetMQ": "xmq_client_send_push",
     "mdSource": "${SIM_PLATFORM_HOME}/sim_data/md.csv",
     "frequency": 5,
     "msg_step": 1000,

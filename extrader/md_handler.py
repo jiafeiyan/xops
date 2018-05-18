@@ -33,6 +33,7 @@ class MdHandler(shfemdapi.CShfeFtdcMduserSpi):
         req_login_field = shfemdapi.CShfeFtdcReqUserLoginField()
         req_login_field.UserID = str(self.userId)
         req_login_field.Password = str(self.password)
+        req_login_field.TradingDay = str(self.TradingDay)
 
         self.md_api.ReqUserLogin(req_login_field, self.get_request_id())
 

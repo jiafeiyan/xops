@@ -198,88 +198,88 @@ class MakeMarketMsgResolver(xmq_msg_resolver):
 
         volume = 1 * volume_tick * VolumeMultiple if MaxLimitOrderVolume > 1 * volume_tick * VolumeMultiple else MaxLimitOrderVolume
 
-        s_a1_p = source_market["AskPrice1"]
-        s_a2_p = source_market["AskPrice2"]
-        s_a3_p = source_market["AskPrice3"]
-        s_a4_p = source_market["AskPrice4"]
-        s_a5_p = source_market["AskPrice5"]
+        s_a1_p = self.__to_float(source_market["AskPrice1"])
+        s_a2_p = self.__to_float(source_market["AskPrice2"])
+        s_a3_p = self.__to_float(source_market["AskPrice3"])
+        s_a4_p = self.__to_float(source_market["AskPrice4"])
+        s_a5_p = self.__to_float(source_market["AskPrice5"])
 
-        t_a1_p = target_market["AskPrice1"]
-        t_a2_p = target_market["AskPrice2"]
-        t_a3_p = target_market["AskPrice3"]
-        t_a4_p = target_market["AskPrice4"]
-        t_a5_p = target_market["AskPrice5"]
+        t_a1_p = self.__to_float(target_market["AskPrice1"])
+        t_a2_p = self.__to_float(target_market["AskPrice2"])
+        t_a3_p = self.__to_float(target_market["AskPrice3"])
+        t_a4_p = self.__to_float(target_market["AskPrice4"])
+        t_a5_p = self.__to_float(target_market["AskPrice5"])
 
-        s_b1_p = source_market["BidPrice1"]
-        s_b2_p = source_market["BidPrice2"]
-        s_b3_p = source_market["BidPrice3"]
-        s_b4_p = source_market["BidPrice4"]
-        s_b5_p = source_market["BidPrice5"]
+        s_b1_p = self.__to_float(source_market["BidPrice1"])
+        s_b2_p = self.__to_float(source_market["BidPrice2"])
+        s_b3_p = self.__to_float(source_market["BidPrice3"])
+        s_b4_p = self.__to_float(source_market["BidPrice4"])
+        s_b5_p = self.__to_float(source_market["BidPrice5"])
 
-        t_b1_p = target_market["BidPrice1"]
-        t_b2_p = target_market["BidPrice2"]
-        t_b3_p = target_market["BidPrice3"]
-        t_b4_p = target_market["BidPrice4"]
-        t_b5_p = target_market["BidPrice5"]
+        t_b1_p = self.__to_float(target_market["BidPrice1"])
+        t_b2_p = self.__to_float(target_market["BidPrice2"])
+        t_b3_p = self.__to_float(target_market["BidPrice3"])
+        t_b4_p = self.__to_float(target_market["BidPrice4"])
+        t_b5_p = self.__to_float(target_market["BidPrice5"])
 
         orders = []
         # 比较卖一
-        if self.__check_price_valid(t_a1_p) and (not self.__check_price_valid(s_a1_p) or float(s_a1_p) > float(t_a1_p)):
+        if self.__check_price_valid(t_a1_p) and (not self.__check_price_valid(s_a1_p) or s_a1_p > t_a1_p):
             orders.append({
                 "SecurityID": security_id, "Direction": "1", "VolumeTotalOriginal": volume,
                 "LimitPrice": self.__to_float(t_a1_p)
             })
         # 比较卖二
-        if self.__check_price_valid(t_a2_p) and (not self.__check_price_valid(s_a2_p) or float(s_a2_p) > float(t_a2_p)):
+        if self.__check_price_valid(t_a2_p) and (not self.__check_price_valid(s_a2_p) or s_a2_p > t_a2_p):
             orders.append({
                 "SecurityID": security_id, "Direction": "1", "VolumeTotalOriginal": volume,
                 "LimitPrice": self.__to_float(t_a2_p)
             })
         # 比较卖三
-        if self.__check_price_valid(t_a3_p) and (not self.__check_price_valid(s_a3_p) or float(s_a3_p) > float(t_a3_p)):
+        if self.__check_price_valid(t_a3_p) and (not self.__check_price_valid(s_a3_p) or s_a3_p > t_a3_p):
             orders.append({
                 "SecurityID": security_id, "Direction": "1", "VolumeTotalOriginal": volume,
                 "LimitPrice": self.__to_float(t_a3_p)
             })
         # 比较卖四
-        if self.__check_price_valid(t_a4_p) and (not self.__check_price_valid(s_a4_p) or float(s_a4_p) > float(t_a4_p)):
+        if self.__check_price_valid(t_a4_p) and (not self.__check_price_valid(s_a4_p) or s_a4_p > t_a4_p):
             orders.append({
                 "SecurityID": security_id, "Direction": "1", "VolumeTotalOriginal": volume,
                 "LimitPrice": self.__to_float(t_a4_p)
             })
         # 比较卖五
-        if self.__check_price_valid(t_a5_p) and (not self.__check_price_valid(s_a5_p) or float(s_a5_p) > float(t_a5_p)):
+        if self.__check_price_valid(t_a5_p) and (not self.__check_price_valid(s_a5_p) or s_a5_p > t_a5_p):
             orders.append({
                 "SecurityID": security_id, "Direction": "1", "VolumeTotalOriginal": volume,
                 "LimitPrice": self.__to_float(t_a5_p)
             })
 
         # 比较买一
-        if self.__check_price_valid(t_b1_p) and (not self.__check_price_valid(s_b1_p) or float(s_b1_p) < float(t_b1_p)):
+        if self.__check_price_valid(t_b1_p) and (not self.__check_price_valid(s_b1_p) or s_b1_p < t_b1_p):
             orders.append({
                 "SecurityID": security_id, "Direction": "0", "VolumeTotalOriginal": volume,
                 "LimitPrice": self.__to_float(t_b1_p)
             })
         # 比较买二
-        if self.__check_price_valid(t_b2_p) and (not self.__check_price_valid(s_b2_p) or float(s_b2_p) < float(t_b2_p)):
+        if self.__check_price_valid(t_b2_p) and (not self.__check_price_valid(s_b2_p) or s_b2_p < t_b2_p):
             orders.append({
                 "SecurityID": security_id, "Direction": "0", "VolumeTotalOriginal": volume,
                 "LimitPrice": self.__to_float(t_b2_p)
             })
         # 比较买三
-        if self.__check_price_valid(t_b3_p) and (not self.__check_price_valid(s_b3_p) or float(s_b3_p) < float(t_b3_p)):
+        if self.__check_price_valid(t_b3_p) and (not self.__check_price_valid(s_b3_p) or s_b3_p < t_b3_p):
             orders.append({
                 "SecurityID": security_id, "Direction": "0", "VolumeTotalOriginal": volume,
                 "LimitPrice": self.__to_float(t_b3_p)
             })
         # 比较买四
-        if self.__check_price_valid(t_b4_p) and (not self.__check_price_valid(s_b4_p) or float(s_b4_p) < float(t_b4_p)):
+        if self.__check_price_valid(t_b4_p) and (not self.__check_price_valid(s_b4_p) or s_b4_p < t_b4_p):
             orders.append({
                 "SecurityID": security_id, "Direction": "0", "VolumeTotalOriginal": volume,
                 "LimitPrice": self.__to_float(t_b4_p)
             })
         # 比较买五
-        if self.__check_price_valid(t_b5_p) and (not self.__check_price_valid(s_b5_p) or float(s_b5_p) < float(t_b5_p)):
+        if self.__check_price_valid(t_b5_p) and (not self.__check_price_valid(s_b5_p) or s_b5_p < t_b5_p):
             orders.append({
                 "SecurityID": security_id, "Direction": "0", "VolumeTotalOriginal": volume,
                 "LimitPrice": self.__to_float(t_b5_p)

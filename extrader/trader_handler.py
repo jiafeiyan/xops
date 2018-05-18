@@ -52,6 +52,7 @@ class TraderHandler(shfetraderapi.CShfeFtdcTraderSpi):
         req_login_field = shfetraderapi.CShfeFtdcReqUserLoginField()
         req_login_field.UserID = str(self.userId)
         req_login_field.Password = str(self.password)
+        req_login_field.TradingDay = str(self.tradingday)
 
         self.trader_api.ReqUserLogin(req_login_field, self.get_request_id())
 
@@ -68,7 +69,7 @@ class TraderHandler(shfetraderapi.CShfeFtdcTraderSpi):
             req_login_field = shfetraderapi.CShfeFtdcReqUserLoginField()
             req_login_field.UserID = str(self.userId)
             req_login_field.Password = str(self.password)
-            req_login_field.TradingDay = str(self.TradingDay)
+            req_login_field.TradingDay = str(self.tradingday)
             self.trader_api.ReqUserLogin(req_login_field, self.get_request_id())
 
         else:
