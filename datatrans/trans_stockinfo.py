@@ -1,13 +1,13 @@
 # -*- coding: UTF-8 -*-
 
 import os
-import datetime
 import json
 import codecs
 
 from utils import parse_conf_args, Configuration, path, mysql, log
 from stock_entity import stockVO
 from xml.dom.minidom import parse
+from dbfread import DBF
 
 
 class trans_stockinfo:
@@ -26,6 +26,8 @@ class trans_stockinfo:
             "SG01": ["cpxx%m%d.txt"],
             "SG02": ["securities_%y%m%d.xml", "cashauctionparams_%y%m%d.xml"]
         }
+        # DBF文件
+        self.dbf_file = ["PAR_QY_INFO%y%m%d.dbf"]
         self.__transform()
 
     def __transform(self):
@@ -39,31 +41,36 @@ class trans_stockinfo:
 
         # 读取txt文件(‘ES’表示股票；‘EU’表示基金；‘D’表示债券； ‘RWS’表示权证；‘FF’表示期货。（参考ISO10962），集合资产管理计划、债券预发行取‘D’)
         stock_list = self.__check_file()
-        if stock_list is None:
-            return
-        for settlement_group in stock_list:
-            self.logger.info("==========trans %s 数据===========" % settlement_group)
-            stock_data = stock_list[settlement_group]
-            # ===========处理stock_dbf写入t_Instrument表==============
-            self.__t_Instrument(mysqlDB=mysqlDB, settlement_group=settlement_group, stock_data=stock_data)
+        # 读取dbf文件【PAR_QY_INFO.dbf】
+        par_qy_info = self.__check_dbf()
+        if stock_list is not None:
+            for settlement_group in stock_list:
+                self.logger.info("==========trans %s 数据===========" % settlement_group)
+                stock_data = stock_list[settlement_group]
+                # ===========处理stock_dbf写入t_Instrument表==============
+                self.__t_Instrument(mysqlDB=mysqlDB, settlement_group=settlement_group, stock_data=stock_data)
 
-            # ===========处理stock_dbf写入t_TradingSegmentAttr表==============
-            self.__t_TradingSegmentAttr(mysqlDB=mysqlDB, settlement_group=settlement_group, stock_data=stock_data)
+                # ===========处理stock_dbf写入t_TradingSegmentAttr表==============
+                self.__t_TradingSegmentAttr(mysqlDB=mysqlDB, settlement_group=settlement_group, stock_data=stock_data)
 
-            # ===========处理stock_dbf写入t_MarginRate表==============
-            self.__t_MarginRate(mysqlDB=mysqlDB, settlement_group=settlement_group, stock_data=stock_data)
+                # ===========处理stock_dbf写入t_MarginRate表==============
+                self.__t_MarginRate(mysqlDB=mysqlDB, settlement_group=settlement_group, stock_data=stock_data)
 
-            # ===========处理stock_dbf写入t_MarginRateDetail表==============
-            self.__t_MarginRateDetail(mysqlDB=mysqlDB, settlement_group=settlement_group, stock_data=stock_data)
+                # ===========处理stock_dbf写入t_MarginRateDetail表==============
+                self.__t_MarginRateDetail(mysqlDB=mysqlDB, settlement_group=settlement_group, stock_data=stock_data)
 
-            # ===========处理stock_dbf写入t_PriceBanding表==============
-            self.__t_PriceBanding(mysqlDB=mysqlDB, settlement_group=settlement_group, stock_data=stock_data)
+                # ===========处理stock_dbf写入t_PriceBanding表==============
+                self.__t_PriceBanding(mysqlDB=mysqlDB, settlement_group=settlement_group, stock_data=stock_data)
 
-            # ===========写入t_InstrumentProperty表==============
-            self.__t_InstrumentProperty(mysqlDB=mysqlDB, settlement_group=settlement_group, stock_data=stock_data)
+                # ===========写入t_InstrumentProperty表==============
+                self.__t_InstrumentProperty(mysqlDB=mysqlDB, settlement_group=settlement_group, stock_data=stock_data)
 
-            # ===========写入t_MarketData表==============
-            self.__t_MarketData(mysqlDB=mysqlDB, settlement_group=settlement_group, stock_data=stock_data)
+                # ===========写入t_MarketData表==============
+                self.__t_MarketData(mysqlDB=mysqlDB, settlement_group=settlement_group, stock_data=stock_data)
+
+        if par_qy_info is not None:
+            # ===========处理info_dbf写入t_SecurityProfit表===========
+            self.__t_SecurityProfit(mysqlDB=mysqlDB, settlement_group={"1": "SG01", "2": "SG02"}, dbf=par_qy_info)
 
     def __t_Instrument(self, mysqlDB, settlement_group, stock_data):
         mysql_conn = mysqlDB.get_cnx()
@@ -94,7 +101,7 @@ class trans_stockinfo:
                                           ProductGroupID,
                                           ProductID,
                                           "4", "2", None, "0",
-                                          stock.BSLDW, 1, 0, 0,
+                                          1, 1, 0, 0,
                                           stock.ZQDM, stock.ZWMC,
                                           2099, 12, "012"))
             cursor.executemany(sql_insert_instrument, sql_insert_params)
@@ -276,6 +283,36 @@ class trans_stockinfo:
             mysql_conn.close()
         self.logger.info("写入t_MarketData完成")
 
+    # 读取处理PAR_QY_INFO文件
+    def __t_SecurityProfit(self, mysqlDB, settlement_group, dbf):
+        mysql_conn = mysqlDB.get_cnx()
+        mysql_conn.start_transaction()
+        try:
+            cursor = mysql_conn.cursor()
+            cursor.execute("delete from siminfo.t_SecurityProfit where SettlementGroupID in " + str(tuple([str(i) for i in settlement_group.values()])))
+            sql_insert_qy_info = """INSERT INTO siminfo.t_SecurityProfit (
+                                               SettlementGroupID,SecurityID,
+                                               SecurityType,SecurityMarketID,
+                                               ProfitType,DJDate,
+                                               CQDate,EndDate,
+                                               DZDate,BeforeRate,
+                                               AfterRate,Price
+                                           )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
+            sql_insert_params = []
+            for info in dbf:
+                if str(info['SCDM']) in settlement_group:
+                    settlement_group_id = settlement_group[str(info['SCDM'])]
+                    sql_insert_params.append((settlement_group_id, info['ZQDM'],
+                                          info['ZQLX'], info['SCDM'], info['QYKIND'],
+                                          info['DJDATE'], info['CQDATE'], info['ENDDATE'],
+                                          info['DZDATE'], info['BEFORERATE'],
+                                          info['AFTERRATE'], info['PRICE']))
+            cursor.executemany(sql_insert_qy_info, sql_insert_params)
+            mysql_conn.commit()
+        finally:
+            mysql_conn.close()
+        self.logger.info("写入t_SecurityProfit完成")
+
     def __check_file(self):
         env_dist = os.environ
         # 判断环境变量是否存在HOME配置
@@ -304,6 +341,30 @@ class trans_stockinfo:
                 # 读取xml文件
                 stock_data.update({sgid: self.__xml_to_stock(stock_path)})
         return stock_data
+
+    def __check_dbf(self):
+        env_dist = os.environ
+        # 判断环境变量是否存在HOME配置
+        if 'HOME' not in env_dist:
+            self.logger.error("HOME not in environment variable")
+            return None
+        # 获取文件路径
+        catalog = env_dist['HOME']
+        catalog = '%s%s%s%s%s' % (catalog, os.path.sep, 'sim_data', os.path.sep, self.TradingDay)
+        par_qy_info = '%s%s%s' % (catalog, os.path.sep, self.dbf_file[0].replace("%y", self.TradingDay[0:4]).replace("%m", self.TradingDay[4:6]).replace("%d", self.TradingDay[6:8]))
+        # 判断PAR_QY_INFOYYYYMMDD.dbf文件是否存在，不存在设置为空
+        if not os.path.exists(par_qy_info):
+            self.logger.error("%s%s" % (par_qy_info, " is not exists"))
+            par_qy_info = None
+        if par_qy_info is not None:
+            par_qy_info = self.__loadDBF(par=par_qy_info)
+        return par_qy_info
+
+    def __loadDBF(self, par):
+        # 加载 PAR_QY_INFO 数据
+        info = DBF(filename=par, encoding='GBK')
+        info.load()
+        return info.records
 
     def __xml_to_stock(self, xml):
         security_file = xml[0]

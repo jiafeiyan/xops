@@ -7,25 +7,9 @@ import csv
 import os
 import time
 
+from msg_resolver_qry_insstatus import QryInstrumentStatusMsgResolver
 from xmq import xmq_pusher, xmq_resolving_suber, xmq_msg_resolver
 from utils import Configuration, parse_conf_args, log, path
-
-
-class InsStatusMsgResolver(xmq_msg_resolver):
-    def __init__(self):
-        self.status = False
-        self.istatus = dict()
-        xmq_msg_resolver.__init__(self)
-
-    def resolve_msg(self, msg):
-        if msg is None or msg.get("type") is None:
-            return
-
-        if msg.get("type") == "istatus":
-            data = msg.get("data")
-            self.istatus.update(data)
-            self.status = True
-
 
 def makemarket_order(context, conf):
     pid = os.getpid()
@@ -55,7 +39,7 @@ def makemarket_order(context, conf):
     source_mq_topic = xmq_source_conf["topic"]
     msg_source_suber_status = xmq_resolving_suber(source_mq_addr, source_mq_topic)
 
-    md_resolver_status = InsStatusMsgResolver()
+    md_resolver_status = QryInstrumentStatusMsgResolver()
     msg_source_suber_status.add_resolver(md_resolver_status)
 
     # 获取数据来源
@@ -219,6 +203,21 @@ class MakeMarketMsgResolver(xmq_msg_resolver):
             s_a5_p = source_market["AskPrice5"]
             s_a5_v = source_market["AskVolume5"]
 
+            # 比较五档行情范围
+            temp_price = 0
+            if self.__check_price_valid(s_a1_p):
+                temp_price = s_a1_p
+            if self.__check_price_valid(s_a2_p):
+                temp_price = s_a2_p
+            if self.__check_price_valid(s_a3_p):
+                temp_price = s_a3_p
+            if self.__check_price_valid(s_a4_p):
+                temp_price = s_a4_p
+            if self.__check_price_valid(s_a5_p):
+                temp_price = s_a5_p
+            if target_price > temp_price:
+                target_price = temp_price
+
             order1 = {"SecurityID": security_id, "Direction": "0", "VolumeTotalOriginal": 0, "LimitPrice": target_price}
             if self.__check_price_valid(s_a5_p) and target_price >= s_a5_p:
                 order1["VolumeTotalOriginal"] = s_a1_v + s_a2_v + s_a3_v + s_a4_v + s_a5_v
@@ -265,6 +264,21 @@ class MakeMarketMsgResolver(xmq_msg_resolver):
             s_b4_v = source_market["BidVolume4"]
             s_b5_p = source_market["BidPrice5"]
             s_b5_v = source_market["BidVolume5"]
+
+            # 比较五档行情范围
+            temp_price = 0
+            if self.__check_price_valid(s_b1_p):
+                temp_price = s_b1_p
+            if self.__check_price_valid(s_b2_p):
+                temp_price = s_b2_p
+            if self.__check_price_valid(s_b3_p):
+                temp_price = s_b3_p
+            if self.__check_price_valid(s_b4_p):
+                temp_price = s_b4_p
+            if self.__check_price_valid(s_b5_p):
+                temp_price = s_b5_p
+            if target_price < temp_price:
+                target_price = temp_price
 
             order1 = {"SecurityID": security_id, "Direction": "1", "VolumeTotalOriginal": 0, "LimitPrice": target_price}
             if self.__check_price_valid(s_b5_p) and target_price <= s_b5_p:
