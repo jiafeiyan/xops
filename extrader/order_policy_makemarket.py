@@ -75,7 +75,7 @@ def makemarket_order(context, conf):
             # 查看合约状态
             if result.get("SecurityID") not in md_resolver_status.istatus:
                 continue
-            if str(md_resolver_status.istatus.get(result.get("SecurityID")).get("InstrumentStatus")) in ('2', '3'):
+            if str(md_resolver_status.istatus.get(result.get("SecurityID")).get("InstrumentStatus")) in ('2',):
                 input_params = {"InstrumentID": result.get("SecurityID"),
                                 "LimitPrice": result.get("LimitPrice"),
                                 "VolumeTotalOriginal": int(result.get("VolumeTotalOriginal")),
@@ -186,6 +186,7 @@ class MakeMarketMsgResolver(xmq_msg_resolver):
 
     def gen_order(self, source_market, target_market):
         security_id = str(target_market["InstrumentID"])
+        max_volume = self.max_volume.get(security_id)
         target_price = self.__to_float(target_market["LastPrice"])
         source_price = self.__to_float(source_market["LastPrice"])
 
@@ -230,13 +231,29 @@ class MakeMarketMsgResolver(xmq_msg_resolver):
             elif self.__check_price_valid(s_a1_p) and target_price >= s_a1_p:
                 order1["VolumeTotalOriginal"] = s_a1_v
 
+            # 报单量为0修改为100
             if order1["VolumeTotalOriginal"] == 0:
-                v = 100 if self.max_volume.get(security_id) > 100 else self.max_volume.get(security_id)
+                v = 100 if max_volume > 100 else max_volume
                 order1["VolumeTotalOriginal"] = v
                 order2 = {"SecurityID": security_id, "Direction": "1", "VolumeTotalOriginal": v,
                           "LimitPrice": target_price}
                 orders.append(order2)
-            orders.append(order1)
+                orders.append(order1)
+            else:
+                volume_list = []
+                quotient = divmod(int(order1["VolumeTotalOriginal"]), int(max_volume))[0] - 1
+                remainder = divmod(int(order1["VolumeTotalOriginal"]), int(max_volume))[1]
+                while quotient >= 0:
+                    quotient -= 1
+                    volume_list.append(int(max_volume))
+                volume_list.append(remainder)
+                # 分段报单
+                for vol in volume_list:
+                    orders.append({"SecurityID": security_id,
+                                   "Direction": "0",
+                                   "VolumeTotalOriginal": vol,
+                                   "LimitPrice": target_price})
+
         elif target_price < source_price:
             s_b1_p = source_market["BidPrice1"]
             s_b1_v = source_market["BidVolume1"]
@@ -262,12 +279,26 @@ class MakeMarketMsgResolver(xmq_msg_resolver):
                 order1["VolumeTotalOriginal"] = s_b1_v
 
             if order1["VolumeTotalOriginal"] == 0:
-                v = 100 if self.max_volume.get(security_id) > 100 else self.max_volume.get(security_id)
+                v = 100 if max_volume > 100 else max_volume
                 order1["VolumeTotalOriginal"] = v
                 order2 = {"SecurityID": security_id, "Direction": "0", "VolumeTotalOriginal": v,
                           "LimitPrice": target_price}
                 orders.append(order2)
-            orders.append(order1)
+                orders.append(order1)
+            else:
+                volume_list = []
+                quotient = divmod(int(order1["VolumeTotalOriginal"]), int(max_volume))[0] - 1
+                remainder = divmod(int(order1["VolumeTotalOriginal"]), int(max_volume))[1]
+                while quotient >= 0:
+                    quotient -= 1
+                    volume_list.append(int(max_volume))
+                volume_list.append(remainder)
+                # 分段报单
+                for vol in volume_list:
+                    orders.append({"SecurityID": security_id,
+                                   "Direction": "1",
+                                   "VolumeTotalOriginal": vol,
+                                   "LimitPrice": target_price})
         return orders
 
     def __to_float(self, float_str):
