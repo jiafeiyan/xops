@@ -65,7 +65,7 @@ class broker_szse_csv:
                                             '0' AS BidPrice3,'0' AS BidVolume3,'0' AS AskPrice3,'0' AS AskVolume3,
                                             '0' AS BidPrice4,'0' AS BidVolume4,'0' AS AskPrice4,'0' AS AskVolume4,
                                             '0' AS BidPrice5,'0' AS BidVolume5,'0' AS AskPrice5,'0' AS AskVolume5,
-                                            t.UpdateTime AS UpdateTime,t.UpdateMillisec AS UpdateMillisec
+                                            '00:00:00' AS UpdateTime,'0' AS UpdateMillisec
                                         FROM siminfo.t_MarketData t,siminfo.t_Instrument t2
                                         WHERE t.SettlementGroupID = t2.SettlementGroupID
                                         AND t.InstrumentID = t2.InstrumentID

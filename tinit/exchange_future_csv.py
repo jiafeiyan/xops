@@ -271,7 +271,7 @@ class exchange_future_csv:
                                             LastPrice,PreSettlementPrice,PreClosePrice,PreOpenInterest,'' as OpenPrice,
                                             '' as HighestPrice,'' as LowestPrice,'0' AS Volume,'0' AS Turnover,OpenInterest,'0' as ClosePrice,
                                             SettlementPrice,UpperLimitPrice,LowerLimitPrice,PreDelta,CurrDelta,
-                                            UpdateTime,UpdateMillisec,InstrumentID,
+                                            '00:00:00' as UpdateTime,'0' as UpdateMillisec,InstrumentID,
                                             '' AS OTCLastPrice,'' AS OTCVolume,'' AS OTCInterestChange
                                       FROM sync.t_MarketData t,siminfo.t_TradeSystemTradingDay t1,
                                            siminfo.t_TradeSystemSettlementGroup t2

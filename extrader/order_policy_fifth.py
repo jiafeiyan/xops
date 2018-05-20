@@ -293,8 +293,6 @@ class MakeMarketMsgResolver(xmq_msg_resolver):
         else:
             buy_price_temp = buy_s_min if buy_t_min == sys.float_info.max else buy_t_min
 
-        print s_lower
-        print s_upper
         # 新增十档
         if ask_price_temp != 0:
             for i in range(1, 6):

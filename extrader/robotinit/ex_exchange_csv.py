@@ -54,6 +54,7 @@ class ex_exchange_stock_csv:
         self.__append_csv("t_TradingAccount")
         self.__append_csv("t_ClientPosition")
         self.__append_csv("t_PartPosition")
+        self.__append_csv("t_CurrMarginRateDetail")
         # 生成机器人报单数据
         self.__gen_robot_csv("order_info")
 
@@ -163,6 +164,10 @@ class ex_exchange_stock_csv:
                                             AND t3.SettlementGroupID = %s
                                             AND t1.TradeSystemID = %s""",
                                     params=(self.initialfunds, self.SettlementGroupID, self.TradeSystemID)),
+            t_CurrMarginRateDetail=dict(sql="""SELECT 'SG01' AS SettlementGroupID,TradingRole,HedgeFlag,'2' as ValueMode,'0.000000' as LongMarginRatio,
+                                                  '0.000000' as ShortMarginRatio,InstrumentID,'R0001' as ParticipantID,ClientID
+                                                FROM sync.t_CurrMarginRateDetail WHERE TradeSystemID=%s""",
+                                        params=(self.TradeSystemID,))
         )
 
         csv_data = self.mysqlDB.select(table_sqls[table_name]["sql"],
