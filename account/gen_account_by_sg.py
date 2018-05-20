@@ -8,17 +8,24 @@ def gen_investors(context, conf):
 
     logger = log.get_logger(category="GenAccount")
 
-    id_int = conf["start"]
+    begin = conf["begin"]
     count = conf["count"]
+    end = conf["end"]
     settlement_group_id = conf["SettlementGroupID"]
     client_prefix = conf["ClientPrefix"]
 
-    logger.info("[gen %d investors start with %d] begin" % (count, id_int))
+    logger.info("[gen %d investors start with %d count %s end %s] begin" % (count, begin, count, end))
 
     id_list_all = []
     id_list_1000 = []
+    id_int = begin
+
+    gen_count = 0
     for i in range(0, count):
         while True:
+            if 0 < end < id_int:
+                break
+            gen_count += 1
             id_str = str(id_int).rjust(8, "0")
             id_int += 1
             if id_str.find("4") < 0:
@@ -58,11 +65,11 @@ def gen_investors(context, conf):
         mysql_conn.commit()
 
     except Exception as e:
-        logger.error("[gen %d investors start with %d] Error: %s" % (count, id_int, e))
+        logger.error("[gen %d investors start with %d %d count %s end %s] Error: %s" % (count, begin, count, end, e))
     finally:
         mysql_conn.close()
 
-    logger.info("[gen %d investors start with %d] end" % (count, id_int))
+    logger.info("[gen %d investors start with %d count %s end %s, generated %s] end" % (count, begin, count, end, gen_count))
 
 
 def main():

@@ -1127,13 +1127,15 @@ def sett_future_option(logger, cursor, current_trading_day, next_trading_day, se
         else:
             settle_sigma = round(total_sigma / total_volume, 4)
         md_dict[underlying_id].update({"sigma": settle_sigma})
-
+    
+    # todo 修改为如果结算价为零才更新
     sql = """update dbclear.t_marketdata t 
               SET t.SettlementPrice = %s
 			  WHERE t.TradingDay = %s
               AND t.SettlementID = %s
               AND t.SettlementGroupID = %s 
-              AND t.InstrumentID = %s"""
+              AND t.InstrumentID = %s
+              AND t.settlementprice = 0"""
     sql_params = []
     for ins in ins_list:
         instrument_id = ins["instrumentID"]

@@ -111,11 +111,24 @@ def open_account(mysql_conn, parameters):
             else:
                 join_mode = str(row[0])
                 if join_mode == "1":
-                    code = "-1"
-                    error = "暂无可用账户"
+                    sql = '''SELECT t1.investorid, t1.investorname, t1.openid, t1.PASSWORD, t1.investorstatus
+                                                                    FROM siminfo.t_investor t1, siminfo.t_activityinvestor t2
+                                                                    WHERE t1.openid = %s 
+                                                                    AND t2.activityid = %s AND t1.investorid = t2.investorid'''
+                    cursor.execute(sql, (open_id, activity))
+                    row = cursor.fetchone()
+                    if row is None:
+                        code = "-1"
+                        error = "暂无可用账户"
 
-                    response.update({"error": error})
-                    result.update({"code": code, "response": response})
+                        response.update({"error": error})
+                        result.update({"code": code, "response": response})
+                    else:
+                        account = str(row[0])
+                        password = str(row[3])
+
+                        response.update({"account": account, "password": password})
+                        result.update({"response": response})
                 else:
                     sql = """SELECT investorid, investorname, openid, PASSWORD, investorstatus FROM siminfo.t_investor WHERE openid = %s AND investoraccounttype ='0'"""
                     cursor.execute(sql, (open_id,))

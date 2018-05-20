@@ -1,8 +1,9 @@
 {
     "mysqlId": "simplatform_base",
     "balance" : "100000",
-    "start": 10000,
+    "begin": 1,
     "count": 10000,
+    "end": 0,
     "SettlementGroupID": "SG09",
     "ClientPrefix": "6"
 }

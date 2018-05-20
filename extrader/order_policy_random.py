@@ -8,6 +8,7 @@ import math
 import traceback
 import os
 
+from msg_resolver_qry_insstatus import QryInstrumentStatusMsgResolver
 from xmq import xmq_resolving_suber, xmq_msg_resolver, xmq_pusher
 from utils import Configuration, parse_conf_args, log, path
 
@@ -23,21 +24,6 @@ class MarketDataMsgResolver(xmq_msg_resolver):
         if msg.get("type") == "marketdata":
             data = msg.get("data")
             self.marketdata.update(data)
-
-class InsStatusMsgResolver(xmq_msg_resolver):
-    def __init__(self):
-        self.status = False
-        self.istatus = dict()
-        xmq_msg_resolver.__init__(self)
-
-    def resolve_msg(self, msg):
-        if msg is None or msg.get("type") is None:
-            return
-
-        if msg.get("type") == "istatus":
-            data = msg.get("data")
-            self.istatus.update(data)
-            self.status = True
 
 def random_order(context, conf):
     pid = os.getpid()
@@ -75,7 +61,7 @@ def random_order(context, conf):
     source_mq_topic = xmq_source_conf["topic"]
     msg_source_suber_status = xmq_resolving_suber(source_mq_addr, source_mq_topic)
 
-    md_resolver_status = InsStatusMsgResolver()
+    md_resolver_status = QryInstrumentStatusMsgResolver()
     msg_source_suber_status.add_resolver(md_resolver_status)
 
     # 获取数据来源
@@ -98,8 +84,8 @@ def random_order(context, conf):
                 if random_data.get("InstrumentID") not in md_resolver_status.istatus:
                     # time.sleep(order_frequency)
                     continue
-                # 集合竞价报单和连续交易
-                if str(md_resolver_status.istatus.get(random_data.get("InstrumentID")).get("InstrumentStatus")) in ('2', '3'):
+                # [集合竞价报单]和连续交易
+                if str(md_resolver_status.istatus.get(random_data.get("InstrumentID")).get("InstrumentStatus")) in ('2',):
                     price_tick = float(random_data.get("PriceTick"))
                     digit = get_decimal_digit(price_tick)
                     # 获取报单价格

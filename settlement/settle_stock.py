@@ -248,12 +248,12 @@ def settle_stock(context, conf):
             # 更新客户股票盈利
             logger.info("[calculate client stock profit]......")
             sql = """INSERT INTO dbclear.t_clientfund(tradingday, settlementgroupid, settlementid, participantid, clientid, accountid, available, transfee, delivfee, positionmargin, profit, stockvalue)
-                                            SELECT %s, t1.settlementgroupid, t1.settlementid, t1.participantid, t1.clientid, t3.accountid, 0, 0, 0, 0, SUM(t1.position * t2.afterrate) AS profit, 0
+                                            SELECT %s AS tradingday, t1.settlementgroupid, t1.settlementid, t1.participantid, t1.clientid, t3.accountid, 0, 0, 0, 0, SUM(t1.position * t2.afterrate) AS profit, 0
                                             FROM dbclear.t_ClientPositionForSecurityProfit t1, (SELECT settlementgroupid, securityid, djdate, afterrate FROM siminfo.t_securityprofit WHERE securitytype = 'GP' AND profittype = 'HL' AND dzdate = %s) t2, siminfo.t_account t3
                                             WHERE t1.djdate = t2.djdate AND t1.settlementgroupid = t2.settlementgroupid 
                                                 AND t1.instrumentid = t2.securityid AND t1.settlementgroupid = t3.settlementgroupid AND t1.participantid = t3.participantid
                                                 AND t1.settlementgroupid = %s AND t1.settlementid = %s
-                                            GROUP BY t1.djdate, t1.settlementgroupid, t1.settlementid, t1.participantid, t1.clientid, t3.accountid
+                                            GROUP BY t1.settlementgroupid, t1.settlementid, t1.participantid, t1.clientid, t3.accountid
                                                 ON DUPLICATE KEY UPDATE dbclear.t_clientfund.profit = VALUES(profit)"""
             cursor.execute(sql, (current_trading_day, next_trading_day, settlement_group_id, settlement_id))
 
@@ -265,7 +265,7 @@ def settle_stock(context, conf):
                                             WHERE t1.djdate = t2.djdate AND t1.settlementgroupid = t2.settlementgroupid 
                                                 AND t1.instrumentid = t2.securityid AND t1.settlementgroupid = t3.settlementgroupid AND t1.participantid = t3.participantid
                                                 AND t1.settlementgroupid = %s AND t1.settlementid = %s
-                                            GROUP BY t1.djdate, t1.settlementgroupid, t1.settlementid, t1.participantid, t1.clientid, t3.accountid
+                                            GROUP BY t1.settlementgroupid, t1.settlementid, t1.participantid, t1.clientid, t3.accountid
                                                 ON DUPLICATE KEY UPDATE dbclear.t_clientfund.positionmargin = VALUES(positionmargin)"""
             cursor.execute(sql, (current_trading_day, current_trading_day, settlement_group_id, settlement_id))
 

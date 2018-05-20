@@ -7,25 +7,9 @@ import csv
 import os
 import time
 
+from msg_resolver_qry_insstatus import QryInstrumentStatusMsgResolver
 from xmq import xmq_pusher, xmq_resolving_suber, xmq_msg_resolver
 from utils import Configuration, parse_conf_args, log, path
-
-
-class InsStatusMsgResolver(xmq_msg_resolver):
-    def __init__(self):
-        self.status = False
-        self.istatus = dict()
-        xmq_msg_resolver.__init__(self)
-
-    def resolve_msg(self, msg):
-        if msg is None or msg.get("type") is None:
-            return
-
-        if msg.get("type") == "istatus":
-            data = msg.get("data")
-            self.istatus.update(data)
-            self.status = True
-
 
 def fifth_level(context, conf):
     pid = os.getpid()
@@ -55,7 +39,7 @@ def fifth_level(context, conf):
     source_mq_topic = xmq_source_conf["topic"]
     msg_source_suber_status = xmq_resolving_suber(source_mq_addr, source_mq_topic)
 
-    md_resolver_status = InsStatusMsgResolver()
+    md_resolver_status = QryInstrumentStatusMsgResolver()
     msg_source_suber_status.add_resolver(md_resolver_status)
 
     # 获取数据来源
@@ -75,7 +59,7 @@ def fifth_level(context, conf):
             # 查看合约状态
             if result.get("SecurityID") not in md_resolver_status.istatus:
                 continue
-            if str(md_resolver_status.istatus.get(result.get("SecurityID")).get("InstrumentStatus")) in ('2', '3'):
+            if str(md_resolver_status.istatus.get(result.get("SecurityID")).get("InstrumentStatus")) in ('2',):
                 input_params = {"InstrumentID": result.get("SecurityID"),
                                 "LimitPrice": result.get("LimitPrice"),
                                 "VolumeTotalOriginal": int(result.get("VolumeTotalOriginal")),
@@ -103,7 +87,7 @@ def load_marketdata(marketdata, MakeMarketMsgResolver, volume_tick):
         InstrumentID = data.get("InstrumentID")
         PreClosePrice = data.get("PreClosePrice")
         MaxLimitOrderVolume = data.get("MaxLimitOrderVolume")
-        VolumeMultiple = data.get("VolumeMultiple")
+        PriceTick = data.get("PriceTick")
         one_row = dict({
             InstrumentID: {
                 'BidPrice5': 0.00000,
@@ -134,11 +118,11 @@ def load_marketdata(marketdata, MakeMarketMsgResolver, volume_tick):
             }
         })
         MakeMarketMsgResolver.make_target(one_row)
-        # 缓存最大下单量
+        # 缓存数据
         MakeMarketMsgResolver.cache.update({InstrumentID: {
             "MaxLimitOrderVolume": int(MaxLimitOrderVolume),
-            "VolumeMultiple": int(VolumeMultiple),
-            "volume_tick": int(volume_tick)
+            "volume_tick": int(volume_tick),
+            "price_tick": float(PriceTick)
         }})
 
 
@@ -193,10 +177,10 @@ class MakeMarketMsgResolver(xmq_msg_resolver):
     def gen_order(self, source_market, target_market):
         security_id = str(target_market["InstrumentID"])
         MaxLimitOrderVolume = self.cache.get(security_id).get("MaxLimitOrderVolume")
-        VolumeMultiple = self.cache.get(security_id).get("VolumeMultiple")
         volume_tick = self.cache.get(security_id).get("volume_tick")
+        price_tick = self.cache.get(security_id).get("price_tick")
 
-        volume = 1 * volume_tick * VolumeMultiple if MaxLimitOrderVolume > 1 * volume_tick * VolumeMultiple else MaxLimitOrderVolume
+        volume = 1 * volume_tick if MaxLimitOrderVolume > 1 * volume_tick else MaxLimitOrderVolume
 
         s_a1_p = self.__to_float(source_market["AskPrice1"])
         s_a2_p = self.__to_float(source_market["AskPrice2"])
@@ -253,7 +237,6 @@ class MakeMarketMsgResolver(xmq_msg_resolver):
                 "SecurityID": security_id, "Direction": "1", "VolumeTotalOriginal": volume,
                 "LimitPrice": self.__to_float(t_a5_p)
             })
-
         # 比较买一
         if self.__check_price_valid(t_b1_p) and (not self.__check_price_valid(s_b1_p) or s_b1_p < t_b1_p):
             orders.append({
@@ -284,6 +267,51 @@ class MakeMarketMsgResolver(xmq_msg_resolver):
                 "SecurityID": security_id, "Direction": "0", "VolumeTotalOriginal": volume,
                 "LimitPrice": self.__to_float(t_b5_p)
             })
+
+        s_upper = self.__to_float(source_market["UpperLimitPrice"])
+        s_lower = self.__to_float(source_market["LowerLimitPrice"])
+        ask_s_max = max(s_a1_p, s_a2_p, s_a3_p, s_a4_p, s_a5_p)
+        ask_t_max = max(t_a1_p, t_a2_p, t_a3_p, t_a4_p, t_a5_p)
+        if ask_s_max > ask_t_max:
+            ask_price_temp = ask_s_max if ask_t_max == 0 else ask_t_max
+        else:
+            ask_price_temp = ask_t_max if ask_s_max == 0 else ask_s_max
+
+        buy_s_min = min(sys.float_info.max if s_b1_p == 0 else s_b1_p,
+                        sys.float_info.max if s_b2_p == 0 else s_b2_p,
+                        sys.float_info.max if s_b3_p == 0 else s_b3_p,
+                        sys.float_info.max if s_b4_p == 0 else s_b4_p,
+                        sys.float_info.max if s_b5_p == 0 else s_b5_p)
+        buy_t_min = min(sys.float_info.max if t_b1_p == 0 else t_b1_p,
+                        sys.float_info.max if t_b2_p == 0 else t_b2_p,
+                        sys.float_info.max if t_b3_p == 0 else t_b3_p,
+                        sys.float_info.max if t_b4_p == 0 else t_b4_p,
+                        sys.float_info.max if t_b5_p == 0 else t_b5_p)
+
+        if buy_s_min > buy_t_min:
+            buy_price_temp = buy_t_min if buy_s_min == sys.float_info.max else buy_s_min
+        else:
+            buy_price_temp = buy_s_min if buy_t_min == sys.float_info.max else buy_t_min
+
+        print s_lower
+        print s_upper
+        # 新增十档
+        if ask_price_temp != 0:
+            for i in range(1, 6):
+                ask_price_temp += price_tick
+                if s_lower <= ask_price_temp <= s_upper:
+                    orders.append({
+                        "SecurityID": security_id, "Direction": "1", "VolumeTotalOriginal": volume,
+                        "LimitPrice": ask_price_temp
+                    })
+        if buy_price_temp != sys.float_info.max:
+            for i in range(1, 6):
+                buy_price_temp -= price_tick
+                if s_lower <= buy_price_temp <= s_upper:
+                    orders.append({
+                        "SecurityID": security_id, "Direction": "0", "VolumeTotalOriginal": volume,
+                        "LimitPrice": buy_price_temp
+                    })
         return orders
 
     def __to_float(self, float_str):
