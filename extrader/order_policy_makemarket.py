@@ -215,7 +215,7 @@ class MakeMarketMsgResolver(xmq_msg_resolver):
                 temp_price = s_a4_p
             if self.__check_price_valid(s_a5_p):
                 temp_price = s_a5_p
-            if target_price > temp_price:
+            if target_price > temp_price > 0:
                 target_price = temp_price
 
             order1 = {"SecurityID": security_id, "Direction": "0", "VolumeTotalOriginal": 0, "LimitPrice": target_price}

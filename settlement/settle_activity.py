@@ -190,6 +190,12 @@ def settle_activity(context, conf):
                                            SET t.rankingstatus = '1'
                                            WHERE t.activityid = %s AND t.activityid = t1.activityid AND t.investorid = t1.investorid AND t1.rankable = '1'"""
                 cursor.execute(sql, (activity_id,))
+            elif ranking_rule == "02":
+                # 排序规则为02时，不排名
+                sql = """UPDATE siminfo.t_activityinvestorevaluation t
+                                                           SET t.rankingstatus = '0'
+                                                           WHERE t.activityid = %s"""
+                cursor.execute(sql, (activity_id,))
             else:
                 # 根据是否真实开户设置rankingstatus，真实开户置为1，否则置为0
                 sql = """UPDATE siminfo.t_activityinvestorevaluation t, (SELECT activityid, investorid FROM siminfo.t_activityrankableinvestor WHERE activityid = %s) t1

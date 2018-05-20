@@ -87,7 +87,6 @@ def load_marketdata(marketdata, MakeMarketMsgResolver, volume_tick):
         InstrumentID = data.get("InstrumentID")
         PreClosePrice = data.get("PreClosePrice")
         MaxLimitOrderVolume = data.get("MaxLimitOrderVolume")
-        VolumeMultiple = data.get("VolumeMultiple")
         PriceTick = data.get("PriceTick")
         one_row = dict({
             InstrumentID: {
@@ -122,7 +121,6 @@ def load_marketdata(marketdata, MakeMarketMsgResolver, volume_tick):
         # 缓存数据
         MakeMarketMsgResolver.cache.update({InstrumentID: {
             "MaxLimitOrderVolume": int(MaxLimitOrderVolume),
-            "VolumeMultiple": int(VolumeMultiple),
             "volume_tick": int(volume_tick),
             "price_tick": float(PriceTick)
         }})
@@ -179,11 +177,10 @@ class MakeMarketMsgResolver(xmq_msg_resolver):
     def gen_order(self, source_market, target_market):
         security_id = str(target_market["InstrumentID"])
         MaxLimitOrderVolume = self.cache.get(security_id).get("MaxLimitOrderVolume")
-        VolumeMultiple = self.cache.get(security_id).get("VolumeMultiple")
         volume_tick = self.cache.get(security_id).get("volume_tick")
         price_tick = self.cache.get(security_id).get("price_tick")
 
-        volume = 1 * volume_tick * VolumeMultiple if MaxLimitOrderVolume > 1 * volume_tick * VolumeMultiple else MaxLimitOrderVolume
+        volume = 1 * volume_tick if MaxLimitOrderVolume > 1 * volume_tick else MaxLimitOrderVolume
 
         s_a1_p = self.__to_float(source_market["AskPrice1"])
         s_a2_p = self.__to_float(source_market["AskPrice2"])
@@ -210,94 +207,111 @@ class MakeMarketMsgResolver(xmq_msg_resolver):
         t_b5_p = self.__to_float(target_market["BidPrice5"])
 
         orders = []
-        ask_price_temp = 0
-        buy_price_temp = 0
         # 比较卖一
         if self.__check_price_valid(t_a1_p) and (not self.__check_price_valid(s_a1_p) or s_a1_p > t_a1_p):
             orders.append({
                 "SecurityID": security_id, "Direction": "1", "VolumeTotalOriginal": volume,
                 "LimitPrice": self.__to_float(t_a1_p)
             })
-            ask_price_temp = self.__to_float(t_a1_p)
         # 比较卖二
         if self.__check_price_valid(t_a2_p) and (not self.__check_price_valid(s_a2_p) or s_a2_p > t_a2_p):
             orders.append({
                 "SecurityID": security_id, "Direction": "1", "VolumeTotalOriginal": volume,
                 "LimitPrice": self.__to_float(t_a2_p)
             })
-            ask_price_temp = self.__to_float(t_a2_p)
         # 比较卖三
         if self.__check_price_valid(t_a3_p) and (not self.__check_price_valid(s_a3_p) or s_a3_p > t_a3_p):
             orders.append({
                 "SecurityID": security_id, "Direction": "1", "VolumeTotalOriginal": volume,
                 "LimitPrice": self.__to_float(t_a3_p)
             })
-            ask_price_temp = self.__to_float(t_a3_p)
         # 比较卖四
         if self.__check_price_valid(t_a4_p) and (not self.__check_price_valid(s_a4_p) or s_a4_p > t_a4_p):
             orders.append({
                 "SecurityID": security_id, "Direction": "1", "VolumeTotalOriginal": volume,
                 "LimitPrice": self.__to_float(t_a4_p)
             })
-            ask_price_temp = self.__to_float(t_a4_p)
         # 比较卖五
         if self.__check_price_valid(t_a5_p) and (not self.__check_price_valid(s_a5_p) or s_a5_p > t_a5_p):
             orders.append({
                 "SecurityID": security_id, "Direction": "1", "VolumeTotalOriginal": volume,
                 "LimitPrice": self.__to_float(t_a5_p)
             })
-            ask_price_temp = self.__to_float(t_a5_p)
         # 比较买一
         if self.__check_price_valid(t_b1_p) and (not self.__check_price_valid(s_b1_p) or s_b1_p < t_b1_p):
             orders.append({
                 "SecurityID": security_id, "Direction": "0", "VolumeTotalOriginal": volume,
                 "LimitPrice": self.__to_float(t_b1_p)
             })
-            buy_price_temp = self.__to_float(t_b1_p)
         # 比较买二
         if self.__check_price_valid(t_b2_p) and (not self.__check_price_valid(s_b2_p) or s_b2_p < t_b2_p):
             orders.append({
                 "SecurityID": security_id, "Direction": "0", "VolumeTotalOriginal": volume,
                 "LimitPrice": self.__to_float(t_b2_p)
             })
-            buy_price_temp = self.__to_float(t_b2_p)
         # 比较买三
         if self.__check_price_valid(t_b3_p) and (not self.__check_price_valid(s_b3_p) or s_b3_p < t_b3_p):
             orders.append({
                 "SecurityID": security_id, "Direction": "0", "VolumeTotalOriginal": volume,
                 "LimitPrice": self.__to_float(t_b3_p)
             })
-            buy_price_temp = self.__to_float(t_b3_p)
         # 比较买四
         if self.__check_price_valid(t_b4_p) and (not self.__check_price_valid(s_b4_p) or s_b4_p < t_b4_p):
             orders.append({
                 "SecurityID": security_id, "Direction": "0", "VolumeTotalOriginal": volume,
                 "LimitPrice": self.__to_float(t_b4_p)
             })
-            buy_price_temp = self.__to_float(t_b4_p)
         # 比较买五
         if self.__check_price_valid(t_b5_p) and (not self.__check_price_valid(s_b5_p) or s_b5_p < t_b5_p):
             orders.append({
                 "SecurityID": security_id, "Direction": "0", "VolumeTotalOriginal": volume,
                 "LimitPrice": self.__to_float(t_b5_p)
             })
-            buy_price_temp = self.__to_float(t_b5_p)
 
+        s_upper = self.__to_float(source_market["UpperLimitPrice"])
+        s_lower = self.__to_float(source_market["LowerLimitPrice"])
+        ask_s_max = max(s_a1_p, s_a2_p, s_a3_p, s_a4_p, s_a5_p)
+        ask_t_max = max(t_a1_p, t_a2_p, t_a3_p, t_a4_p, t_a5_p)
+        if ask_s_max > ask_t_max:
+            ask_price_temp = ask_s_max if ask_t_max == 0 else ask_t_max
+        else:
+            ask_price_temp = ask_t_max if ask_s_max == 0 else ask_s_max
+
+        buy_s_min = min(sys.float_info.max if s_b1_p == 0 else s_b1_p,
+                        sys.float_info.max if s_b2_p == 0 else s_b2_p,
+                        sys.float_info.max if s_b3_p == 0 else s_b3_p,
+                        sys.float_info.max if s_b4_p == 0 else s_b4_p,
+                        sys.float_info.max if s_b5_p == 0 else s_b5_p)
+        buy_t_min = min(sys.float_info.max if t_b1_p == 0 else t_b1_p,
+                        sys.float_info.max if t_b2_p == 0 else t_b2_p,
+                        sys.float_info.max if t_b3_p == 0 else t_b3_p,
+                        sys.float_info.max if t_b4_p == 0 else t_b4_p,
+                        sys.float_info.max if t_b5_p == 0 else t_b5_p)
+
+        if buy_s_min > buy_t_min:
+            buy_price_temp = buy_t_min if buy_s_min == sys.float_info.max else buy_s_min
+        else:
+            buy_price_temp = buy_s_min if buy_t_min == sys.float_info.max else buy_t_min
+
+        print s_lower
+        print s_upper
         # 新增十档
         if ask_price_temp != 0:
             for i in range(1, 6):
                 ask_price_temp += price_tick
-                orders.append({
-                    "SecurityID": security_id, "Direction": "1", "VolumeTotalOriginal": VolumeMultiple,
-                    "LimitPrice": ask_price_temp
-                })
-        if buy_price_temp != 0:
+                if s_lower <= ask_price_temp <= s_upper:
+                    orders.append({
+                        "SecurityID": security_id, "Direction": "1", "VolumeTotalOriginal": volume,
+                        "LimitPrice": ask_price_temp
+                    })
+        if buy_price_temp != sys.float_info.max:
             for i in range(1, 6):
                 buy_price_temp -= price_tick
-                orders.append({
-                    "SecurityID": security_id, "Direction": "0", "VolumeTotalOriginal": VolumeMultiple,
-                    "LimitPrice": buy_price_temp
-                })
+                if s_lower <= buy_price_temp <= s_upper:
+                    orders.append({
+                        "SecurityID": security_id, "Direction": "0", "VolumeTotalOriginal": volume,
+                        "LimitPrice": buy_price_temp
+                    })
         return orders
 
     def __to_float(self, float_str):
