@@ -1,5 +1,5 @@
 {
-    "targetMQ": "xmq_md_send",
+    "targetMQ": "xmq_md_send_push",
     "targetExchangeId": "stock_exchange",
     "userId": "R000101",
     "password": "111111",

@@ -137,7 +137,7 @@ def publish_stock(context, conf):
                                     SET t1.balance = t1.available + t2.available - t2.transfee + t2.profit - t2.positionmargin, 
                                            t1.available = t1.available + t2.available - t2.transfee + t2.profit - t2.positionmargin, 
                                            t1.fee = t1.fee + t2.transfee, t1.stockvalue = t1.stockvalue + t2.stockvalue,
-                                           t1.currentasset = t1.available + t2.available - t2.transfee + t2.profit - t2.positionmargin + t2.stockvalue
+                                           t1.currentasset = t1.currentasset + t2.available - t2.transfee + t2.profit - t2.positionmargin + t2.stockvalue
                                     WHERE t1.brokersystemid = t2.brokersystemid and t1.investorid = t2.investorid"""
                 cursor.execute(sql, (next_trading_day, settlement_group_id, settlement_id))
 

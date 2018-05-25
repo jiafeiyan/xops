@@ -48,6 +48,7 @@ def publish_etf(context, conf):
         # 投资者资金预处理
         sql = """UPDATE siminfo.t_investorfund t1
                        SET t1.prebalance = t1.balance, 
+                       t1.available = t1.balance, 
                        t1.prestockvalue = t1.stockvalue, 
                        t1.PreMargin = t1.CurrMargin,
                        t1.stockvalue = 0,
@@ -209,11 +210,11 @@ def publish_etf(context, conf):
                                                 AND t2.settlementid = %s
                                             ) t2 
                                             SET t1.balance = t1.balance + t2.available - t2.transfee - t2.DelivFee,
-                                            t1.available = t1.balance + t2.available - t2.transfee - t2.DelivFee - t2.positionmargin,
+                                            t1.available = t1.available + t2.available - t2.transfee - t2.DelivFee - t2.positionmargin,
                                             t1.fee = t1.fee + t2.transfee,
                                             t1.currmargin = t1.currmargin + t2.positionmargin,
                                             t1.premium = t1.premium + t2.available,
-                                            t1.currentasset = t1.balance + t2.available - t2.transfee - t2.DelivFee
+                                            t1.currentasset = t1.currentasset + t2.available - t2.transfee - t2.DelivFee
                                         WHERE
                                             t1.brokersystemid = t2.brokersystemid 
                                             AND t1.investorid = t2.investorid"""

@@ -161,7 +161,7 @@ class broker_etf_csv:
                                             '0' AS BidPrice3,'0' AS BidVolume3,'0' AS AskPrice3,'0' AS AskVolume3,
                                             '0' AS BidPrice4,'0' AS BidVolume4,'0' AS AskPrice4,'0' AS AskVolume4,
                                             '0' AS BidPrice5,'0' AS BidVolume5,'0' AS AskPrice5,'0' AS AskVolume5,
-                                            t.UpdateTime AS UpdateTime,t.UpdateMillisec AS UpdateMillisec
+                                            '00:00:00' AS UpdateTime,'0' AS UpdateMillisec
                                         FROM siminfo.t_MarketData t,siminfo.t_Instrument t2
                                         WHERE t.SettlementGroupID = t2.SettlementGroupID
                                         AND t.InstrumentID = t2.InstrumentID
@@ -179,10 +179,10 @@ class broker_etf_csv:
                                         t.ClientID AS ShareholderID,t2.TradingDay AS TradingDay,'1' AS ExchangeID,
                                         t.InstrumentID AS SecurityID,t.PosiDirection AS PosiDirection,
                                         t.HedgeFlag AS HedgeFlag,t.YdPosition AS HistoryPos,'0' AS HistoryPosFrozen,
-                                        '0' AS TodayPos,'0' AS TodayPosFrozen,t.PositionCost AS TotalPosCost,
+                                        '0' AS TodayPos,'0' AS TodayPosFrozen,t.YdPositionCost AS TotalPosCost,
                                         t.LongFrozen AS LongFrozen,t.ShortFrozen ShortFrozen,'0' AS LongFrozenAmount,
                                         '0' AS ShortFrozenAmount,'30' AS OpenVolume,'0' AS CloseVolume,
-                                        '0' AS OpenAmount,'0' AS CloseAmount,'0' AS Margin,
+                                        '0' AS OpenAmount,'0' AS CloseAmount,t.UseMargin AS Margin,
                                         t.FrozenMargin AS FrozenMargin,'0' AS FrozenCash,'0' AS FrozenCommission,
                                         '0' AS cashIn,'0' AS Commission,'0' AS StrikeFrozen,'0' AS StrikeFrozenAmount,
                                         t.YdPosition AS PrePosition,'0' AS HistoryPosPrice,'0' AS HistoryCombPos,'0' AS TodayCombPos,

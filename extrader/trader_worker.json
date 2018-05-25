@@ -4,5 +4,6 @@
     "targetExchangeId": "stock_exchange",
     "userId": "R000101",
     "password": "111111",
-    "tradingday": "20180508"
+    "tradingday": "20180508",
+    "second_send": {"sec":10, "send": 200}
 }

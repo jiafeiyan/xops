@@ -15,6 +15,9 @@ def start_get_md_quotes(context, conf):
     logger = log.get_logger(category="MdService")
     logger.info("[start real time quotes with %s] begin" % (json.dumps(conf, encoding="UTF-8", ensure_ascii=False)))
 
+    # md 文件开始时间
+    start_time = conf.get("start_time")
+
     # 获取实盘行情文件路径
     md_source = path.convert(conf.get("mdSource"))
     # 获取刷新频率
@@ -49,16 +52,27 @@ def start_get_md_quotes(context, conf):
     # pointer = 1
     step = conf.get("msg_step")
     f = open(md_source, 'r')
-    f.seek(HEAD_OFF_SET)
-    count = 0
 
+    # 设置启动偏移量
+    if conf.get("is_loop"):
+        # 循环读取，跳过表头区域
+        f.seek(HEAD_OFF_SET)
+    else:
+        # 非循环读取，设置为行末尾
+        f.seek(-1, 2)
+        while f.read(1) != '\n':
+            f = open(md_source, 'r')
+            f.seek(-1, 2)
+
+    count = 0
+    find_one = False if start_time is not None else True
     while True:
         istatus = md_resolver_status.istatus.values()
         if len(istatus) == 0:
             continue
         else:
             istatus = istatus[0].get("InstrumentStatus")
-        if istatus in ("2", "3"):
+        if istatus in (("2", "3") if conf.get("is_loop") else ("1", "2", "3", "0", "5")):
             line = f.readline()
             if len(line) == 0:
                 logger.info("real time quotes had send %s messages", str(count))
@@ -71,7 +85,14 @@ def start_get_md_quotes(context, conf):
                 if conf.get("is_loop"):
                     logger.info("读到文件末尾，重新循环")
                     f.seek(HEAD_OFF_SET)
+                    find_one = False if start_time is not None else True
+                time.sleep(frequency)
             else:
+                if not find_one and start_time not in line:
+                    continue
+                else:
+                    find_one = True
+
                 handle_file(line, msg_queue_puber)
                 count += 1
                 if count == step:
@@ -119,7 +140,7 @@ def handle_file(read_line, pub):
 def main():
     base_dir, config_names, config_files, add_ons = parse_conf_args(__file__, config_names=["exchange", "xmq"])
 
-    context, conf = Configuration.load(base_dir=base_dir, config_names=config_names, config_files=config_files)
+    context, conf = Configuration.load(base_dir=base_dir, config_names=config_names, config_files=config_files, add_ons=add_ons)
 
     start_get_md_quotes(context, conf)
 

@@ -2,6 +2,7 @@
 
 import threading
 import shfemdapi
+import time
 
 from utils import log
 
@@ -23,8 +24,8 @@ class MdHandler(shfemdapi.CShfeFtdcMduserSpi):
         self.request_id = 0
         self.lock = threading.Lock()
 
-    def set_msg_puber(self, msg_puber):
-        self.msg_puber = msg_puber
+    def set_msg_puber(self, msg_pusher):
+        self.msg_pusher = msg_pusher
 
     def OnFrontConnected(self):
         self.logger.info("OnFrontConnected")
@@ -33,7 +34,6 @@ class MdHandler(shfemdapi.CShfeFtdcMduserSpi):
         req_login_field = shfemdapi.CShfeFtdcReqUserLoginField()
         req_login_field.UserID = str(self.userId)
         req_login_field.Password = str(self.password)
-        req_login_field.TradingDay = str(self.TradingDay)
 
         self.md_api.ReqUserLogin(req_login_field, self.get_request_id())
 
@@ -46,6 +46,11 @@ class MdHandler(shfemdapi.CShfeFtdcMduserSpi):
 
         if pRspInfo is not None and pRspInfo.ErrorID != 0:
             self.logger.error("login failed : %s" % pRspInfo.ErrorMsg.decode("GBK").encode("UTF-8"))
+            time.sleep(3)
+            req_login_field = shfemdapi.CShfeFtdcReqUserLoginField()
+            req_login_field.UserID = str(self.userId)
+            req_login_field.Password = str(self.password)
+            self.md_api.ReqUserLogin(req_login_field, self.get_request_id())
         else:
             self.logger.info("login success")
             self.is_logined = True
@@ -88,7 +93,7 @@ class MdHandler(shfemdapi.CShfeFtdcMduserSpi):
                             "AskVolume5": float(pDepthMarketData.AskVolume5)})
             msg = {"type": "marketdata",
                    "data": {pDepthMarketData.InstrumentID: md_info}}
-            self.msg_puber.send(msg)
+            self.msg_pusher.send(msg)
 
     def get_request_id(self):
         self.lock.acquire()

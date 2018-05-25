@@ -37,6 +37,9 @@ def start_trader_service(context, conf):
     user_id = conf["userId"]
     password = conf["password"]
 
+    sec = conf["second_send"].get("sec")
+    send = conf["second_send"].get("send")
+
     # 发送信息【合约状态】
     xmq_target_conf = context.get("xmq").get(conf.get("targetMQ"))
     target_mq_addr = xmq_target_conf["address"]
@@ -47,8 +50,8 @@ def start_trader_service(context, conf):
     trader_handler = TraderHandler(trader_api, user_id, password, conf.get("tradingday"))
     trader_api.RegisterFront(exchange_front_addr)
     trader_api.RegisterSpi(trader_handler)
-    trader_api.SubscribePrivateTopic(shfetraderapi.TERT_RESUME)
-    trader_api.SubscribePublicTopic(shfetraderapi.TERT_RESUME)
+    trader_api.SubscribePrivateTopic(shfetraderapi.TERT_QUICK)
+    trader_api.SubscribePublicTopic(shfetraderapi.TERT_QUICK)
 
     trader_handler.set_msg_puber(msg_queue_puber)
 
@@ -66,9 +69,8 @@ def start_trader_service(context, conf):
     source_mq_topic = xmq_source_conf["topic"]
     msg_source_puller = xmq_resolving_puller(source_mq_addr, source_mq_topic)
 
-    msg_source_puller.add_resolver(InsertOrderMsgResolver(trader_handler))
+    msg_source_puller.add_resolver(InsertOrderMsgResolver(trader_handler, sec, send))
     msg_source_puller.add_resolver(TraderWorkerResolver(trader_handler))
-    msg_source_puller.add_resolver(QryMarketDataMsgResolver(trader_handler))
 
     trader_api.Join()
 
