@@ -48,6 +48,7 @@ def publish_future(context, conf):
         # 投资者资金预处理
         sql = """UPDATE siminfo.t_investorfund t1
                                      SET t1.prebalance = t1.balance, 
+                                     t1.available = t1.balance, 
                                      t1.prestockvalue = t1.stockvalue, 
                                      t1.PreMargin = t1.CurrMargin,
                                      t1.stockvalue = 0,
@@ -213,7 +214,7 @@ def publish_future(context, conf):
                                     t1.fee = t1.fee + t2.transfee,
                                     t1.currmargin = t1.currmargin + t2.positionmargin,
                                     t1.premium = t1.premium + t2.available,
-                                    t1.currentasset = t1.balance + t2.available - t2.transfee - t2.DelivFee + t2.profit
+                                    t1.currentasset = t1.currentasset + t2.available - t2.transfee - t2.DelivFee + t2.profit
                                 WHERE
                                     t1.brokersystemid = t2.brokersystemid 
                                     AND t1.investorid = t2.investorid"""
@@ -258,10 +259,10 @@ def publish_future(context, conf):
                 sql = """DELETE FROM siminfo.t_FuturePositionDtl WHERE settlementgroupid = %s"""
                 cursor.execute(sql, (settlement_group_id,))
                 sql = """INSERT into siminfo.t_FuturePositionDtl (TradingDay,SettlementGroupID,SettlementID,InstrumentID,ParticipantID,ClientID,HedgeFlag,Direction,OpenDate,TradeID,Volume,OpenPrice,TradeType,CombInstrumentID,ExchangeID,CloseProfitByDate,CloseProfitByTrade,PositionProfitByDate,PositionProfitByTrade,Margin,ExchMargin,MarginRateByMoney,MarginRateByVolume,LastSettlementPrice,SettlementPrice,CloseVolume,CloseAmount)
-                        select TradingDay,SettlementGroupID,SettlementID,InstrumentID,ParticipantID,ClientID,HedgeFlag,Direction,OpenDate,TradeID,Volume,OpenPrice,TradeType,CombInstrumentID,ExchangeID,CloseProfitByDate,CloseProfitByTrade,PositionProfitByDate,PositionProfitByTrade,Margin,ExchMargin,MarginRateByMoney,MarginRateByVolume,LastSettlementPrice,SettlementPrice,CloseVolume,CloseAmount
+                        select %s,SettlementGroupID,SettlementID,InstrumentID,ParticipantID,ClientID,HedgeFlag,Direction,OpenDate,TradeID,Volume,OpenPrice,TradeType,CombInstrumentID,ExchangeID,CloseProfitByDate,CloseProfitByTrade,PositionProfitByDate,PositionProfitByTrade,Margin,ExchMargin,MarginRateByMoney,MarginRateByVolume,LastSettlementPrice,SettlementPrice,CloseVolume,CloseAmount
                         from dbclear.t_FuturePositionDtl t 
                         WHERE t.volume !=0 and t.tradingday = %s AND t.settlementgroupid = %s AND t.settlementid = %s"""
-                cursor.execute(sql, (next_trading_day, settlement_group_id, settlement_id))
+                cursor.execute(sql, (next_trading_day, current_trading_day, settlement_group_id, settlement_id))
 
                 # 更新结算状态
                 logger.info("[update %s settlement status]......" % settlement_group_id)

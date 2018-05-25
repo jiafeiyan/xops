@@ -3,6 +3,7 @@
 import threading
 import shfetraderapi
 import time
+import os
 
 from utils import log
 
@@ -26,6 +27,14 @@ class TraderHandler(shfetraderapi.CShfeFtdcTraderSpi):
 
         self.request_id = 0
         self.lock = threading.Lock()
+
+        self.private_worker = False
+        # 初始化锁文件【防止多进程重复擦送合约状态信息】
+        try:
+            os.mknod("private_worker.con", 0600)
+            self.private_worker = True
+        except OSError:
+            pass
 
     def set_msg_puber(self, msg_puber):
         self.msg_puber = msg_puber
@@ -101,7 +110,15 @@ class TraderHandler(shfetraderapi.CShfeFtdcTraderSpi):
                 pInstrumentStatus.InstrumentID: {"InstrumentID": pInstrumentStatus.InstrumentID,
                                                  "InstrumentStatus": pInstrumentStatus.InstrumentStatus}}}
             self.cache_md_status.update(msg.get("data"))
-            self.msg_puber.send(msg)
+            if self.private_worker:
+                self.msg_puber.send(msg)
+
+    def control_md_status(self):
+        self.lock.acquire()
+        try:
+            pass
+        finally:
+            self.lock.release()
 
     def OnRspOrderInsert(self, pInputOrder, pRspInfo, nRequestID, bIsLast):
         if pRspInfo is not None and pRspInfo.ErrorID != 0:

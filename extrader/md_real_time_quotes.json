@@ -3,7 +3,8 @@
     "sourceMQ": "xmq_client_recv",
     "sTargetMQ": "xmq_client_send_push",
     "mdSource": "${SIM_PLATFORM_HOME}/sim_data/md.csv",
-    "frequency": 5,
-    "msg_step": 1000,
-    "is_loop": false
+    "frequency": 2,
+    "msg_step": 10,
+    "is_loop": false,
+    "start_time": ""
 }

@@ -1,6 +1,7 @@
 {
     "targetMQ": "xmq_client_send_push",
-    "mdSourceMQ": "xmq_md_recv",
+    "tmdSourceMQ": "xmq_md_recv",
+    "smdSourceMQ": "xmq_md_recv_pull",
     "sourceMQ": "xmq_client_recv",
     "fileSource": "${SIM_PLATFORM_HOME}/csvfiles/exchange/0002/order_info.csv",
     "clientId": "robot00001",

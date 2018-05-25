@@ -6,7 +6,7 @@ import time
 import shfemdapi
 from md_handler import MdHandler
 
-from xmq import xmq_queue_puber
+from xmq import xmq_queue_pusher
 from utils import Configuration, parse_conf_args, log
 
 def start_md_service(context, conf):
@@ -22,22 +22,20 @@ def start_md_service(context, conf):
     topic_id_list = conf["topicId"]
 
     xmq_target_conf = context.get("xmq").get(conf.get("targetMQ"))
-
     target_mq_addr = xmq_target_conf["address"]
     target_mq_topic = xmq_target_conf["topic"]
-
-    msg_queue_puber = xmq_queue_puber(target_mq_addr, target_mq_topic)
+    msg_queue_pusher = xmq_queue_pusher(target_mq_addr, target_mq_topic)
 
     md_api = shfemdapi.CShfeFtdcMduserApi_CreateFtdcMduserApi()
     md_handler = MdHandler(md_api, user_id, password)
 
     for topic_id in topic_id_list:
-        md_api.SubscribeMarketDataTopic(topic_id, shfemdapi.TERT_RESTART)
+        md_api.SubscribeMarketDataTopic(topic_id, shfemdapi.TERT_QUICK)
 
     md_api.RegisterFront(exchange_front_addr)
     md_api.RegisterSpi(md_handler)
 
-    md_handler.set_msg_puber(msg_queue_puber)
+    md_handler.set_msg_puber(msg_queue_pusher)
 
     md_api.Init()
 

@@ -38,5 +38,18 @@
     "xmq_trader_recv_pull": {
         "address": "tcp://127.0.0.1:5566",
         "topic": "EX:TRADER:"
+    },
+    "xmq_md_pushpull_server": {
+        "pushAddress": "tcp://*:6666",
+        "pullAddress": "tcp://*:6677"
+    },
+    "xmq_md_send_push": {
+        "address": "tcp://127.0.0.1:6666",
+        "topic": "EX:MD:"
+    },
+    "xmq_md_recv_pull": {
+        "address": "tcp://127.0.0.1:6677",
+        "topic": "EX:MD:"
     }
+
 }

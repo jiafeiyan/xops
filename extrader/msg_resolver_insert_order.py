@@ -1,13 +1,24 @@
 # -*- coding: UTF-8 -*-
 
 from trader_msg_resolver import TraderMsgResolver
+from datetime import datetime
+
+import time
 import shfetraderapi
 import traceback
 
 
 class InsertOrderMsgResolver(TraderMsgResolver):
-    def __init__(self, handler):
-        TraderMsgResolver.__init__(self, handler)
+    def __init__(self, handler, sec, send):
+        TraderMsgResolver.__init__(self, handler, )
+        self.sec = sec
+        self.send = send
+
+        self.count = 0
+        self.time_begin = 0
+        self.time_start = True
+
+        self.reset = False
 
     def resolve_msg(self, msg):
         if msg is None or msg.get("type") is None:
@@ -34,7 +45,7 @@ class InsertOrderMsgResolver(TraderMsgResolver):
                 input_order_field.IsAutoSuspend = 0
                 input_order_field.TimeCondition = ord('3')
                 # 限价 SHFE_FTDC_OPT_LimitPrice 2
-                input_order_field.OrderPriceType = ord('2')
+                input_order_field.OrderPriceType = ord('2') if data.get("OrderPriceType") is None else ord(data.get("OrderPriceType"))
                 # 任何数量 SHFE_FTDC_VC_AV '1'
                 input_order_field.VolumeCondition = ord('1')
                 # 立即SHFE_FTDC_CTC_Immediately ‘1’
@@ -44,7 +55,20 @@ class InsertOrderMsgResolver(TraderMsgResolver):
                 request_id = self.handler.get_request_id()
                 # 0 开仓 1 平仓
                 input_order_field.CombOffsetFlag = '0'
+
+                if self.time_start:
+                    self.time_begin = datetime.now()
+                    self.time_start = False
+
+                if self.count == self.send:
+                    diff = self.sec - (datetime.now() - self.time_begin).total_seconds()
+                    if diff > 0:
+                        time.sleep(diff)
+                    self.time_start = True
+                    self.count = 0
+
                 self.handler.trader_api.ReqOrderInsert(input_order_field, request_id)
+                self.count += 1
                 seq = msg.get("seq")
                 print seq
             except Exception as err:

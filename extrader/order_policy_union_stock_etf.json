@@ -6,5 +6,14 @@
     "fileSource": "${SIM_PLATFORM_HOME}/csvfiles/exchange/0001/order_info.csv",
     "clientId": "robot00001",
     "ParticipantID": "R0001",
-    "volumeTick": 100
+    "orderConf": {
+        "stock": {
+            "fifth_level_call_volume": 100000,
+            "normal_volume": 1000
+        },
+        "etf": {
+            "fifth_level_call_volume": 10,
+            "normal_volume": 1
+        }
+    }
 }
