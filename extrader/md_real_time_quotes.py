@@ -72,7 +72,7 @@ def start_get_md_quotes(context, conf):
             continue
         else:
             istatus = istatus[0].get("InstrumentStatus")
-        if istatus in (("2", "3") if conf.get("is_loop") else ("1", "2", "3", "0", "5")):
+        if istatus in (("2", "3") if conf.get("is_loop") else ("1", "2", "3", "0", "5", "6")):
             line = f.readline()
             if len(line) == 0:
                 logger.info("real time quotes had send %s messages", str(count))

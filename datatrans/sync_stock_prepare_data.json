@@ -9,7 +9,7 @@
                   "${HOME}/security_share/info/reff03%m%d.txt",
                   "${HOME}/security_share/cashauctionparams_%y%m%d.xml",
                   "${HOME}/security_share/securities_%y%m%d.xml",
-                  "${HOME}/security_share/PAR_QY_INFO%y%m%d.dbf"]
+                  "${HOME}/jydata_share/%y%m%d/PAR_QY_INFO%y%m%d.dbf"]
       }
     ]
 }

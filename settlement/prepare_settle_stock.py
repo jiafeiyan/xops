@@ -74,6 +74,8 @@ def prepare_settle_stock(context, conf):
                              SET TradingDay = '%s', SettlementGroupID = 'TS-%s', SettlementID = '%s'""" % (
             csv_path, current_trading_day, trade_system_id, settlement_id)
             cursor.execute(sql)
+            sql = """delete from dbclear.t_clientposition where participantid = 'R0001'"""
+            cursor.execute(sql)
             sql = """UPDATE 
                               dbclear.t_ClientPosition t1,
                               (SELECT 
@@ -102,6 +104,8 @@ def prepare_settle_stock(context, conf):
                                      IGNORE 1 LINES
                                      SET TradingDay = '%s', SettlementGroupID = 'TS-%s', SettlementID = '%s'""" % (
             csv_path, current_trading_day, trade_system_id, settlement_id)
+            cursor.execute(sql)
+            sql = """delete from dbclear.t_partposition where participantid = 'R0001'"""
             cursor.execute(sql)
             sql = """UPDATE 
                               dbclear.t_PartPosition t1,
@@ -162,6 +166,8 @@ def prepare_settle_stock(context, conf):
                                      SET TradingDay = '%s', SettlementGroupID = 'TS-%s', SettlementID = '%s'""" % (
             csv_path, current_trading_day, trade_system_id, settlement_id)
             cursor.execute(sql)
+            sql = """delete from dbclear.t_order where participantid = 'R0001'"""
+            cursor.execute(sql)
             sql = """UPDATE 
                               dbclear.t_Order t1,
                               (SELECT 
@@ -190,6 +196,8 @@ def prepare_settle_stock(context, conf):
                                      IGNORE 1 LINES
                                      SET TradingDay = '%s', SettlementGroupID = 'TS-%s', SettlementID = '%s'""" % (
             csv_path, current_trading_day, trade_system_id, settlement_id)
+            cursor.execute(sql)
+            sql = """delete from dbclear.t_trade where participantid = 'R0001'"""
             cursor.execute(sql)
             sql = """UPDATE 
                               dbclear.t_Trade t1,
@@ -257,9 +265,9 @@ def prepare_settle_stock(context, conf):
             cursor.execute(sql, (settlement_id, trade_system_id))
             sql = """INSERT INTO dbclear.t_ClientPositionForSecurityProfit(DJDate,SettlementGroupID,SettlementID,HedgeFlag,PosiDirection,YdPosition,Position,LongFrozen,ShortFrozen,YdLongFrozen,YdShortFrozen,BuyTradeVolume,SellTradeVolume,PositionCost,YdPositionCost,UseMargin,FrozenMargin,LongFrozenMargin,ShortFrozenMargin,FrozenPremium,InstrumentID,ParticipantID,ClientID) 
                                             SELECT t2.djdate,t1.SettlementGroupID,%s,t1.HedgeFlag,t1.PosiDirection,t1.YdPosition,t1.Position,t1.LongFrozen,t1.ShortFrozen,t1.YdLongFrozen,t1.YdShortFrozen,t1.BuyTradeVolume,t1.SellTradeVolume,t1.PositionCost,t1.YdPositionCost,t1.UseMargin,t1.FrozenMargin,t1.LongFrozenMargin,t1.ShortFrozenMargin,t1.FrozenPremium,t1.InstrumentID,t1.ParticipantID,t1.ClientID
-                                            FROM dbclear.t_ClientPosition t1, (SELECT settlementgroupid, securityid, djdate FROM siminfo.t_securityprofit WHERE djdate = %s AND profittype != 'X' AND securitytype = 'GP') t2
-                                            WHERE t1.settlementgroupid = t2.settlementgroupid AND t1.instrumentid = t2.securityid AND t1.settlementgroupid IN (SELECT settlementgroupid FROM siminfo.t_tradesystemsettlementgroup WHERE tradesystemid = %s)"""
-            cursor.execute(sql, (settlement_id, current_trading_day, trade_system_id))
+                                            FROM dbclear.t_ClientPosition t1, (SELECT distinct settlementgroupid, securityid, djdate FROM siminfo.t_securityprofit WHERE djdate = %s AND profittype != 'X' AND securitytype = 'GP') t2
+                                            WHERE t1.tradingday = %s AND t1.settlementgroupid = t2.settlementgroupid AND t1.instrumentid = t2.securityid AND t1.settlementgroupid IN (SELECT settlementgroupid FROM siminfo.t_tradesystemsettlementgroup WHERE tradesystemid = %s)"""
+            cursor.execute(sql, (settlement_id, current_trading_day, current_trading_day, trade_system_id))
 
             # 更新etf期权结算价，收盘价
             logger.info("[update etf closeprice settlementprice to dbclear]......")

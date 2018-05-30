@@ -75,7 +75,7 @@ class broker_stock_csv:
                          params=(self.brokerSystemID, self.brokerSystemID, self.brokerSystemID,
                                  self.brokerSystemID, self.brokerSystemID)),
             BusinessUnit=dict(columns=("InvestorID", "BusinessUnitID", "BusinessUnitName"),
-                              sql="""SELECT t.InvestorID,t.InvestorID AS BusinessUnitID,'Bu1' AS BusinessUnitName
+                              sql="""SELECT DISTINCT t.InvestorID,t.InvestorID AS BusinessUnitID,'Bu1' AS BusinessUnitName
                                     FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1,
                                          siminfo.t_BrokerSystemSettlementGroup t2
                                     WHERE t.InvestorID = t1.InvestorID

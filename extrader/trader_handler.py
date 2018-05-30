@@ -125,3 +125,12 @@ class TraderHandler(shfetraderapi.CShfeFtdcTraderSpi):
             self.logger.error("OnRspOrderInsert failed : %s" % pRspInfo.ErrorMsg.decode("GBK").encode("UTF-8"))
         else:
             pass
+
+    def OnRspOrderAction(self, pOrderAction, pRspInfo, nRequestID, bIsLast):
+        return shfetraderapi.CShfeFtdcTraderSpi.OnRspOrderAction(self, pOrderAction, pRspInfo, nRequestID, bIsLast)
+
+    def OnRtnOrder(self, pOrder):
+        return shfetraderapi.CShfeFtdcTraderSpi.OnRtnOrder(self, pOrder)
+
+    def OnRtnTrade(self, pTrade):
+        return shfetraderapi.CShfeFtdcTraderSpi.OnRtnTrade(self, pTrade)

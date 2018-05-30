@@ -207,19 +207,20 @@ class UnionMsgResolver(xmq_msg_resolver):
             # 实盘行情
             elif msg.get("type") == "makemarket":
                 self.target(md_data)
-                if not self.source_update_time.has_key(ins):
-                    self.source_update_time.update({ins: datetime.now()})
-                    self.req_order()
-                elif self.md_resolver_status.istatus.get(ins).get("InstrumentStatus") in ('3',) \
-                        and (datetime.now() - self.source_update_time.get(ins)).total_seconds() >= 20:
-                    # 报五档单
-                    self.source_update_time.update({ins: datetime.now()})
-                    self.req_order(callmarket=True)
-                elif self.md_resolver_status.istatus.get(ins).get("InstrumentStatus") in ('2',) \
-                        and (datetime.now() - self.source_update_time.get(ins)).total_seconds() >= 60:
-                    # 大于1s处理
-                    self.source_update_time.update({ins: datetime.now()})
-                    self.req_order(timeout=True)
+                if ins in self.md_resolver_status.istatus:
+                    if not self.source_update_time.has_key(ins):
+                        self.source_update_time.update({ins: datetime.now()})
+                        self.req_order()
+                    elif self.md_resolver_status.istatus.get(ins).get("InstrumentStatus") in ('3',) \
+                            and (datetime.now() - self.source_update_time.get(ins)).total_seconds() >= 20:
+                        # 报五档单
+                        self.source_update_time.update({ins: datetime.now()})
+                        self.req_order(callmarket=True)
+                    elif self.md_resolver_status.istatus.get(ins).get("InstrumentStatus") in ('2',) \
+                            and (datetime.now() - self.source_update_time.get(ins)).total_seconds() >= 60:
+                        # 大于1s处理
+                        self.source_update_time.update({ins: datetime.now()})
+                        self.req_order(timeout=True)
         finally:
             self.lock.release()
 
@@ -441,6 +442,9 @@ class UnionMsgResolver(xmq_msg_resolver):
 
         fifth_level_call_volume = self.cache.get(security_id).get("fifth_level_call_volume")
 
+        upper_price = self.__to_float(source_market["UpperLimitPrice"])
+        lower_price = self.__to_float(source_market["LowerLimitPrice"])
+
         s_a1_p = self.__to_float(source_market["AskPrice1"])
         s_a2_p = self.__to_float(source_market["AskPrice2"])
         s_a3_p = self.__to_float(source_market["AskPrice3"])
@@ -512,6 +516,15 @@ class UnionMsgResolver(xmq_msg_resolver):
             return orders
 
         for (index, ap) in enumerate(s_a_p):
+            # 跌停
+            if index == 0 and t_a1_p <= lower_price:
+                orders.append({
+                    "SecurityID": security_id,
+                    "Direction": "1",
+                    "VolumeTotalOriginal": t_a_v[index],
+                    "LimitPrice": t_a1_p, "level": "a1", "order_type": "fifth_level_type"
+                })
+                return orders
             # 实盘卖一小于模拟盘卖一
             if index == 0 and 0 < t_a1_p < ap:
                 orders.append({
@@ -531,6 +544,16 @@ class UnionMsgResolver(xmq_msg_resolver):
                 return orders
 
         for (index, bp) in enumerate(s_b_p):
+            # 涨停
+            if index == 0 and t_b1_p >= upper_price:
+                orders.append({
+                    "SecurityID": security_id,
+                    "Direction": "0",
+                    "VolumeTotalOriginal": t_b_v[index],
+                    "LimitPrice": t_b1_p, "level": "b1", "order_type": "fifth_level_type"
+                })
+                return orders
+
             # 实盘买一大于模拟盘买一
             if index == 0 and t_b1_p > bp:
                 orders.append({

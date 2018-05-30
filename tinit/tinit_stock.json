@@ -25,6 +25,12 @@
         "type": "put",
         "target" : "${HOME}/run/mdreceiver/bin",
         "items": ["${SIM_PLATFORM_HOME}/csvfiles/exchange/0001/md"]
+      },
+      {
+        "host": "stock_robot",
+        "type": "put",
+        "target" : "${HOME}/xops/csvfiles/exchange/0001/",
+        "items": ["${SIM_PLATFORM_HOME}/csvfiles/exchange/0001/order_info.csv"]
       }
     ]
 }
