@@ -126,11 +126,113 @@ class TraderHandler(shfetraderapi.CShfeFtdcTraderSpi):
         else:
             pass
 
-    def OnRspOrderAction(self, pOrderAction, pRspInfo, nRequestID, bIsLast):
-        return shfetraderapi.CShfeFtdcTraderSpi.OnRspOrderAction(self, pOrderAction, pRspInfo, nRequestID, bIsLast)
+    # def OnRspOrderAction(self, pOrderAction, pRspInfo, nRequestID, bIsLast):
+    #     self.logger.info("OnRspOrderAction")
+    #     if pRspInfo is not None and pRspInfo.ErrorID != 0:
+    #         self.logger.error("OnRspOrderAction failed : %s" % pRspInfo.ErrorMsg.decode("GBK").encode("UTF-8"))
+    #     else:
+    #         if pOrderAction is not None:
+    #             msg = {
+    #                 "OrderSysID": pOrderAction.OrderSysID,
+    #                 "OrderLocalID": pOrderAction.OrderLocalID,
+    #                 "ActionFlag": pOrderAction.ActionFlag,
+    #                 "ParticipantID": pOrderAction.ParticipantID,
+    #                 "ClientID": pOrderAction.ClientID,
+    #                 "UserID": pOrderAction.UserID,
+    #                 "LimitPrice": pOrderAction.LimitPrice,
+    #                 "VolumeChange": pOrderAction.VolumeChange,
+    #                 "ActionLocalID": pOrderAction.ActionLocalID,
+    #                 "BusinessUnit": pOrderAction.BusinessUnit,
+    #                 "BusinessLocalID": pOrderAction.BusinessLocalID
+    #             }
+    #             print msg
 
     def OnRtnOrder(self, pOrder):
-        return shfetraderapi.CShfeFtdcTraderSpi.OnRtnOrder(self, pOrder)
+        self.logger.info("OnRtnOrder")
+        if pOrder is not None:
+            data = {
+                "TradingDay": pOrder.TradingDay,
+                # "SettlementGroupID": pOrder.SettlementGroupID,
+                # "SettlementID": pOrder.SettlementID,
+                "OrderSysID": pOrder.OrderSysID,
+                "ParticipantID": pOrder.ParticipantID,
+                "ClientID": pOrder.ClientID,
+                # "UserID": pOrder.UserID,
+                # "InstrumentID": pOrder.InstrumentID,
+                # "OrderPriceType": pOrder.OrderPriceType,
+                # "Direction": pOrder.Direction,
+                # "CombOffsetFlag": pOrder.CombOffsetFlag,
+                # "CombHedgeFlag": pOrder.CombHedgeFlag,
+                # "LimitPrice": pOrder.LimitPrice,
+                # "VolumeTotalOriginal": pOrder.VolumeTotalOriginal,
+                # "TimeCondition": pOrder.TimeCondition,
+                # "GTDDate": pOrder.GTDDate,
+                # "VolumeCondition": pOrder.VolumeCondition,
+                # "MinVolume": pOrder.MinVolume,
+                # "ContingentCondition": pOrder.ContingentCondition,
+                # "StopPrice": pOrder.StopPrice,
+                # "ForceCloseReason": pOrder.ForceCloseReason,
+                # "OrderLocalID": pOrder.OrderLocalID,
+                # "IsAutoSuspend": pOrder.IsAutoSuspend,
+                # "OrderSource": pOrder.OrderSource,
+                "OrderStatus": pOrder.OrderStatus,
+                # "OrderType": pOrder.OrderType,
+                # "VolumeTraded": pOrder.VolumeTraded,
+                # "VolumeTotal": pOrder.VolumeTotal,
+                # "InsertDate": pOrder.InsertDate,
+                # "InsertTime": pOrder.InsertTime,
+                # "ActiveTime": pOrder.ActiveTime,
+                # "SuspendTime": pOrder.SuspendTime,
+                # "UpdateTime": pOrder.UpdateTime,
+                # "CancelTime": pOrder.CancelTime,
+                # "ActiveUserID": pOrder.ActiveUserID,
+                # "Priority": pOrder.Priority,
+                # "TimeSortID": pOrder.TimeSortID,
+                # "ClearingPartID": pOrder.ClearingPartID,
+                # "BusinessUnit": pOrder.BusinessUnit,
+                # "BusinessLocalID": pOrder.BusinessLocalID,
+                # "ActionDay": pOrder.ActionDay,
+            }
+            msg = {"type": "rtnOrder",
+                   "data": [pOrder.TradingDay,
+                            pOrder.OrderSysID,
+                            pOrder.ParticipantID,
+                            pOrder.ClientID,
+                            pOrder.OrderStatus]}
+            self.msg_puber.send(msg)
 
     def OnRtnTrade(self, pTrade):
-        return shfetraderapi.CShfeFtdcTraderSpi.OnRtnTrade(self, pTrade)
+        self.logger.info("OnRtnTrade")
+        if pTrade is not None:
+            data = {
+                "TradingDay": pTrade.TradingDay,
+                # "SettlementGroupID": pTrade.SettlementGroupID,
+                # "SettlementID": pTrade.SettlementID,
+                # "TradeID": pTrade.TradeID,
+                # "Direction": pTrade.Direction,
+                "OrderSysID": pTrade.OrderSysID,
+                "ParticipantID": pTrade.ParticipantID,
+                "ClientID": pTrade.ClientID,
+                # "TradingRole": pTrade.TradingRole,
+                # "AccountID": pTrade.AccountID,
+                # "InstrumentID": pTrade.InstrumentID,
+                # "OffsetFlag": pTrade.OffsetFlag,
+                # "HedgeFlag": pTrade.HedgeFlag,
+                # "Price": pTrade.Price,
+                # "Volume": pTrade.Volume,
+                # "TradeTime": pTrade.TradeTime,
+                # "TradeType": pTrade.TradeType,
+                # "PriceSource": pTrade.PriceSource,
+                # "UserID": pTrade.UserID,
+                # "OrderLocalID": pTrade.OrderLocalID,
+                # "ClearingPartID": pTrade.ClearingPartID,
+                # "BusinessUnit": pTrade.BusinessUnit,
+                # "BusinessLocalID": pTrade.BusinessLocalID,
+                # "ActionDay": pTrade.ActionDay,
+            }
+            msg = {"type": "rtnTrade",
+                   "data": [pTrade.TradingDay,
+                            pTrade.OrderSysID,
+                            pTrade.ParticipantID,
+                            pTrade.ClientID]}
+            self.msg_puber.send(msg)

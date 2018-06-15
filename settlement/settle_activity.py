@@ -203,11 +203,11 @@ def settle_activity(context, conf):
                                             WHERE t.activityid = %s AND t.activityid = t1.activityid AND t.investorid = t1.investorid"""
                 cursor.execute(sql, (activity_id,activity_id,))
 
-                # 根据是否参与交易设置rankingstatus，昨资产或今资产不为初始资产置为1，否则置为0
-                sql = """UPDATE siminfo.t_activityinvestorevaluation t
-                                            SET t.rankingstatus = 0
-                                            WHERE t.activityid = %s AND t.preasset = t.initialasset AND t.currentasset = t.initialasset"""
-                cursor.execute(sql, (activity_id,))
+            # 根据是否参与交易设置rankingstatus，昨资产或今资产不为初始资产置为1，否则置为0
+            sql = """UPDATE siminfo.t_activityinvestorevaluation t
+                                        SET t.rankingstatus = 0
+                                        WHERE t.activityid = %s AND t.preasset = t.initialasset AND t.currentasset = t.initialasset"""
+            cursor.execute(sql, (activity_id,))
 
             # 设置总收益率排名
             sql = """UPDATE siminfo.t_activityinvestorevaluation t, 

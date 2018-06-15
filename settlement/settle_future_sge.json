@@ -3,6 +3,5 @@
   "exchangeId" : "SGE",
   "settlementGroupId" : "SG09",
   "settlementId" : "1",
-  "marginSingleBigSide": true,
-  "close_posi_ydposi": true
+  "marginSingleBigSide": true
 }

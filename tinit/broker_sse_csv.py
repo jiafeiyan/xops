@@ -50,7 +50,7 @@ class broker_sse_csv:
                                         "BidVolume1", "AskVolume1", "BidPrice2", "BidVolume2", "AskPrice2",
                                         "AskVolume2", "BidPrice3", "BidVolume3", "AskPrice3", "AskVolume3",
                                         "BidPrice4", "BidVolume4", "AskPrice4", "AskVolume4", "BidPrice5", "BidVolume5",
-                                        "AskPrice5", "AskVolume5", "UpdateTime", "UpdateMillisec"],
+                                        "AskPrice5", "AskVolume5", "UpdateTime", "UpdateMillisec", "ClosePrice", "MDSecurityStat"],
                                sql="""SELECT t.TradingDay AS TradingDay,t.InstrumentID AS SecurityID,
                                                 '1' AS ExchangeID,t2.InstrumentName AS SecurityName,
                                                 t.PreSettlementPrice AS PreClosePrice,t.OpenPrice AS OpenPrice,
@@ -64,7 +64,8 @@ class broker_sse_csv:
                                                 '0' AS BidPrice3,'0' AS BidVolume3,'0' AS AskPrice3,'0' AS AskVolume3,
                                                 '0' AS BidPrice4,'0' AS BidVolume4,'0' AS AskPrice4,'0' AS AskVolume4,
                                                 '0' AS BidPrice5,'0' AS BidVolume5,'0' AS AskPrice5,'0' AS AskVolume5,
-                                                '00:00:00' AS UpdateTime,'0' AS UpdateMillisec
+                                                '00:00:00' AS UpdateTime,'0' AS UpdateMillisec,
+                                                '0' as ClosePrice, '0' as MDSecurityStat
                                             FROM siminfo.t_MarketData t,siminfo.t_Instrument t2
                                             WHERE t.SettlementGroupID = t2.SettlementGroupID
                                             AND t.InstrumentID = t2.InstrumentID

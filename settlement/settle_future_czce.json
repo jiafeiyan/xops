@@ -3,6 +3,5 @@
   "exchangeId" : "CZCE",
   "settlementGroupId" : "SG05",
   "settlementId" : "1",
-  "marginSingleBigSide": false,
-  "close_posi_ydposi": true
+  "marginSingleBigSide": false
 }

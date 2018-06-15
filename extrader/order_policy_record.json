@@ -1,4 +1,5 @@
 {
-    "record": "xmq_rec_recv"
-
+    "sourceMQ": "xmq_client_recv",
+    "targetMQ": "xmq_client_send_push",
+    "second_action": {"sec":60, "send": 500}
 }

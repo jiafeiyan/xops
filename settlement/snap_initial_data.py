@@ -39,9 +39,10 @@ def snap_data(context, conf):
         logger.info("[get current trading day] current_trading_day = %s" % (current_trading_day))
 
         logger.info("[snap investor fund]......")
-        sql = """INSERT INTO snap.t_s_investorfund(TradingDay,BrokerSystemID,InvestorID,PreBalance,CurrMargin,CloseProfit,Premium,Deposit,Withdraw,Balance,Available,PreMargin,FuturesMargin,OptionsMargin,PositionProfit,Profit,Interest,Fee,TotalCollateral,CollateralForMargin,PreAccmulateInterest,AccumulateInterest,AccumulateFee,ForzenDeposit,AccountStatus,PreStockValue,StockValue)
-                            SELECT %s,BrokerSystemID,InvestorID,PreBalance,CurrMargin,CloseProfit,Premium,Deposit,Withdraw,Balance,Available,PreMargin,FuturesMargin,OptionsMargin,PositionProfit,Profit,Interest,Fee,TotalCollateral,CollateralForMargin,PreAccmulateInterest,AccumulateInterest,AccumulateFee,ForzenDeposit,AccountStatus,PreStockValue,StockValue
-                            FROM siminfo.t_investorfund WHERE BrokerSystemID = %s"""
+        sql = """INSERT INTO snap.t_s_investorfund (
+                        TradingDay,	BrokerSystemID,	InvestorID,	PreBalance,	CurrMargin,	CloseProfit,	Premium,	Deposit,	Withdraw,	Balance,	Available,	PreMargin,	FuturesMargin,	OptionsMargin,	PositionProfit,	Profit,	Interest,	Fee,	TotalCollateral,	CollateralForMargin,	PreAccmulateInterest,	AccumulateInterest,	AccumulateFee,	ForzenDeposit,	AccountStatus,	InitialAsset,	PreMonthAsset,	PreWeekAsset,	PreAsset,	CurrentAsset,	PreStockValue,	StockValue 
+                    ) SELECT %s,BrokerSystemID,InvestorID,PreBalance,CurrMargin,CloseProfit,Premium,Deposit,Withdraw,Balance,Available,PreMargin,FuturesMargin,OptionsMargin,PositionProfit,Profit,Interest,Fee,TotalCollateral,CollateralForMargin,PreAccmulateInterest,AccumulateInterest,AccumulateFee,ForzenDeposit,AccountStatus,InitialAsset,PreMonthAsset,PreWeekAsset,PreAsset,CurrentAsset,PreStockValue,StockValue 
+                    FROM siminfo.t_investorfund WHERE BrokerSystemID = %s"""
         cursor.execute(sql, (current_trading_day, broker_system_id,))
 
         logger.info("[snap client position]......")

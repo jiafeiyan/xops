@@ -39,6 +39,7 @@ class broker_stock_csv:
         self.__data_to_csv("TradingAccount", mysqlDB)
         self.__data_to_csv("TradingAgreement", mysqlDB)
         self.__data_to_csv("User", mysqlDB)
+        self.__data_to_csv("InvestorCondOrderLimitParam", mysqlDB)
 
     def __data_to_csv(self, csv_name, mysqlDB):
         table_sqls = dict(
@@ -105,14 +106,16 @@ class broker_stock_csv:
                                    "IdCardNo", "ContractNo", "BirthDate", "Gender", "Professional", "Country",
                                    "TaxNo", "LicenseNo", "RegisteredCapital", "RegisteredCurrency", "Mobile",
                                    "RiskLevel", "Remark", "OpenDate", "CloseDate", "Status", "Contacter", "Fax",
-                                   "Telephone", "Email", "Address", "ZipCode", "InnerBranchID", "Operways"),
+                                   "Telephone", "Email", "Address", "ZipCode", "InnerBranchID", "Operways",
+                                   "CRiskLevel", "ProfInvestorType", "InvestKinds"),
                           sql="""SELECT DISTINCT t.InvestorID,'0001' AS DepartmentID,'0' AS InvestorType,
                                         t.InvestorName,'1' AS IdCardType,t.OpenID AS IdCardNo,'' AS ContractNo,
                                         '' AS BirthDate,'' AS Gender,'' AS Professional,'' AS Country,'' AS TaxNo,
                                         '' AS LicenseNo,'0' AS RegisteredCapital,'' AS RegisteredCurrency,'' AS Mobile,
                                         '' AS RiskLevel,'' AS Remark,'' AS OpenDate,'' AS CloseDate,'1' AS STATUS,
                                         '' AS Contacter,'' AS Fax,'' AS Telephone,'' AS Email,'' AS Address,
-                                        '' AS ZipCode,'' AS InnerBranchID,'' AS Operways
+                                        '' AS ZipCode,'' AS InnerBranchID,'' AS Operways, 
+                                        '' AS CRiskLevel, '' AS ProfInvestorType, '' AS InvestKinds
                                     FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1,
                                          siminfo.t_BrokerSystemSettlementGroup t2
                                     WHERE t.InvestorID = t1.InvestorID
@@ -142,38 +145,44 @@ class broker_stock_csv:
                                   params=(self.brokerSystemID,)),
             User=dict(columns=("UserID", "UserName", "UserType", "DepartmentID", "UserPassword", "LoginLimit",
                                "PasswordFailLimit", "Status", "Contacter", "Fax", "Telephone", "Email", "Address",
-                               "ZipCode", "OpenDate", "CloseDate"),
+                               "ZipCode", "OpenDate", "CloseDate", "CommFlux"),
                       sql="""SELECT DISTINCT t.InvestorID AS UserID,t.InvestorName AS UserName,'2' AS UserType,
                                     '0001' AS DepartmentID,t. PASSWORD AS UserPassword,'10' AS LoginLimit,
                                     '3' AS PasswordFailLimit,if(t.InvestorStatus='3','3','1') AS STATUS,
                                     '' AS Contacter,'' AS Fax,'' AS Telephone, '' AS Email,'' AS Address,
-                                    '' AS ZipCode,'' AS OpenDate,'' AS CloseDate
+                                    '' AS ZipCode,'' AS OpenDate,'' AS CloseDate,'100' AS CommFlux
                                 FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1,
-                                     siminfo.t_BrokerSystemSettlementGroup t2
+                                         siminfo.t_BrokerSystemSettlementGroup t2
                                 WHERE t.InvestorID = t1.InvestorID
                                 AND t1.SettlementGroupID = t2.SettlementGroupID
                                 AND t2.BrokerSystemID = %s
                             UNION ALL
                             SELECT 'broker' AS UserID,'操作员broker' AS UserName,'1' AS UserType,
-                                    '0000' AS DepartmentID,'sim@2018' AS UserPassword,'3' AS LoginLimit,
-                                    '3' AS PasswordFailLimit,'1' AS STATUS,'' AS Contacter,'' AS Fax,'' AS Telephone,
-                                    '' AS Email,'' AS Address,'' AS ZipCode,'' AS OpenDate,'' AS CloseDate
+                                '0000' AS DepartmentID,'sim@2018' AS UserPassword,'3' AS LoginLimit,
+                                '3' AS PasswordFailLimit,'1' AS STATUS,'' AS Contacter,'' AS Fax,'' AS Telephone,
+                                '' AS Email,'' AS Address,'' AS ZipCode,'' AS OpenDate,'' AS CloseDate,'100' AS CommFlux
                             UNION ALL
                             SELECT 'broker1' AS UserID,'操作员broker1' AS UserName,'1' AS UserType,
-                                    '0000' AS DepartmentID,'sim@2018' AS UserPassword,'3' AS LoginLimit,
-                                    '3' AS PasswordFailLimit,'1' AS STATUS,'' AS Contacter,'' AS Fax,'' AS Telephone,
-                                    '' AS Email,'' AS Address,'' AS ZipCode,'' AS OpenDate,'' AS CloseDate
+                                '0000' AS DepartmentID,'sim@2018' AS UserPassword,'3' AS LoginLimit,
+                                '3' AS PasswordFailLimit,'1' AS STATUS,'' AS Contacter,'' AS Fax,'' AS Telephone,
+                                '' AS Email,'' AS Address,'' AS ZipCode,'' AS OpenDate,'' AS CloseDate,'100' AS CommFlux
                             UNION ALL
                             SELECT 'admin' AS UserID,'管理员admin' AS UserName,'1' AS UserType,
-                                    '0000' AS DepartmentID,'sim@2018' AS UserPassword,'3' AS LoginLimit,
-                                    '3' AS PasswordFailLimit,'1' AS STATUS,'' AS Contacter,'' AS Fax,'' AS Telephone,
-                                    '' AS Email,'' AS Address,'' AS ZipCode,'' AS OpenDate,'' AS CloseDate
+                                '0000' AS DepartmentID,'sim@2018' AS UserPassword,'3' AS LoginLimit,
+                                '3' AS PasswordFailLimit,'1' AS STATUS,'' AS Contacter,'' AS Fax,'' AS Telephone,
+                                '' AS Email,'' AS Address,'' AS ZipCode,'' AS OpenDate,'' AS CloseDate,'100' AS CommFlux
                             UNION ALL
                             SELECT 'admin1' AS UserID,'管理员admin1' AS UserName,'1' AS UserType,
-                                    '0000' AS DepartmentID,'sim@2018' AS UserPassword,'3' AS LoginLimit,
-                                    '3' AS PasswordFailLimit,'1' AS STATUS,'' AS Contacter,'' AS Fax,'' AS Telephone,
-                                    '' AS Email,'' AS Address,'' AS ZipCode,'' AS OpenDate,'' AS CloseDate""",
+                                '0000' AS DepartmentID,'sim@2018' AS UserPassword,'3' AS LoginLimit,
+                                '3' AS PasswordFailLimit,'1' AS STATUS,'' AS Contacter,'' AS Fax,'' AS Telephone,
+                                '' AS Email,'' AS Address,'' AS ZipCode,'' AS OpenDate,'' AS CloseDate,'100' AS CommFlux""",
                       params=(self.brokerSystemID,)),
+            InvestorCondOrderLimitParam=dict(columns=("InvestorID", "MaxCondOrderLimitCnt", "CurrCondOrderCnt"),
+                                             sql="""SELECT InvestorID,
+                                                        "10" AS MaxCondOrderLimitCnt,
+                                                        "0" AS CurrCondOrderCnt 
+                                                    FROM
+                                                        siminfo.t_investor""")
         )
         # 查询siminfo数据库数据内容
         csv_data = mysqlDB.select(table_sqls[csv_name]["sql"], table_sqls[csv_name].get("params"))

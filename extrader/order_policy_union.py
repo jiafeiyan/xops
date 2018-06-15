@@ -23,7 +23,8 @@ def order_union(context, conf):
         "[start union order order with %s] begin" % (json.dumps(conf, encoding="UTF-8", ensure_ascii=False)))
 
     order_conf = conf.get("orderConf")
-
+    # 判断股票期货
+    market_type = conf.get("type")
     # 接收行情状态信息
     xmq_source_conf = context.get("xmq").get(conf.get("sourceMQ"))
     source_mq_addr = xmq_source_conf["address"]
@@ -32,7 +33,7 @@ def order_union(context, conf):
     md_resolver_status = QryInstrumentStatusMsgResolver()
     msg_source_suber_status.add_resolver(md_resolver_status)
 
-    md_resolver = UnionMsgResolver(md_resolver_status)
+    md_resolver = UnionMsgResolver(md_resolver_status, market_type)
     # 获取数据来源
     file_source = path.convert(conf.get("fileSource"))
     order_source_data = [row for row in csv.DictReader(open(file_source))]
@@ -102,6 +103,7 @@ def load_marketdata(marketdata, UnionMsgResolver, conf):
         pre_close_price = data.get("PreClosePrice")
         max_limit_order_volume = data.get("MaxLimitOrderVolume")
         product_class = str(data.get("ProductClass"))
+        price_tick = data.get("PriceTick")
         one_row = dict({
             instrument_id: {
                 'BidPrice5': 0.00000,
@@ -144,7 +146,8 @@ def load_marketdata(marketdata, UnionMsgResolver, conf):
         UnionMsgResolver.cache.update({instrument_id: {
             "max_limit_order_volume": int(max_limit_order_volume),
             "fifth_level_call_volume": conf.get(product_class).get("fifth_level_call_volume"),
-            "normal_volume": conf.get(product_class).get("normal_volume")
+            "normal_volume": conf.get(product_class).get("normal_volume"),
+            "price_tick": float(price_tick)
         }})
         UnionMsgResolver.source(one_row)
 
@@ -161,15 +164,17 @@ def get_decimal_digit(decimal):
 
 
 class UnionMsgResolver(xmq_msg_resolver):
-    def __init__(self, md_resolver_status):
+    def __init__(self, md_resolver_status, market_type):
         xmq_msg_resolver.__init__(self)
+        # 类型
+        self.market_type = market_type
         # 模拟盘行情
         self.source_market_context = {}
         # 实盘行情
         self.target_market_context = {}
         # 通过order_info.csv初始化缓存数据
         self.cache = dict()
-        # 缓存模拟盘行情接受时间
+        # 缓存模拟盘行情接受时间o
         self.source_update_time = dict()
         # 合约状态
         self.md_resolver_status = md_resolver_status
@@ -440,6 +445,9 @@ class UnionMsgResolver(xmq_msg_resolver):
         # normal_volume = self.cache.get(security_id).get("normal_volume") * random.randint(1, 10)
         # volume = fifth_level_call_volume if callmarket else normal_volume
 
+        last_price = self.__to_float(source_market["LastPrice"])
+        price_tick = self.cache.get(security_id).get("price_tick")
+
         fifth_level_call_volume = self.cache.get(security_id).get("fifth_level_call_volume")
 
         upper_price = self.__to_float(source_market["UpperLimitPrice"])
@@ -493,6 +501,14 @@ class UnionMsgResolver(xmq_msg_resolver):
         t_b_p = [t_b1_p, t_b2_p, t_b3_p, t_b4_p, t_b5_p]
         t_b_v = [t_b1_v, t_b2_v, t_b3_v, t_b4_v, t_b5_v]
 
+        # 定义买卖五档tick后价格
+        s_t_a_p = []
+        s_t_b_p = []
+        for i in range(1, 6):
+            s_t_a_p.append(last_price + i * price_tick)
+            s_t_b_p.append(last_price - i * price_tick)
+
+        # 判断是否集合竞价
         if callmarket:
             for (index, ap) in enumerate(s_a_p):
                 if ap == 0 and t_a_p[index] != 0:
@@ -517,7 +533,7 @@ class UnionMsgResolver(xmq_msg_resolver):
 
         for (index, ap) in enumerate(s_a_p):
             # 跌停
-            if index == 0 and t_a1_p <= lower_price:
+            if index == 0 and 0 < t_a1_p <= lower_price:
                 orders.append({
                     "SecurityID": security_id,
                     "Direction": "1",
@@ -534,14 +550,32 @@ class UnionMsgResolver(xmq_msg_resolver):
                     "LimitPrice": t_a1_p, "level": "a1", "order_type": "fifth_level_type_1"
                 })
                 return orders
-            if ap == 0 and t_a_p[index] != 0:
-                orders.append({
-                    "SecurityID": security_id,
-                    "Direction": "1",
-                    "VolumeTotalOriginal": min(t_a_v[index], fifth_level_call_volume),
-                    "LimitPrice": t_a_p[index], "level": "a" + str(index + 1), "order_type": "fifth_level_type_2"
-                })
-                return orders
+            # 期货补齐五档
+            if self.market_type == 'future':
+                fifth_add = None
+                if s_a_p.count(0) != 0:
+                    for value in s_t_a_p:
+                        if value not in s_a_p:
+                            fifth_add = value
+                            break
+                if fifth_add is not None:
+                    orders.append({
+                        "SecurityID": security_id,
+                        "Direction": "1",
+                        "VolumeTotalOriginal": random.randint(8, 10),
+                        "LimitPrice": fifth_add, "level": "a1", "order_type": "fifth_level_type_add_sell"
+                    })
+                    return orders
+            # 股票
+            if self.market_type == 'stock':
+                if ap == 0 and t_a_p[index] != 0:
+                    orders.append({
+                        "SecurityID": security_id,
+                        "Direction": "1",
+                        "VolumeTotalOriginal": min(t_a_v[index], fifth_level_call_volume),
+                        "LimitPrice": t_a_p[index], "level": "a" + str(index + 1), "order_type": "fifth_level_type_2"
+                    })
+                    return orders
 
         for (index, bp) in enumerate(s_b_p):
             # 涨停
@@ -563,14 +597,32 @@ class UnionMsgResolver(xmq_msg_resolver):
                     "LimitPrice": t_b1_p, "level": "b1", "order_type": "fifth_level_type_3"
                 })
                 return orders
-            if bp == 0 and t_b_p[index] != 0:
-                orders.append({
-                    "SecurityID": security_id,
-                    "Direction": "0",
-                    "VolumeTotalOriginal": min(t_b_v[index], fifth_level_call_volume),
-                    "LimitPrice": t_b_p[index], "level": "b" + str(index + 1), "order_type": "fifth_level_type_4"
-                })
-                return orders
+            # 期货补齐五档
+            if self.market_type == 'future':
+                fifth_add = None
+                if s_b_p.count(0) != 0:
+                    for value in s_t_b_p:
+                        if value not in s_b_p:
+                            fifth_add = value
+                            break
+                if fifth_add is not None:
+                    orders.append({
+                        "SecurityID": security_id,
+                        "Direction": "0",
+                        "VolumeTotalOriginal": random.randint(8, 10),
+                        "LimitPrice": fifth_add, "level": "b1", "order_type": "fifth_level_type_add_buy"
+                    })
+                    return orders
+            # 股票
+            if self.market_type == 'stock':
+                if bp == 0 and t_b_p[index] != 0:
+                    orders.append({
+                        "SecurityID": security_id,
+                        "Direction": "0",
+                        "VolumeTotalOriginal": min(t_b_v[index], fifth_level_call_volume),
+                        "LimitPrice": t_b_p[index], "level": "b" + str(index + 1), "order_type": "fifth_level_type_4"
+                    })
+                    return orders
         return orders
 
     # 市价单

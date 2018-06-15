@@ -14,7 +14,6 @@ def settle_future(context, conf):
     settlement_id = conf.get("settlementId")
     exchange_id = conf.get("exchangeId")
     marginSingleBigSide = conf.get("marginSingleBigSide")
-    close_posi_ydposi = conf.get("close_posi_ydposi")
 
     logger.info("[settle future %s] begin" % (json.dumps(conf, encoding="UTF-8", ensure_ascii=False)))
     mysql_pool = mysql(configs=context.get("mysql").get(conf.get("mysqlId")))
@@ -94,7 +93,7 @@ def settle_future(context, conf):
             # 计算持仓明细
             calc_future_posdtl(logger, cursor, current_trading_day, settlement_group_id, settlement_id, exchange_id)
             # 期货结算
-            sett_future(logger, cursor, current_trading_day, next_trading_day, settlement_group_id, settlement_id, close_posi_ydposi)
+            sett_future(logger, cursor, current_trading_day, next_trading_day, settlement_group_id, settlement_id)
             # 期货期权计算
             sett_future_option(logger, cursor, current_trading_day, next_trading_day, settlement_group_id,
                                settlement_id)
@@ -210,7 +209,7 @@ def settle_future(context, conf):
     return result_code
 
 
-def sett_future(logger, cursor, current_trading_day, next_trading_day, settlement_group_id, settlement_id, close_posi_ydposi):
+def sett_future(logger, cursor, current_trading_day, next_trading_day, settlement_group_id, settlement_id):
     # 计算结算价
     logger.info("[calculate settlement price] is processing......")
     sql = """UPDATE dbclear.t_marketdata tm,
@@ -293,18 +292,11 @@ def sett_future(logger, cursor, current_trading_day, next_trading_day, settlemen
                                   t1.price,
                                   t1.volume,
                                   case
-                                    when t1.offsetflag = '0' or t1.offsetflag = '1' or
+                                    when t1.offsetflag = '0' or t1.offsetflag = '1' or t1.offsetflag = '4' or
                                          t1.offsetflag = '2' or t1.offsetflag = '3' then
                                      round(t4.volumemultiple * if(t1.direction='0',
                                                   (t2.settlementprice - t1.price) * t1.volume,
                                                   (t1.price - t2.settlementprice) * t1.volume),
-                                           2)
-                                    when t1.offsetflag = '4' then
-                                     round(t4.volumemultiple * if(t1.direction='0',
-                                                  (t2.presettlementprice - t1.price) *
-                                                  t1.volume,
-                                                  (t1.price - t2.presettlementprice) *
-                                                  t1.volume),
                                            2)
                                   end as profit
                              from dbclear.t_trade t1, dbclear.t_marketdata t2, (select t3.settlementgroupid,
@@ -373,63 +365,37 @@ def sett_future(logger, cursor, current_trading_day, next_trading_day, settlemen
                                and t1.settlementid = %s"""
     cursor.execute(sql, (settlement_group_id, current_trading_day, settlement_group_id, settlement_id,
                          settlement_group_id, current_trading_day, settlement_group_id, settlement_id))
-    if close_posi_ydposi:
-        sql = """insert into dbclear.t_clienttradeprofit(TradingDay, SettlementGroupID, SettlementID, ParticipantID, ClientID, AccountID, InstrumentID, TradeID, Direction, OffsetFlag, Price, Volume, Profit)
-                    (SELECT t1.TradingDay,
+
+    sql = """insert into dbclear.t_clienttradeprofit(TradingDay, SettlementGroupID, SettlementID, ParticipantID, ClientID, AccountID, InstrumentID, TradeID, Direction, OffsetFlag, Price, Volume, Profit)
+                (SELECT t1.TradingDay,
                             t1.SettlementGroupID,
                             t1.SettlementID,
                             t1.ParticipantID,
                             t1.ClientID,
                             t5.AccountID,
                             t1.InstrumentID,
-                            t1.TradeID,
-                            t1.Direction,
-                            t1.OffsetFlag,
-                            t1.Price,
-                            t1.Volume,
-                            round(
-                                t4.volumemultiple *
-                            IF
-                                (
-                                    t1.direction = '3',
-                                    ( t3.PreSettlementPrice - t3.SettlementPrice ) * t1.Volume,
-                                    ( t3.SettlementPrice - t3.PreSettlementPrice ) * t1.Volume
-                                ),
-                                2 
-                            ) AS profit
-                        FROM(SELECT
-                            t2.TradingDay,
-                            t2.SettlementGroupID,
-                            t2.SettlementID,
-                            t2.ParticipantID,
-                            t2.ClientID,
-                            t2.InstrumentID,
-                            0 as TradeID,
-                            if(t2.PosiDirection = '2', '1', '0') as Direction,
+                            '0' as TradeID,
+                            if(t1.PosiDirection = '2', '0', '1') as Direction,
                             '1' as OffsetFlag,
                             '0' as Price,
-                            t1.ydposition - IFNULL( t2.position, 0 ) AS Volume
-                        FROM
-                            siminfo.t_clientposition t1
-                            LEFT JOIN dbclear.t_clientposition t2 ON (
-                                t1.settlementgroupid = t2.settlementgroupid
-                                AND t1.clientid = t2.clientid 
-                                AND t1.instrumentid = t2.instrumentid 
-                                AND t1.posidirection = t2.posidirection 
-                                AND t1.tradingday = t2.tradingday
-                                AND t1.tradingday = %s
-                                and t1.SettlementGroupID = %s
-                                and t2.SettlementID = %s
-                            )) t1
-                            LEFT JOIN dbclear.t_marketdata t3 ON ( t1.InstrumentID = t3.InstrumentID AND t1.TradingDay = t3.TradingDay ) 
-                            LEFT JOIN siminfo.t_instrument t4 on ( t1.InstrumentID = t4.InstrumentID ) 
-                            LEFT JOIN siminfo.t_partroleaccount t5 on ( t5.SettlementGroupID = t1.SettlementGroupID and t5.ParticipantID = t1.ParticipantID)
-                        WHERE
-                            t1.tradingday = %s
-                            and t1.SettlementGroupID = %s
-                            and t1.SettlementID = %s
-                          AND t1.Volume > 0)"""
-        cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id, current_trading_day, settlement_group_id, settlement_id))
+                            t1.ydposition,
+                            round(
+                                    t4.volumemultiple *
+                                    IF( if(t1.PosiDirection = '2', '0', '1')  = '0',
+                                        ( t3.SettlementPrice - t3.PreSettlementPrice ) * t1.ydposition,
+                                        ( t3.PreSettlementPrice - t3.SettlementPrice ) * t1.ydposition
+                                ),2 
+                            ) AS profit
+                    FROM siminfo.t_clientposition t1 
+                    LEFT JOIN dbclear.t_marketdata t3 ON ( t1.InstrumentID = t3.InstrumentID AND t1.TradingDay = t3.TradingDay ) 
+                    LEFT JOIN siminfo.t_instrument t4 on ( t1.InstrumentID = t4.InstrumentID ) 
+                  LEFT JOIN siminfo.t_partroleaccount t5 on ( t5.SettlementGroupID = t1.SettlementGroupID and t5.ParticipantID = t1.ParticipantID)
+                    WHERE
+                        t1.tradingday = %s
+                        and t1.SettlementGroupID = %s
+                        and t1.SettlementID = %s
+                    AND t1.ydposition > 0)"""
+    cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id))
 
     # 交收持仓处理
     logger.info("[Move DelivPosition] is processing......")
@@ -438,7 +404,7 @@ def sett_future(logger, cursor, current_trading_day, next_trading_day, settlemen
                                        )select %s, t.SettlementGroupID, %s, t.instrumentid
                                    from siminfo.t_instrumentproperty t, siminfo.t_instrument t1
                                where t.SettlementGroupID = t1.SettlementGroupID and t.InstrumentID = t1.InstrumentID 
-                                 and t1.ProductClass != '2' and  t.settlementgroupid = %s and t.startdelivdate <= %s"""
+                                 and t1.ProductClass != '2' and  t.settlementgroupid = %s and t.ExpireDate < %s"""
     cursor.execute(sql, (current_trading_day, settlement_id, settlement_group_id, next_trading_day))
     # 2）插入到t_clientdelivposition
     sql = """insert into dbclear.t_clientdelivposition(TradingDay,SettlementGroupID,SettlementID,HedgeFlag,
@@ -1172,7 +1138,7 @@ def sett_future_option(logger, cursor, current_trading_day, next_trading_day, se
                                            )select %s, t.SettlementGroupID, %s, t.instrumentid
                                        from siminfo.t_instrumentproperty t, siminfo.t_instrument t1
                                    where t.SettlementGroupID = t1.SettlementGroupID and t.InstrumentID = t1.InstrumentID 
-                                     and t1.ProductClass = '2' and  t.settlementgroupid = %s and t.startdelivdate <= %s"""
+                                     and t1.ProductClass = '2' and  t.settlementgroupid = %s and t.ExpireDate < %s"""
     cursor.execute(sql, (current_trading_day, settlement_id, settlement_group_id, next_trading_day))
     # 2）插入到t_clientdelivposition
     sql = """insert into dbclear.t_clientdelivposition(TradingDay,SettlementGroupID,SettlementID,HedgeFlag,

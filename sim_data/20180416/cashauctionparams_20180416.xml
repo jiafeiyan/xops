@@ -7,7 +7,7 @@
 <SellQtyUpperLimit>1000000.00</SellQtyUpperLimit>
 <BuyQtyUnit>100.00</BuyQtyUnit>
 <SellQtyUnit>1.00</SellQtyUnit>
-<PriceTick>0.0100</PriceTick>
+<PriceTick>0.0010</PriceTick>
 <PriceLimitSetting>
 <Setting>
 <Type>C</Type>

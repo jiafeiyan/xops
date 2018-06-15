@@ -1,4 +1,5 @@
 {
+    "type": "stock",
     "targetMQ": "xmq_client_send_push",
     "tmdSourceMQ": "xmq_md_recv",
     "smdSourceMQ": "xmq_md_recv_pull",

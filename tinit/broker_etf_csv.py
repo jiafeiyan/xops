@@ -300,62 +300,63 @@ class broker_etf_csv:
             TradingAccount=dict(columns=("DepartmentID", "AccountID", "CurrencyID", "AccountType", "PreDeposit",
                                          "PreFrozenCash", "UsefulMoney", "FetchLimit", "Deposit", "Withdraw",
                                          "FrozenMargin", "FrozenCash", "FrozenCommission", "CurrMargin", "Commission",
-                                         "RoyaltyIn", "RoyaltyOut", "AccountOwner"),
+                                         "RoyaltyIn", "RoyaltyOut", "BankAccountID", "BankID", "AccountOwner"),
                                 sql="""SELECT '0001' AS DepartmentID,t.InvestorID AS AccountID,'1' AS CurrencyID,
                                                 '3' AS AccountType,t.Balance AS PreDeposit,'0' AS PreFrozenCash,
                                                 t.Available AS UsefulMoney,t.Available AS FetchLimit,
                                                 t.Deposit AS Deposit,t.Withdraw AS Withdraw,'0' AS FrozenMargin,
                                                 '0' AS FrozenCash,'0' AS FrozenCommission,'0' AS CurrMargin,
                                                 '0' AS Commission,'0' AS RoyaltyIn,'0' AS RoyaltyOut,
+                                                '2' AS BankAccountID, '1' AS BankID,
                                                 t.InvestorID AS AccountOwner
                                             FROM siminfo.t_InvestorFund t,siminfo.t_BrokerSystemSettlementGroup t1
                                             WHERE t.BrokerSystemID = t1.BrokerSystemID AND t1.SettlementGroupID = %s""",
                                 params=(self.settlementGroupID,)),
             User=dict(columns=("UserID", "UserName", "UserType", "DepartmentID", "UserPassword", "LoginLimit",
                                "PasswordFailLimit", "Status", "Contacter", "Fax", "Telephone", "Email", "Address",
-                               "ZipCode", "OpenDate", "CloseDate"),
+                               "ZipCode", "OpenDate", "CloseDate", "CommFlux"),
                       sql="""SELECT t.InvestorID AS UserID,t.InvestorName AS UserName,'2' AS UserType,
-                                        '0001' AS DepartmentID,t.PASSWORD AS UserPassword,'10' AS LoginLimit,
-                                        '3' AS PasswordFailLimit,'3' AS STATUS,'' AS Contacter,'' AS Fax,'' AS Telephone,
-                                        '' AS Email,'' AS Address,'' AS ZipCode,'' AS OpenDate,'' AS CloseDate
-                                FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1
-                                WHERE t.InvestorID = t1.InvestorID AND t1.SettlementGroupID =  %s
-                                UNION ALL
-                                SELECT 'broker' AS UserID,'操作员broker' AS UserName,'0' AS UserType,
-                                        '0001' AS DepartmentID,'sim@2018' AS UserPassword,'10' AS LoginLimit,
-                                        '3' AS PasswordFailLimit,'3' AS STATUS,'' AS Contacter,'' AS Fax,'' AS Telephone,
-                                        '' AS Email,'' AS Address,'' AS ZipCode,'' AS OpenDate,'' AS CloseDate
-                                UNION ALL
-                                SELECT 'broker1' AS UserID,'操作员broker1' AS UserName,'0' AS UserType,
-                                        '0001' AS DepartmentID,'sim@2018' AS UserPassword,'10' AS LoginLimit,
-                                        '3' AS PasswordFailLimit,'3' AS STATUS,'' AS Contacter,'' AS Fax,'' AS Telephone,
-                                        '' AS Email,'' AS Address,'' AS ZipCode,'' AS OpenDate,'' AS CloseDate
-                                UNION ALL
-                                SELECT 'admin' AS UserID,'管理员admin' AS UserName,'1' AS UserType,
-                                        '0001' AS DepartmentID,'sim@2018' AS UserPassword,'10' AS LoginLimit,
-                                        '3' AS PasswordFailLimit,'3' AS STATUS,'' AS Contacter,'' AS Fax,'' AS Telephone,
-                                        '' AS Email,'' AS Address,'' AS ZipCode,'' AS OpenDate,'' AS CloseDate
-                                UNION ALL
-                                SELECT 'admin1' AS UserID,'管理员admin1' AS UserName,'1' AS UserType,
-                                        '0001' AS DepartmentID,'sim@2018' AS UserPassword,'10' AS LoginLimit,
-                                        '3' AS PasswordFailLimit,'3' AS STATUS,'' AS Contacter,'' AS Fax,'' AS Telephone,
-                                        '' AS Email,'' AS Address,'' AS ZipCode,'' AS OpenDate,'' AS CloseDate""",
+                            '0001' AS DepartmentID,t.PASSWORD AS UserPassword,'10' AS LoginLimit,
+                            '3' AS PasswordFailLimit,'3' AS STATUS,'' AS Contacter,'' AS Fax,'' AS Telephone,
+                            '' AS Email,'' AS Address,'' AS ZipCode,'' AS OpenDate,'' AS CloseDate,'0' AS CommFlux
+                        FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1
+                        WHERE t.InvestorID = t1.InvestorID AND t1.SettlementGroupID =  %s
+                        UNION ALL
+                        SELECT 'broker' AS UserID,'操作员broker' AS UserName,'0' AS UserType,
+                            '0001' AS DepartmentID,'sim@2018' AS UserPassword,'10' AS LoginLimit,
+                            '3' AS PasswordFailLimit,'3' AS STATUS,'' AS Contacter,'' AS Fax,'' AS Telephone,
+                            '' AS Email,'' AS Address,'' AS ZipCode,'' AS OpenDate,'' AS CloseDate,'0' AS CommFlux
+                        UNION ALL
+                        SELECT 'broker1' AS UserID,'操作员broker1' AS UserName,'0' AS UserType,
+                            '0001' AS DepartmentID,'sim@2018' AS UserPassword,'10' AS LoginLimit,
+                            '3' AS PasswordFailLimit,'3' AS STATUS,'' AS Contacter,'' AS Fax,'' AS Telephone,
+                            '' AS Email,'' AS Address,'' AS ZipCode,'' AS OpenDate,'' AS CloseDate,'0' AS CommFlux
+                        UNION ALL
+                        SELECT 'admin' AS UserID,'管理员admin' AS UserName,'1' AS UserType,
+                            '0001' AS DepartmentID,'sim@2018' AS UserPassword,'10' AS LoginLimit,
+                            '3' AS PasswordFailLimit,'3' AS STATUS,'' AS Contacter,'' AS Fax,'' AS Telephone,
+                            '' AS Email,'' AS Address,'' AS ZipCode,'' AS OpenDate,'' AS CloseDate,'0' AS CommFlux
+                        UNION ALL
+                        SELECT 'admin1' AS UserID,'管理员admin1' AS UserName,'1' AS UserType,
+                            '0001' AS DepartmentID,'sim@2018' AS UserPassword,'10' AS LoginLimit,
+                            '3' AS PasswordFailLimit,'3' AS STATUS,'' AS Contacter,'' AS Fax,'' AS Telephone,
+                            '' AS Email,'' AS Address,'' AS ZipCode,'' AS OpenDate,'' AS CloseDate,'0' AS CommFlux""",
                       params=(self.settlementGroupID,)),
-            SSEInvestorLimitPositionParam=dict(columns=("InvestorID", "ExchangeID", "ProductID", "SecurityType",
-                                                        "SecurityID", "TotalPositionLimit", "LongPositionLimit",
+            SSEInvestorLimitPositionParam=dict(columns=("InvestorID", "ExchangeID", "ProductID", "SecurityID",
+                                                        "LimitPositionUnit", "TotalPositionLimit", "LongPositionLimit",
                                                         "TodayBuyOpenLimit", "TodaySellOpenLimit",
                                                         "TodayCoveredOpenLimit", "TodayOpenLimit",
                                                         "LongCallPositionLimit", "LongPutPositionLimit",
                                                         "LongUnderlyingPositionLimit", "ShortUnderlyingPositionLimit"),
                                                sql="""SELECT t.InvestorID,'1' AS ExchangeID,'d' AS ProductID,
-                                                            '0' AS SecurityType,'00000000' AS SecurityID,
+                                                            '0' AS SecurityID,'2' AS LimitPositionUnit,
                                                             '1000000' AS TotalPositionLimit,'800000' AS LongPositionLimit,
                                                             '200000' AS TodayBuyOpenLimit,'200000' AS TodaySellOpenLimit,
                                                             '200000' AS TodayCoveredOpenLimit,'500000' AS TodayOpenLimit,
                                                             '0' AS LongCallPositionLimit,'0' AS LongPutPositionLimit,
                                                             '0' AS LongUnderlyingPositionLimit,'0' AS ShortUnderlyingPositionLimit
-                                                        FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1
-                                                        WHERE t.InvestorID = t1.InvestorID
+                                                    FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1
+                                                    WHERE t.InvestorID = t1.InvestorID
                                                         AND t1.SettlementGroupID = %s""",
                                                params=(self.settlementGroupID,)),
             SSEInvestorMarginFee=dict(columns=("DepartmentID", "InvestorID", "ExchangeID", "ProductID", "SecurityType",

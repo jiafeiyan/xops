@@ -3,6 +3,5 @@
   "exchangeId" : "INE",
   "settlementGroupId" : "SG08",
   "settlementId" : "1",
-  "marginSingleBigSide": true,
-  "close_posi_ydposi": true
+  "marginSingleBigSide": true
 }

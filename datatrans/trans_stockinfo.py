@@ -336,7 +336,7 @@ class trans_stockinfo:
             if sgid == 'SG01':
                 # 读取txt文件
                 stock_file = codecs.open(stock_path[0], encoding='gbk')
-                stock_data.update({sgid: self.__txt_to_stock(stock_file, ("ES","ASH","510050", "510300"))})
+                stock_data.update({sgid: self.__txt_to_stock(stock_file, ("ES", "ASH", "510050", "510300", "511010", "510900"))})
             if sgid == 'SG02':
                 # 读取xml文件
                 stock_data.update({sgid: self.__xml_to_stock(stock_path)})
@@ -377,7 +377,7 @@ class trans_stockinfo:
         for se in Security:
             zqdm = se.getElementsByTagName("SecurityID")[0].childNodes[0].data.strip()
             SecurityType = se.getElementsByTagName("SecurityType")[0].childNodes[0].data.strip()
-            if int(SecurityType) in (1, 2, 3):
+            if int(SecurityType) in (1, 2, 3, 16, 17):
                 stock = stockVO(None)
                 stock.ZQDM = zqdm
                 stock.ZWMC = se.getElementsByTagName("Symbol")[0].childNodes[0].data.strip()
@@ -405,6 +405,8 @@ class trans_stockinfo:
                     "LimitDownRate")[0].childNodes[0].data.strip()
                 stock.BSLDW = \
                 se.getElementsByTagName("BuyQtyUnit")[0].childNodes[0].data.strip()
+                stock.JGDW = \
+                se.getElementsByTagName("PriceTick")[0].childNodes[0].data.strip()
                 stock_list.update({zqdm: stock})
         return stock_list.values()
 
