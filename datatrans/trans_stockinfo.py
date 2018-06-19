@@ -336,7 +336,7 @@ class trans_stockinfo:
             if sgid == 'SG01':
                 # 读取txt文件
                 stock_file = codecs.open(stock_path[0], encoding='gbk')
-                stock_data.update({sgid: self.__txt_to_stock(stock_file, ("ES", "ASH", "510050", "510300", "511010", "510900"))})
+                stock_data.update({sgid: self.__txt_to_stock(stock_file, ("ES", "ASH", "EBS"))})
             if sgid == 'SG02':
                 # 读取xml文件
                 stock_data.update({sgid: self.__xml_to_stock(stock_path)})
@@ -377,7 +377,7 @@ class trans_stockinfo:
         for se in Security:
             zqdm = se.getElementsByTagName("SecurityID")[0].childNodes[0].data.strip()
             SecurityType = se.getElementsByTagName("SecurityType")[0].childNodes[0].data.strip()
-            if int(SecurityType) in (1, 2, 3, 16, 17):
+            if int(SecurityType) in (1, 2, 3, 14, 15, 16, 17, 18, 19, 20):
                 stock = stockVO(None)
                 stock.ZQDM = zqdm
                 stock.ZWMC = se.getElementsByTagName("Symbol")[0].childNodes[0].data.strip()
@@ -416,7 +416,7 @@ class trans_stockinfo:
             VO = stockVO(lines.split("|"))
             if stock_filter is None:
                 stock_list.append(VO)
-            elif VO.ZQLB in stock_filter and VO.ZQZLB in stock_filter:
+            elif VO.ZQLB in stock_filter or VO.ZQZLB in stock_filter:
                 stock_list.append(VO)
             elif VO.ZQDM in stock_filter:
                 stock_list.append(VO)
