@@ -1311,16 +1311,14 @@ def sett_future_option(logger, cursor, current_trading_day, next_trading_day, se
                                         t2.openfeeratio
                                        when t1.offsetflag = '3' or t1.offsetflag = '1' or  t1.offsetflag = '4' then
                                         t2.closetodayfeeratio
-                               end),
-                               2) * t1.volume ,
+                               end) * t1.volume, 2),
                            round((case
                                        when t1.offsetflag = '0' or
                                         t1.offsetflag = '2' then
                                         t2.openfeeratio
                                        when t1.offsetflag = '3' or t1.offsetflag = '1' or  t1.offsetflag = '4' then
                                         t2.closetodayfeeratio
-                               end) * t1.price * t3.volumemultiple,
-                               2) * t1.volume ) as transfee,
+                               end) * t1.price * t3.volumemultiple * t1.volume, 2)) as transfee,
                                                t1.OrderSysID,
                                                '0' as Minfee,
                                                '0' as MaxFee
@@ -1355,7 +1353,7 @@ def sett_future_option(logger, cursor, current_trading_day, next_trading_day, se
                             SELECT
                                 t1.TradingDay,t1.SettlementGroupID,t1.SettlementID,t1.Direction,t1.ParticipantID,t1.ClientID,t1.AccountID,
                                 t1.InstrumentID,if (t1.OffsetFlag = '0',t1.Volume, -1 * t1.Volume ) as Volume,t1.UserID,
-                                ROUND( IF ( t1.Direction = '0', - 1 * Price * t2.VolumeMultiple * t2.UnderlyingMultiple, Price * t2.VolumeMultiple * t2.UnderlyingMultiple) , 2 ) * t1.Volume AS Premium 
+                                ROUND( IF ( t1.Direction = '0', - 1 * Price * t2.VolumeMultiple * t2.UnderlyingMultiple, Price * t2.VolumeMultiple * t2.UnderlyingMultiple) * t1.Volume, 2 )  AS Premium 
                             FROM
                                 dbclear.t_trade t1,siminfo.t_instrument t2 
                             WHERE
@@ -1398,32 +1396,33 @@ def sett_future_option(logger, cursor, current_trading_day, next_trading_day, se
                         if (t1.posidirection = '3', GREATEST(
                         round(t3.SettlementPrice * t4.VolumeMultiple * t4.UnderlyingMultiple + 
                                         if(t5.ValueMode = '1', 
-                                                t5.ShortMarginRatio * (t1.Position + t1.YdPosition) * t4.underlyvolumemultiple * t4.SettlementPrice,
-                                                t5.ShortMarginRatio * (t1.Position + t1.YdPosition) * t4.underlyvolumemultiple 
+                                                t5.ShortMarginRatio * t4.underlyvolumemultiple * t4.SettlementPrice,
+                                                t5.ShortMarginRatio * t4.underlyvolumemultiple 
                                                 ) -
                                         (1/2) * if(t4.OptionsType = '1', 
                                                                 GREATEST(t4.StrikePrice - t4.SettlementPrice,0) * t4.VolumeMultiple * t4.UnderlyingMultiple,
-                                                                GREATEST(t4.SettlementPrice - t4.StrikePrice,0)), 2) * t4.VolumeMultiple * t4.UnderlyingMultiple,
+                                                                GREATEST(t4.SettlementPrice - t4.StrikePrice,0) * t4.VolumeMultiple * t4.UnderlyingMultiple), 2),
                         round(t3.SettlementPrice * t4.VolumeMultiple * t4.UnderlyingMultiple + 
                                             (1/2) * if(t5.ValueMode = '1', 
-                                                t5.ShortMarginRatio * (t1.Position + t1.YdPosition) * t4.underlyvolumemultiple * t4.SettlementPrice,
-                                                t5.ShortMarginRatio * (t1.Position + t1.YdPosition) * t4.underlyvolumemultiple) , 2)
-                       ), 0) as positionmargin
+                                                t5.ShortMarginRatio * t4.underlyvolumemultiple * t4.SettlementPrice,
+                                                t5.ShortMarginRatio * t4.underlyvolumemultiple) , 2)
+                       ), 0) * (t1.Position + t1.YdPosition)  as positionmargin
                     FROM
                     ( SELECT t1.*, t2.tradingrole FROM dbclear.t_clientposition t1, siminfo.t_client t2 WHERE t1.clientid = t2.clientid and t2.SettlementGroupID = %s) t1,
                     siminfo.t_PartRoleAccount t2,
                     dbclear.t_marketdata t3,
                     (select t.*, t1.volumemultiple as underlyvolumemultiple,t2.SettlementPrice
                         from siminfo.t_instrument t left join siminfo.t_instrument t1 on t.UnderlyingInstrID = t1.InstrumentID and t.SettlementGroupID = t1.SettlementGroupID 
-                        left join dbclear.t_marketdata t2 on t2.TradingDay = %s and t2.SettlementID = %s and t.SettlementGroupID = t2.SettlementGroupID and t.InstrumentID = t2.InstrumentID
+                        left join dbclear.t_marketdata t2 on t2.TradingDay = %s and t2.SettlementID = %s and t.SettlementGroupID = t2.SettlementGroupID and t.UnderlyingInstrID = t2.InstrumentID
                         where t.ProductClass = '2' and t.SettlementGroupID = %s) t4,
                     siminfo.t_marginratedetail t5
                     WHERE t2.TradingRole = t1.TradingRole
                             and t2.SettlementGroupID = t1.SettlementGroupID
                             and t2.ParticipantID = t1.ParticipantID
                             AND t1.tradingday = t3.tradingday 
-                            and t1.instrumentid = t5.InstrumentID
-                            AND t1.instrumentid = t4.instrumentid 
+			                and t1.hedgeflag = t5.HedgeFlag			    
+                            and t4.underlyinginstrid = t5.InstrumentID                            
+			                AND t1.instrumentid = t4.instrumentid 
                             and t1.InstrumentID = t3.InstrumentID
                             AND t1.settlementid = t3.settlementid 
                             AND t1.settlementgroupid = t3.settlementgroupid 
