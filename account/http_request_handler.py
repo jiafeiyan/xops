@@ -99,7 +99,7 @@ def open_account(mysql_conn, parameters):
                     result.update({"code": code, "response": response})
     else:
         if row is None:
-            sql = '''SELECT joinmode FROM siminfo.t_activity WHERE activityid =  %s AND activitystatus in ('0', '1')'''
+            sql = '''SELECT joinmode, termno FROM siminfo.t_activity WHERE activityid =  %s AND activitystatus in ('0', '1')'''
             cursor.execute(sql, (activity,))
             row = cursor.fetchone()
             if row is None:
@@ -110,6 +110,7 @@ def open_account(mysql_conn, parameters):
                 result.update({"code": code, "response": response})
             else:
                 join_mode = str(row[0])
+                term_no = int(row[1])
                 if join_mode == "1":
                     sql = '''SELECT t1.investorid, t1.investorname, t1.openid, t1.PASSWORD, t1.investorstatus
                                                                     FROM siminfo.t_investor t1, siminfo.t_activityinvestor t2
@@ -150,7 +151,7 @@ def open_account(mysql_conn, parameters):
             account = str(row[0])
             password = str(row[3])
 
-            sql = '''SELECT joinmode FROM siminfo.t_activity WHERE activityid =  %s AND activitystatus in ('0', '1')'''
+            sql = '''SELECT joinmode, termno FROM siminfo.t_activity WHERE activityid =  %s AND activitystatus in ('0', '1')'''
             cursor.execute(sql, (activity,))
             row = cursor.fetchone()
             if row is None:
@@ -161,6 +162,7 @@ def open_account(mysql_conn, parameters):
                 result.update({"code": code, "response": response})
             else:
                 join_mode = str(row[0])
+                term_no = int(row[1])
 
                 sql = '''SELECT t1.investorid, t1.investorname, t1.openid, t1.PASSWORD, t1.investorstatus
                                                 FROM siminfo.t_investor t1, siminfo.t_activityinvestor t2
@@ -538,7 +540,7 @@ def join_activity_with_account(mysql_conn, parameters):
             result.update({"code": code, "response": response})
     else:
         investor_id = str(row[0])
-        sql = '''SELECT activityid FROM siminfo.t_activity WHERE activityid =  %s AND activitystatus in ('0', '1')'''
+        sql = '''SELECT activityid, termno FROM siminfo.t_activity WHERE activityid =  %s AND activitystatus in ('0', '1')'''
         cursor.execute(sql, (activity,))
         row = cursor.fetchone()
 
@@ -549,6 +551,7 @@ def join_activity_with_account(mysql_conn, parameters):
                 response.update({"error": error})
                 result.update({"code": code, "response": response})
         else:
+            term_no = int(row[1])
             sql = '''SELECT activityid, investorid, joindate FROM siminfo.t_activityinvestor WHERE activityid =  %s AND investorid = %s'''
             cursor.execute(sql, (activity, investor_id))
             row = cursor.fetchone()
@@ -559,8 +562,8 @@ def join_activity_with_account(mysql_conn, parameters):
                                         SELECT DISTINCT settlementgroupid FROM siminfo.t_activitysettlementgroup t 
                                         WHERE t.activityid IN 
                                         (SELECT t1.activityid FROM siminfo.t_activityinvestor t1, siminfo.t_activity t2 
-                                        WHERE t1.investorid = %s AND t1.activityid = t2.activityid AND t2.activitytype != '0' AND (t2.activitystatus = '0' OR t2.activitystatus = '1')))"""
-                cursor.execute(sql, (activity, investor_id))
+                                        WHERE t1.investorid = %s AND t2.termno = %s AND t1.activityid = t2.activityid AND t2.activitytype != '0' AND (t2.activitystatus = '0' OR t2.activitystatus = '1')))"""
+                cursor.execute(sql, (activity, investor_id, term_no))
                 cursor.fetchall()
                 if cursor.rowcount > 0:
                     code = "-1"
@@ -570,8 +573,8 @@ def join_activity_with_account(mysql_conn, parameters):
                     result.update({"code": code, "response": response})
                 else:
                     # 检查赛事活动状态
-                    sql = """SELECT activitystatus, joinmode FROM siminfo.t_activity WHERE activityid = %s"""
-                    cursor.execute(sql, (activity,))
+                    sql = """SELECT activitystatus, joinmode FROM siminfo.t_activity WHERE activityid = %s AND termno = %s"""
+                    cursor.execute(sql, (activity, term_no,))
                     row = cursor.fetchone()
                     activity_status = str(row[0])
                     join_mode = str(row[1])
@@ -589,12 +592,12 @@ def join_activity_with_account(mysql_conn, parameters):
                         cursor.execute(sql, (activity,investor_id,activity,investor_id))
                         cursor.fetchall()
                         if cursor.rowcount == 0 or join_mode == '0' or join_mode == '1':
-                            sql = """INSERT INTO siminfo.t_activityinvestorevaluation(ActivityID,InvestorID,InitialAsset,PreMonthAsset,PreWeekAsset,PreAsset,CurrentAsset,TotalReturnRate,ReturnRateOf1Day)
-                                                SELECT t2.activityid, t1.investorid, SUM(t1.currentasset) AS initialasset, SUM(t1.premonthasset) AS premonthasset, SUM(t1.preweekasset) AS preweekasset, SUM(t1.preasset) AS preasset, SUM(t1.currentasset) AS currasset, 0, 0  FROM siminfo.t_investorfund t1,
+                            sql = """INSERT INTO siminfo.t_activityinvestorevaluation(ActivityID,TermNo,InvestorID,InitialAsset,PreMonthAsset,PreWeekAsset,PreAsset,CurrentAsset,TotalReturnRate,ReturnRateOf1Day)
+                                                SELECT t2.activityid, %s, t1.investorid, SUM(t1.currentasset) AS initialasset, SUM(t1.premonthasset) AS premonthasset, SUM(t1.preweekasset) AS preweekasset, SUM(t1.preasset) AS preasset, SUM(t1.currentasset) AS currasset, 0, 0  FROM siminfo.t_investorfund t1,
                                                         (SELECT DISTINCT t1.activityid, t2.brokersystemid FROM siminfo.t_activitysettlementgroup t1, siminfo.t_brokersystemsettlementgroup t2 WHERE t1.activityid = %s AND t1.settlementgroupid = t2.settlementgroupid) t2
                                                         WHERE t1.investorid = %s AND t1.brokersystemid = t2.brokersystemid
                                                         GROUP BY t2.activityid, t1.investorid"""
-                            cursor.execute(sql, (activity, investor_id))
+                            cursor.execute(sql, (term_no, activity, investor_id))
 
                             join_status = '1'
 
@@ -614,12 +617,13 @@ def join_activity_with_account(mysql_conn, parameters):
 
 def query_activity_ranking(mysql_conn, parameters):
     activity_id = parameters.get("activity")
+    term_no = parameters.get("term")
     investor_id = parameters.get("investor")
     query_type = parameters.get("type")
     query_count = parameters.get("count")
 
     code = "0"
-    response = {"activity": activity_id, "investor": investor_id, "type": query_type, "count": query_count}
+    response = {"activity": activity_id, "term": term_no, "investor": investor_id, "type": query_type, "count": query_count}
     result = {"kind": "queryActivityRanking", "code": code, "response": response}
 
     if activity_id is None or activity_id == "":
@@ -654,6 +658,14 @@ def query_activity_ranking(mysql_conn, parameters):
 
     cursor = mysql_conn.cursor()
 
+    if term_no is None or term_no == "":
+        sql = """SELECT MAX(termno) FROM siminfo.t_activity WHERE activityid = %s"""
+        cursor.execute(sql, (activity_id,))
+        row = cursor.fetchone()
+
+        if row is not None:
+            term_no = int(row[0])
+
     if investor_id is not None and investor_id != "":
         sql = '''SELECT investorid FROM siminfo.t_investor WHERE investorid =  %s'''
         cursor.execute(sql, (investor_id,))
@@ -672,24 +684,24 @@ def query_activity_ranking(mysql_conn, parameters):
     if query_type == '99' and investor_id is not None and investor_id != "":
         sql = """SELECT t.investorid, t1.investorname, t.initialasset, t.preasset, t.currentasset, ROUND(t.totalreturnrate, 4), ROUND(t.returnrateof1day, 4), t.rankingstatus, t.preranking, t.ranking
                                 FROM siminfo.t_activityinvestorevaluation t, siminfo.t_investor t1
-                                WHERE t.activityid = %s AND t.investorid = %s AND t.investorid = t1.investorid"""
-        cursor.execute(sql, (activity_id, investor_id,))
+                                WHERE t.activityid = %s AND t.termno = %s AND t.investorid = %s AND t.investorid = t1.investorid"""
+        cursor.execute(sql, (activity_id, term_no, investor_id,))
         rows = cursor.fetchall()
 
     if query_type == '00':
         if investor_id is not None and investor_id != "":
             sql = """SELECT t.investorid, t1.investorname, t.initialasset, t.preasset, t.currentasset, ROUND(t.totalreturnrate, 4), ROUND(t.returnrateof1day, 4), t.rankingstatus, t.preranking, t.ranking
                                     FROM siminfo.t_activityinvestorevaluation t, siminfo.t_investor t1
-                                    WHERE t.activityid = %s AND ((t.rankingstatus = '1' AND (t.ranking <= %s OR %s = '0')) OR t.investorid = %s) AND t.investorid = t1.investorid
+                                    WHERE t.activityid = %s AND t.termno = %s AND ((t.rankingstatus = '1' AND (t.ranking <= %s OR %s = '0')) OR t.investorid = %s) AND t.investorid = t1.investorid
                                     ORDER BY t.rankingstatus DESC, t.ranking"""
-            cursor.execute(sql, (activity_id, query_count, query_count, investor_id))
+            cursor.execute(sql, (activity_id, term_no, query_count, query_count, investor_id))
             rows = cursor.fetchall()
         else:
             sql = """SELECT t.investorid, t1.investorname, t.initialasset, t.preasset, t.currentasset, ROUND(t.totalreturnrate, 4), ROUND(t.returnrateof1day, 4), t.rankingstatus, t.preranking, t.ranking
                                     FROM siminfo.t_activityinvestorevaluation t, siminfo.t_investor t1
-                                    WHERE t.activityid = %s AND t.rankingstatus = '1' AND (t.ranking <= %s OR %s = '0') AND t.investorid = t1.investorid
+                                    WHERE t.activityid = %s AND t.termno = %s AND t.rankingstatus = '1' AND (t.ranking <= %s OR %s = '0') AND t.investorid = t1.investorid
                                     ORDER BY t.rankingstatus DESC, t.ranking"""
-            cursor.execute(sql, (activity_id, query_count, query_count))
+            cursor.execute(sql, (activity_id, term_no, query_count, query_count))
             rows = cursor.fetchall()
 
     if query_type == '01':
@@ -697,20 +709,20 @@ def query_activity_ranking(mysql_conn, parameters):
             sql = """SELECT t.investorid, t1.investorname, t.initialasset, t.preasset, t.currentasset, ROUND(t.totalreturnrate, 4), ROUND(t.returnrateof1day, 4), t.rankingstatus, 0 as preranking, t.newranking AS ranking 
                                 FROM (SELECT t.* FROM
                                             (SELECT t.*, (@i:=@i+1) AS newranking FROM siminfo.t_activityinvestorevaluation t,(SELECT @i:=0) AS it
-                                            WHERE t.activityid = %s AND t.rankingstatus = '1' 
+                                            WHERE t.activityid = %s AND t.termno = %s AND t.rankingstatus = '1' 
                                             ORDER BY t.returnrateof1day DESC, t.totalreturnrate DESC, t.currentasset DESC, t.investorid) t WHERE t.newranking <= %s OR %s = '0'
                                         UNION ALL
                                         SELECT t.*, 0 AS newranking FROM siminfo.t_activityinvestorevaluation t
-                                        WHERE t.activityid = %s AND t.rankingstatus = '0' AND t.investorid = %s
+                                        WHERE t.activityid = %s AND t.termno = %s AND t.rankingstatus = '0' AND t.investorid = %s
                                         ) t, siminfo.t_investor t1 WHERE t.investorid = t1.investorid"""
-            cursor.execute(sql, (activity_id, query_count, query_count, activity_id, investor_id))
+            cursor.execute(sql, (activity_id, term_no, query_count, query_count, activity_id, term_no, investor_id))
             rows = cursor.fetchall()
         else:
             sql = """SELECT t.investorid, t1.investorname, t.initialasset, t.preasset, t.currentasset, ROUND(t.totalreturnrate, 4), ROUND(t.returnrateof1day, 4), t.rankingstatus, 0 as preranking, t.newranking AS ranking 
                                     FROM (SELECT t.*, (@i:=@i+1) AS newranking FROM siminfo.t_activityinvestorevaluation t,(SELECT @i:=0) AS it
-                                        WHERE t.activityid = %s AND t.rankingstatus = '1' 
+                                        WHERE t.activityid = %s AND t.termno = %s AND t.rankingstatus = '1' 
                                         ORDER BY t.returnrateof1day DESC, t.totalreturnrate DESC, t.currentasset DESC, t.investorid) t, siminfo.t_investor t1 WHERE (t.newranking <= %s OR %s = '0') AND t.investorid = t1.investorid"""
-            cursor.execute(sql, (activity_id, query_count, query_count))
+            cursor.execute(sql, (activity_id, term_no, query_count, query_count))
             rows = cursor.fetchall()
 
     data = []

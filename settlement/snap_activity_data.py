@@ -23,24 +23,9 @@ def snap_data(context, conf):
         cursor = mysql_conn.cursor()
 
         logger.info("[snap t_activityinvestorevaluation]......")
-        sql = """INSERT INTO snap.t_s_activityinvestorevaluation ( TradingDay,ActivityID,InvestorID,InitialAsset,PreMonthAsset,PreWeekAsset,PreAsset,CurrentAsset,TotalReturnRate,ReturnRateOfMonth,ReturnRateOfWeek,ReturnRateOf1Day,RankingStatus,PreRanking,Ranking) SELECT
-                    DATE_FORMAT( NOW( ), '%Y%m%d' ),
-                    ActivityID,
-                    InvestorID,
-                    InitialAsset,
-                    PreMonthAsset,
-                    PreWeekAsset,
-                    PreAsset,
-                    CurrentAsset,
-                    TotalReturnRate,
-                    ReturnRateOfMonth,
-                    ReturnRateOfWeek,
-                    ReturnRateOf1Day,
-                    RankingStatus,
-                    PreRanking,
-                    Ranking
-                    FROM
-                        siminfo.t_activityinvestorevaluation"""
+        sql = """INSERT INTO snap.t_s_activityinvestorevaluation(TradingDay,ActivityID,TermNo,InvestorID,InitialAsset,PreAsset,CurrentAsset,TotalReturnRate,ReturnRateOf1Day,RankingStatus,PreRanking,Ranking)
+                            SELECT DATE_FORMAT(NOW(), '%Y%m%d'),ActivityID,TermNo,InvestorID,InitialAsset,PreAsset,CurrentAsset,TotalReturnRate,ReturnRateOf1Day,RankingStatus,PreRanking,Ranking
+                            FROM siminfo.t_activityinvestorevaluation"""
         cursor.execute(sql)
 
         mysql_conn.commit()
