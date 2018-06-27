@@ -23,6 +23,8 @@ class trans_futureinfo:
         self.file_marketdata = "future_depthmarketdata.csv"
         self.file_product = "future_product.csv"
         self.file_marginrate = "future_marginrate.csv"
+        self.tradesystemid = configs.get("tradesystemid")
+        self.exclude = configs.get("exclude")
         # 交易所和结算组对应关系
         self.exchange_conf = self.__get_exchange()
         self.__transform()
@@ -31,7 +33,7 @@ class trans_futureinfo:
     def __get_exchange(self):
         sql = """select ExchangeID, t.SettlementGroupID from siminfo.t_settlementgroup t, siminfo.t_tradesystemsettlementgroup t1
                   where t.SettlementGroupID = t1.SettlementGroupID and t1.TradeSystemID = %s and t.SettlementGroupID != %s"""
-        res = self.mysqlDB.select(sql, ('0002', 'SG09'))
+        res = self.mysqlDB.select(sql, (self.tradesystemid, self.exclude))
         exchange_conf = dict()
         for row in res:
             exchange_conf.update({str(row[0]): str(row[1])})
@@ -41,7 +43,7 @@ class trans_futureinfo:
         mysqlDB = self.mysqlDB
         # 查询当前交易日
         sql = """SELECT tradingday FROM siminfo.t_tradesystemtradingday WHERE tradesystemid = %s"""
-        fc = mysqlDB.select(sql, ('0002',))
+        fc = mysqlDB.select(sql, (self.tradesystemid,))
         current_trading_day = fc[0][0]
         self.TradingDay = current_trading_day
         self.logger.info("[trans_futureinfo] current_trading_day = %s" % current_trading_day)
@@ -419,7 +421,7 @@ class trans_futureinfo:
             for future in csv_file:
                 SGID = self.exchange_conf[future["ExchangeID"]]
                 if float(future["PreSettlementPrice"]) != 0:
-                    if SGID == 'SG06':
+                    if SGID in ('SG06', 'SG106'):
                         sql_insert_params.append((SGID, template[SGID][1], template[SGID][2], template[SGID][3],
                                                   template[SGID][4], template[SGID][5], future["InstrumentID"],
                                                   template[SGID][7]))

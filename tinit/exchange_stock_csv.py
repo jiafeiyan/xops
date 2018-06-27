@@ -62,6 +62,7 @@ class exchange_stock_csv:
         # 初始化生成CSV文件路径
         output = path.convert(context.get("csv")[configs.get("csv")]['exchange'])
         self.csv_path = os.path.join(output, str(configs.get("tradeSystemID")))
+        self.settlementgroup = configs.get("settlementgroup")
         self.__to_csv()
 
     def __to_csv(self):
@@ -315,14 +316,7 @@ class exchange_stock_csv:
         self.__produce_csv(table_name, table_sqls[table_name], csv_data)
 
     def __generate_marketdata(self, exchange, mysqlDB):
-        if exchange == "sse":
-            sgid = "SG01"
-        elif exchange == "szse":
-            sgid = "SG02"
-        elif exchange == "sse_etf":
-            sgid = "SG07"
-        else:
-            sgid = ""
+        sgid = self.settlementgroup.get(exchange)
         sql = """SELECT t.InstrumentID 
                   FROM sync.t_instrument t
                   WHERE t.SettlementGroupID = %s"""

@@ -16,7 +16,7 @@ def sync_stock_prepare_data(context, conf):
     mysqlDB = mysql(configs=context.get("mysql").get(conf.get("mysqlId")))
     # 查询当前交易日
     sql = """SELECT t1.tradingday FROM siminfo.t_tradesystemtradingday t1 WHERE t1.tradesystemid = %s"""
-    res = mysqlDB.select(sql, ("0001",))
+    res = mysqlDB.select(sql, (conf.get("tradesystemid"),))
     current_trading_day = str(res[0][0])
 
     # 拷贝目标地址
@@ -41,7 +41,7 @@ def sync_stock_prepare_data(context, conf):
         rsync.rsync_groups(context, rsync_config)
     except Exception as e:
         logger.info("[sync etf broker csvs with %s] Error: %s" % (
-        json.dumps(rsync_config, encoding="UTF-8", ensure_ascii=False), e))
+            json.dumps(rsync_config, encoding="UTF-8", ensure_ascii=False), e))
         result_code = -1
 
     logger.info("[sync etf broker csvs with %s] end" % json.dumps(rsync_config, encoding="UTF-8", ensure_ascii=False))
@@ -62,6 +62,7 @@ def main():
         await = float(conf.get("time_await")) * 60
         time.sleep(await)
         result = sync_stock_prepare_data(context, conf)
+
 
 if __name__ == "__main__":
     main()

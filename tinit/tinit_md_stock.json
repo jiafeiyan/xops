@@ -1,0 +1,20 @@
+{
+
+    "mysqlId": "simplatform_base",
+    "baseDataHome" : "${HOME}/md/stock",
+    "tradesystemid": "00101",
+    "SyncsFrom": [
+      {
+        "host": "remote_stock_exchange",
+        "items": ["${HOME}/run/mdimport/csv/%y%m%d"]
+      }
+    ],
+    "Syncs": [
+      {
+        "host": "stock_exchange",
+        "type": "put",
+        "target" : "${HOME}/run/md",
+        "items": ["${HOME}/md/stock/md.csv"]
+      }
+    ]
+}

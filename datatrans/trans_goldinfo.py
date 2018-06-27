@@ -18,7 +18,8 @@ class trans_goldinfo:
         self.mysqlDB = mysql(configs=context.get("mysql")[configs.get("mysqlId")])
         # 初始化模板路径
         self.initTemplate = context.get("init")[configs.get("initId")]
-        self.SettlementGroupID = "SG09"
+        self.tradesystemid = configs.get("tradesystemid")
+        self.SettlementGroupID = configs.get("settlementGroupID")
         self.file_instrument = "gold_instrument.csv"
         self.file_marketdata = "gold_depthmarketdata.csv"
         # 交易所和结算组对应关系
@@ -28,7 +29,7 @@ class trans_goldinfo:
         mysqlDB = self.mysqlDB
         # 查询当前交易日
         sql = """SELECT tradingday FROM siminfo.t_tradesystemtradingday WHERE tradesystemid = %s"""
-        fc = mysqlDB.select(sql, ('0002',))
+        fc = mysqlDB.select(sql, (self.tradesystemid,))
         current_trading_day = fc[0][0]
         self.TradingDay = current_trading_day
         self.logger.info("[trans_goldinfo] current_trading_day = %s" % current_trading_day)

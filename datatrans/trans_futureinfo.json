@@ -1,5 +1,7 @@
 {
   "mysqlId": "simplatform_base",
   "logId": "default",
-  "initId": "init_base"
+  "initId": "init_base",
+  "tradesystemid": "0002",
+  "exclude": "SG09"
 }

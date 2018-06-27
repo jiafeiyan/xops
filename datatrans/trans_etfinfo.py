@@ -25,14 +25,15 @@ class trans_etfinfo:
         # 初始化模板路径
         self.initTemplate = context.get("init")[configs.get("initId")]
         self.etf_filename = "reff03"
-        self.SettlementGroupID = "SG07"
+        self.SettlementGroupID = configs.get("settlementGroupID")
+        self.tradesystemid = configs.get("tradesystemid")
         self.__transform()
 
     def __transform(self):
         mysqlDB = self.mysqlDB
         # 查询当前交易日
         sql = """SELECT tradingday FROM siminfo.t_tradesystemtradingday WHERE tradesystemid = %s"""
-        fc = mysqlDB.select(sql, ('0001',))
+        fc = mysqlDB.select(sql, (self.tradesystemid,))
         current_trading_day = fc[0][0]
         self.TradingDay = current_trading_day
         self.logger.info("[trans_etfinfo] current_trading_day = %s" % current_trading_day)

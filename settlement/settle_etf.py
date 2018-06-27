@@ -11,6 +11,7 @@ def settle_etf(context, conf):
 
     settlement_group_id = conf.get("settlementGroupId")
     settlement_id = conf.get("settlementId")
+    stock_settle = conf.get("stock_settle")
 
     logger.info("[settle etf %s] begin" % (json.dumps(conf, encoding="UTF-8", ensure_ascii=False)))
     mysql_pool = mysql(configs=context.get("mysql").get(conf.get("mysqlId")))
@@ -74,7 +75,7 @@ def settle_etf(context, conf):
                                         AND t1.TradingDay = %s
                                         AND t1.SettlementID = %s
                                         AND t1.SettlementGroupID = %s """
-            cursor.execute(sql, (current_trading_day, "SG01", settlement_id, settlement_group_id, current_trading_day, settlement_id, settlement_group_id))
+            cursor.execute(sql, (current_trading_day, stock_settle, settlement_id, settlement_group_id, current_trading_day, settlement_id, settlement_group_id))
 
             # 结算价为零赋值为昨结算
             sql = """UPDATE dbclear.t_marketdata t 
@@ -152,22 +153,21 @@ def settle_etf(context, conf):
                              end as transfeeratio,
                              t2.valuemode,
                              if(t2.valuemode='2',
-                                            round((case
+                                            round(((case
                                                             when t1.offsetflag = '0' or
                                                                      t1.offsetflag = '2' then
                                                              t2.openfeeratio
                                                             when t1.offsetflag = '3' or t1.offsetflag = '1' or  t1.offsetflag = '4' then
                                                              t2.closetodayfeeratio
-                                                        end) * t3.volumemultiple + t2.CloseYesterdayFeeRatio,
-                                                        2) * t1.volume ,
-                                            round((case
+                                                        end) * t3.volumemultiple + t2.CloseYesterdayFeeRatio) * t1.volume, 2),
+                                            round(((case
                                                             when t1.offsetflag = '0' or
                                                                      t1.offsetflag = '2' then
                                                              t2.openfeeratio
                                                             when t1.offsetflag = '3' or t1.offsetflag = '1' or  t1.offsetflag = '4' then
                                                              t2.closetodayfeeratio
-                                                        end) * t1.price * t3.volumemultiple + t2.CloseYesterdayFeeRatio,
-                                                        2) * t1.volume ) as transfee,
+                                                        end) * t1.price * t3.volumemultiple + t2.CloseYesterdayFeeRatio) * t1.volume ,
+                                                        2)) as transfee,
                                                                 t1.OrderSysID,
                                                                 '0' as Minfee,
                                                                 '0' as MaxFee
@@ -199,22 +199,21 @@ def settle_etf(context, conf):
                              end as transfeeratio,
                              t2.valuemode,
                              if(t2.valuemode='2',
-                                            round((case
+                                            round(((case
                                                             when t1.offsetflag = '0' or
                                                                      t1.offsetflag = '2' then
                                                              t2.openfeeratio
                                                             when t1.offsetflag = '3' or t1.offsetflag = '1' or  t1.offsetflag = '4' then
                                                              t2.closetodayfeeratio
-                                                        end) * t3.volumemultiple + t2.CloseYesterdayFeeRatio,
-                                                        2) * t1.volume ,
-                                            round((case
+                                                        end) * t3.volumemultiple + t2.CloseYesterdayFeeRatio) * t1.volume, 2),
+                                            round(((case
                                                             when t1.offsetflag = '0' or
                                                                      t1.offsetflag = '2' then
                                                              t2.openfeeratio
                                                             when t1.offsetflag = '3' or t1.offsetflag = '1' or  t1.offsetflag = '4' then
                                                              t2.closetodayfeeratio
-                                                        end) * t1.price * t3.volumemultiple + t2.CloseYesterdayFeeRatio,
-                                                        2) * t1.volume ) as transfee,
+                                                        end) * t1.price * t3.volumemultiple + t2.CloseYesterdayFeeRatio) * t1.volume ,
+                                                        2)) as transfee,
                                                                 t1.OrderSysID,
                                                                 '0' as Minfee,
                                                                 '0' as MaxFee
@@ -248,22 +247,21 @@ def settle_etf(context, conf):
                              end as transfeeratio,
                              t2.valuemode,
                              if(t2.valuemode='2',
-                                            round((case
+                                            round(((case
                                                             when t1.offsetflag = '0' or
                                                                      t1.offsetflag = '2' then
                                                              t2.openfeeratio
                                                             when t1.offsetflag = '3' or t1.offsetflag = '1' or  t1.offsetflag = '4' then
                                                              t2.closetodayfeeratio
-                                                        end) * t3.volumemultiple + t2.CloseYesterdayFeeRatio,
-                                                        2) * t1.volume ,
-                                            round((case
+                                                        end) * t3.volumemultiple + t2.CloseYesterdayFeeRatio) * t1.volume, 2),
+                                            round(((case
                                                             when t1.offsetflag = '0' or
                                                                      t1.offsetflag = '2' then
                                                              t2.openfeeratio
                                                             when t1.offsetflag = '3' or t1.offsetflag = '1' or  t1.offsetflag = '4' then
                                                              t2.closetodayfeeratio
-                                                        end) * t1.price * t3.volumemultiple + t2.CloseYesterdayFeeRatio,
-                                                        2) * t1.volume ) as transfee,
+                                                        end) * t1.price * t3.volumemultiple + t2.CloseYesterdayFeeRatio) * t1.volume ,
+                                                        2)) as transfee,
                                                                 t1.OrderSysID,
                                                                 '0' as Minfee,
                                                                 '0' as MaxFee
@@ -351,7 +349,7 @@ def settle_etf(context, conf):
                         SELECT
                             t1.TradingDay,t1.SettlementGroupID,t1.SettlementID,t1.Direction,t1.ParticipantID,t1.ClientID,t1.AccountID,
                             t1.InstrumentID,if (t1.OffsetFlag = '0',t1.Volume, -1 * t1.Volume ) as Volume,t1.UserID,
-                            ROUND( IF ( t1.Direction = '0', - 1 * Price * t2.UnderlyingMultiple, Price * t2.UnderlyingMultiple ) , 2 ) * t1.Volume AS Premium 
+                            ROUND( IF (t1.Direction = '0', - 1 * Price * t2.UnderlyingMultiple, Price * t2.UnderlyingMultiple) * t1.Volume , 2 ) AS Premium 
                         FROM
                             dbclear.t_trade t1,siminfo.t_instrument t2 
                         WHERE

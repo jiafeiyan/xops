@@ -1,0 +1,20 @@
+{
+
+    "mysqlId": "simplatform_base",
+    "baseDataHome" : "${HOME}/md/future",
+    "tradesystemid": "00201",
+    "SyncsFrom": [
+      {
+        "host": "remote_future_exchange",
+        "items": ["${HOME}/run/mdimport/csv/%y%m%d"]
+      }
+    ],
+    "Syncs": [
+      {
+        "host": "future_exchange",
+        "type": "put",
+        "target" : "${HOME}/run/mdreceiver/md",
+        "items": ["${HOME}/md/future/md.csv"]
+      }
+    ]
+}

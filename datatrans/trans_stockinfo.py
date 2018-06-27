@@ -22,19 +22,28 @@ class trans_stockinfo:
         # 初始化模板路径
         self.initTemplate = context.get("init")[configs.get("initId")]
         # 股票文件
-        self.stock_filename = {
-            "SG01": ["cpxx%m%d.txt"],
-            "SG02": ["securities_%y%m%d.xml", "cashauctionparams_%y%m%d.xml"]
-        }
+        self.stock_filename = self.byteify(configs.get("file"))
         # DBF文件
         self.dbf_file = ["PAR_QY_INFO%y%m%d.dbf"]
+        self.market = self.byteify(configs.get("market"))
+        self.tradesystemid = self.byteify(configs.get("tradesystemid"))
         self.__transform()
+
+    def byteify(self, _input):
+        if isinstance(_input, dict):
+            return {self.byteify(key): self.byteify(value) for key, value in _input.iteritems()}
+        elif isinstance(_input, list):
+            return [self.byteify(element) for element in _input]
+        elif isinstance(_input, unicode):
+            return _input.encode('utf-8')
+        else:
+            return _input
 
     def __transform(self):
         mysqlDB = self.mysqlDB
         # 查询当前交易日
         sql = """SELECT tradingday FROM siminfo.t_tradesystemtradingday WHERE tradesystemid = %s"""
-        fc = mysqlDB.select(sql, ('0001',))
+        fc = mysqlDB.select(sql, (self.tradesystemid,))
         current_trading_day = fc[0][0]
         self.TradingDay = current_trading_day
         self.logger.info("[trans_stockinfo] current_trading_day = %s" % current_trading_day)
@@ -70,7 +79,7 @@ class trans_stockinfo:
 
         if par_qy_info is not None:
             # ===========处理info_dbf写入t_SecurityProfit表===========
-            self.__t_SecurityProfit(mysqlDB=mysqlDB, settlement_group={"1": "SG01", "2": "SG02"}, dbf=par_qy_info)
+            self.__t_SecurityProfit(mysqlDB=mysqlDB, settlement_group=self.market, dbf=par_qy_info)
 
     def __t_Instrument(self, mysqlDB, settlement_group, stock_data):
         mysql_conn = mysqlDB.get_cnx()
@@ -89,10 +98,10 @@ class trans_stockinfo:
                                        DeliveryYear,DeliveryMonth,AdvanceMonth
                                    )VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
             sql_insert_params = []
-            if settlement_group == 'SG01':
+            if settlement_group in ('SG01', 'SG101'):
                 ProductID = 'ZQ_SH'
                 ProductGroupID = 'ZQ'
-            if settlement_group == 'SG02':
+            if settlement_group in ('SG02', 'SG102'):
                 ProductID = 'ZQ_SZ'
                 ProductGroupID = 'ZQ'
             for stock in stock_data:
@@ -333,11 +342,11 @@ class trans_stockinfo:
                 if not os.path.exists(stock_path[index]):
                     self.logger.error("%s%s" % (stock_path[index], " is not exists"))
                     return None
-            if sgid == 'SG01':
+            if sgid == 'SG01' or sgid == 'SG101':
                 # 读取txt文件
                 stock_file = codecs.open(stock_path[0], encoding='gbk')
-                stock_data.update({sgid: self.__txt_to_stock(stock_file, ("ES", "ASH", "EBS"))})
-            if sgid == 'SG02':
+                stock_data.update({sgid: self.__txt_to_stock(stock_file, ("ASH", "EBS", "CEF", "OEF", "FBL", "OFN" ,"LOF"))})
+            if sgid == 'SG02' or sgid == 'SG102':
                 # 读取xml文件
                 stock_data.update({sgid: self.__xml_to_stock(stock_path)})
         return stock_data
@@ -377,7 +386,7 @@ class trans_stockinfo:
         for se in Security:
             zqdm = se.getElementsByTagName("SecurityID")[0].childNodes[0].data.strip()
             SecurityType = se.getElementsByTagName("SecurityType")[0].childNodes[0].data.strip()
-            if int(SecurityType) in (1, 2, 3, 14, 15, 16, 17, 18, 19, 20):
+            if int(SecurityType) in (1, 2, 3, 14, 15, 16, 17, 18, 19, 20, 23, 24, 25):
                 stock = stockVO(None)
                 stock.ZQDM = zqdm
                 stock.ZWMC = se.getElementsByTagName("Symbol")[0].childNodes[0].data.strip()

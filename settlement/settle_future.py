@@ -849,7 +849,7 @@ def sett_future(logger, cursor, current_trading_day, next_trading_day, settlemen
                                         2) as positionmargin
                                        from (select t1.*, t2.tradingrole
                                            from dbclear.t_clientposition t1, siminfo.t_client t2
-                                           where t1.clientid = t2.clientid) t1,
+                                           where t1.clientid = t2.clientid and t1.settlementgroupid = t2.settlementgroupid) t1,
                                        (select t1.settlementgroupid,
                                                t1.participantid,
                                                t2.accountid,
@@ -902,7 +902,7 @@ def sett_future(logger, cursor, current_trading_day, next_trading_day, settlemen
                                         2) as positionmargin
                                        from (select t1.*, t2.tradingrole
                                            from dbclear.t_clientposition t1, siminfo.t_client t2
-                                           where t1.clientid = t2.clientid) t1,
+                                           where t1.clientid = t2.clientid and t1.settlementgroupid = t2.settlementgroupid) t1,
                                        (select t1.settlementgroupid,
                                                t1.participantid,
                                                t2.accountid,
@@ -956,7 +956,7 @@ def sett_future(logger, cursor, current_trading_day, next_trading_day, settlemen
                                         2) as positionmargin
                                        from (select t1.*, t2.tradingrole
                                            from dbclear.t_clientposition t1, siminfo.t_client t2
-                                           where t1.clientid = t2.clientid) t1,
+                                           where t1.clientid = t2.clientid and t1.settlementgroupid = t2.settlementgroupid) t1,
                                        (select t1.settlementgroupid,
                                                t1.participantid,
                                                t2.accountid,

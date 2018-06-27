@@ -2,6 +2,7 @@
     "mysqlId": "simplatform_base",
     "baseDataHome" : "${HOME}/sim_data",
     "time_await": "3",
+    "tradesystemid": "0001",
     "Syncs": [
       {
         "host": "stock_exchange",

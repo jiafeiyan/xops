@@ -1,5 +1,11 @@
 {
   "mysqlId": "simplatform_base",
   "logId": "default",
-  "initId": "init_base"
+  "initId": "init_base",
+  "tradesystemid": "0001",
+  "file": {
+      "SG01": ["cpxx%m%d.txt"],
+      "SG02": ["securities_%y%m%d.xml", "cashauctionparams_%y%m%d.xml"]
+  },
+  "market": {"1": "SG01", "2": "SG02"}
 }

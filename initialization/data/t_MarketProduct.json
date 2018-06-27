@@ -1,5 +1,9 @@
 [
   ["SG01","Market01","ZQ_SH"],
   ["SG02","Market02","ZQ_SZ"],
-  ["SG07","Market07","ETF"]
+  ["SG07","Market07","ETF"],
+
+  ["SG101","Market11","ZQ_SH"],
+  ["SG102","Market12","ZQ_SZ"],
+  ["SG107","Market17","ETF"]
 ]
