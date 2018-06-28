@@ -317,7 +317,7 @@ def settle_etf(context, conf):
                                 (t3.SettlementPrice + greatest(0.12 * t3.UnderlyingClosePx - greatest(t4.strikeprice - t3.UnderlyingClosePx, 0) , 0.07 * t3.UnderlyingClosePx)) * t4.underlyingmultiple ,
                                 LEAST(t3.SettlementPrice + greatest(0.12 * t3.UnderlyingClosePx - greatest(t3.UnderlyingClosePx - t4.strikeprice,0), 0.07 * t4.strikeprice), t4.strikeprice) * t4.underlyingmultiple ),0) * (t1.position + t1.YdPosition) AS positionmargin 
                             FROM
-                                ( SELECT t1.*, t2.tradingrole FROM dbclear.t_clientposition t1, siminfo.t_client t2 WHERE t1.clientid = t2.clientid ) t1,
+                                ( SELECT t1.*, t2.tradingrole FROM dbclear.t_clientposition t1, siminfo.t_client t2 WHERE t1.clientid = t2.clientid and t1.settlementgroupid = t2.settlementgroupid) t1,
                                 siminfo.t_PartRoleAccount t2,
                                 dbclear.t_marketdata t3,
                                 siminfo.t_instrument t4 
