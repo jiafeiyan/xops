@@ -1,0 +1,4 @@
+{
+  "mysqlId" : "simplatform_base",
+  "dumpUserFile" : "${SIM_PLATFORM_HOME}/settlement_data/stock/t_User.csv"
+}

@@ -1,0 +1,21 @@
+{
+  "SG01": ["SG01","0001","InstrumentID","00000000"],
+  "SG02": ["SG02","0002","InstrumentID","00000000"],
+  "SG03": ["SG03","0003","InstrumentID","00000000"],
+  "SG04": ["SG04","0004","InstrumentID","00000000"],
+  "SG05": ["SG05","0005","InstrumentID","00000000"],
+  "SG06": ["SG06","0006","InstrumentID","00000000"],
+  "SG07": ["SG07","0007","InstrumentID","00000000"],
+  "SG08": ["SG08","0008","InstrumentID","00000000"],
+  "SG09": ["SG09","0009","InstrumentID","00000000"],
+  
+  "SG101": ["SG101","0001","InstrumentID","00000000"],
+  "SG102": ["SG102","0002","InstrumentID","00000000"],
+  "SG103": ["SG103","0003","InstrumentID","00000000"],
+  "SG104": ["SG104","0004","InstrumentID","00000000"],
+  "SG105": ["SG105","0005","InstrumentID","00000000"],
+  "SG106": ["SG106","0006","InstrumentID","00000000"],
+  "SG107": ["SG107","0007","InstrumentID","00000000"],
+  "SG108": ["SG108","0008","InstrumentID","00000000"],
+  "SG109": ["SG109","0009","InstrumentID","00000000"]
+}

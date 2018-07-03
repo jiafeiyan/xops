@@ -1,0 +1,4 @@
+{
+  "host" : "etf_broker",
+  "command" : "${HOME}/run/start.sh"
+}

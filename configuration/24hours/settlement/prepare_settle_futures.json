@@ -1,0 +1,6 @@
+{
+    "tradeSystemId" : "00102",
+    "settlementId" : "1",
+    "mysqlId" : "simplatform_base",
+    "baseDataHome" : "${SIM_PLATFORM_HOME}/settlement_data"
+}

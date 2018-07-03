@@ -6,7 +6,7 @@ cd ${SIM_PLATFORM_HOME}/crontab
 now_date=`date +%Y%m%d`
 
 # 判断是否交易日
-trading_day=`sh ${SIM_PLATFORM_HOME}/appshell/get_stock_tradingday.sh`
+trading_day=`sh ${SIM_PLATFORM_HOME}/appshell/stock/get_stock_tradingday.sh`
 
 # settlement_stock.sh
 sh ${SIM_PLATFORM_HOME}/appshell/settlement_activity.sh >> crontab.log

@@ -4,8 +4,7 @@ import os
 import json
 import time
 
-import rsync
-from utils import log, Configuration, parse_conf_args, process_assert, path, mysql
+from utils import log, Configuration, parse_conf_args, rsync, path, mysql
 
 
 def sync_stock_prepare_data(context, conf):

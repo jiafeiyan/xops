@@ -1,0 +1,11 @@
+{
+    "mysqlId": "simplatform_base",
+    "baseDataHome" : "${HOME}/sim_data",
+    "tradesystemid": "00101",
+    "Syncs": [
+      {
+        "host": "remote_xapp",
+        "items": ["${HOME}/sim_data/%y%m%d"]
+      }
+    ]
+}

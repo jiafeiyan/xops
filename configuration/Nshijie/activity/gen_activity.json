@@ -1,0 +1,14 @@
+{
+  "mysqlId" : "simplatform_base",
+  "activities" : [{
+    "code": "0002",
+    "name": "华鑫期货大赛",
+    "type" : "1",
+    "balance" : "3000000",
+    "joinMode" : "1",
+    "rankingRule" : "01",
+    "begin":"20180516",
+    "end":"20990515",
+    "settlement_groups" : ["SG03","SG04","SG05","SG06","SG08","SG09"]
+  }]
+}

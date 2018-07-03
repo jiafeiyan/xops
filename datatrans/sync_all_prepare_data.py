@@ -3,8 +3,7 @@
 import os
 import json
 
-import rsync
-from utils import log, Configuration, parse_conf_args, process_assert, path, mysql
+from utils import log, Configuration, parse_conf_args, process_assert, path, mysql, rsync
 
 
 def sync_all_prepare_data(context, conf):

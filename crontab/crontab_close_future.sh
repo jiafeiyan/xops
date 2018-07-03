@@ -8,7 +8,7 @@ now_date=`date +%Y%m%d`
 echo "${now_date} crontab_close_future.sh start..." | tee -a crontab.log
 
 # 判断是否交易日
-trading_day=`sh ${SIM_PLATFORM_HOME}/appshell/get_future_tradingday.sh`
+trading_day=`sh ${SIM_PLATFORM_HOME}/appshell/future/get_future_tradingday.sh`
 
 if [ "${trading_day}" != "${now_date}" ]; then
     echo "当前日期[${now_date}]非当前交易日[${trading_day}]..." | tee -a crontab.log
@@ -16,6 +16,6 @@ if [ "${trading_day}" != "${now_date}" ]; then
 fi
 
 # settlement_stock.sh
-sh ${SIM_PLATFORM_HOME}/appshell/close_future_exchange.sh >> crontab.log
+sh ${SIM_PLATFORM_HOME}/appshell/future/close_future_exchange.sh >> crontab.log
 
 echo "${now_date} crontab_close_future.sh finished..." | tee -a crontab.log

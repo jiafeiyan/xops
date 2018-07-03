@@ -1,4 +1,0 @@
-{
-  "host" : "stock_exchange",
-  "command" : "${HOME}/run/start.sh -d @tradingday@ -n @tradingday@ -t 09:30:00"
-}

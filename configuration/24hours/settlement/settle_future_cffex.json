@@ -1,0 +1,7 @@
+{
+  "mysqlId" : "simplatform_base",
+  "exchangeId" : "CFFEX",
+  "settlementGroupId" : "SG106",
+  "settlementId" : "1",
+  "marginSingleBigSide": true
+}

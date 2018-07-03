@@ -1,8 +1,6 @@
 # -*- coding: UTF-8 -*-
 
-from utils import Configuration, parse_conf_args
-import rsync
-
+from utils import Configuration, parse_conf_args, rsync
 
 def main():
     base_dir, config_names, config_files, add_ons = parse_conf_args(__file__, config_names=["hosts"])

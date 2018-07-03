@@ -1,9 +1,7 @@
 # -*- coding: UTF-8 -*-
 
-import os
 import json
 
-import rsync
 from utils import log, mysql, Configuration, parse_conf_args, process_assert
 
 

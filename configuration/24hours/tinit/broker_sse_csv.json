@@ -1,0 +1,7 @@
+{
+  "settlementGroupID": "SG101",
+  "mysqlId": "simplatform_base",
+  "logId": "default",
+  "csv": "csv_base",
+  "csvRoute": "stock/"
+}

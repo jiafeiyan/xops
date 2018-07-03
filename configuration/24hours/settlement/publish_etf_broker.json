@@ -1,0 +1,9 @@
+{
+  "mysqlId" : "simplatform_base",
+  "brokerSystemId" : "00102",
+  "settlementGroups" : [{
+    "settlementGroupId" : "SG107",
+    "settlementId" : "1"
+    }
+  ]
+}

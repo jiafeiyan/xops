@@ -1,0 +1,22 @@
+{
+    "Syncs": [
+      {
+        "host": "future_broker",
+        "type": "put",
+        "target" : "${HOME}/tinit/perf",
+        "items": ["${SIM_PLATFORM_HOME}/csvfiles/broker/future"]
+      },
+      {
+        "host": "future_exchange",
+        "type": "put",
+        "target" : "${HOME}/run/tinit/dump",
+        "items": ["${SIM_PLATFORM_HOME}/csvfiles/exchange/00102"]
+      },
+      {
+        "host": "future_exchange",
+        "type": "put",
+        "target" : "${HOME}/run/mdreceiver/bin",
+        "items": ["${SIM_PLATFORM_HOME}/csvfiles/exchange/00102/md"]
+      }
+    ]
+}

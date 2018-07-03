@@ -1,0 +1,11 @@
+{
+  "tradeSystemID": "00101",
+  "mysqlId": "simplatform_base",
+  "logId": "default",
+  "csv": "csv_base",
+  "settlementgroup": {
+      "sse": "SG01",
+      "szse": "SG02",
+      "sse_etf": "SG07"
+  }
+}

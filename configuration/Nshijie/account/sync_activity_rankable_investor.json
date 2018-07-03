@@ -1,0 +1,9 @@
+{
+  "mysqlId" : "simplatform_base",
+  "oracleId" : "cif",
+  "activities" : [{
+    "id": "0001",
+    "depart": "3620",
+    "startDate": "20170301"
+  }]
+}

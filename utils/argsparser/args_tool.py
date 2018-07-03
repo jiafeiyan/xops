@@ -16,7 +16,7 @@ def parse_conf_args(file_name, base_dir=None, config_names=None):
     if args.conf is None:
         args.conf = []
 
-    args.conf.insert(0, Configuration.find_selfconfig(file_name))
+    args.conf.insert(0, Configuration.find_selfconfig(file_name, False if len(args.conf) == 0 else True ))
 
     ads = {}
     if args.ads is not None:

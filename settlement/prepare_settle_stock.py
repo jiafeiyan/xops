@@ -3,7 +3,6 @@
 import os
 import json
 
-import rsync
 from utils import mysql, log, Configuration, parse_conf_args, path, process_assert
 
 

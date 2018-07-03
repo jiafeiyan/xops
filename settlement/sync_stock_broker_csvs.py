@@ -4,8 +4,7 @@ import os
 import json
 import shutil
 
-import rsync
-from utils import log, Configuration, parse_conf_args, process_assert, path
+from utils import log, Configuration, parse_conf_args, process_assert, path, rsync
 
 
 def sync_stock_broker_csvs(context, conf):

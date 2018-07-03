@@ -1,0 +1,30 @@
+{
+    "Syncs": [
+      {
+        "host": "stock_broker",
+        "type": "put",
+        "target" : "${HOME}/run/tinit/csv",
+        "items": ["${SIM_PLATFORM_HOME}/csvfiles/broker/stock/SG101",
+                  "${SIM_PLATFORM_HOME}/csvfiles/broker/stock/SG102",
+                  "${SIM_PLATFORM_HOME}/csvfiles/broker/stock"]
+      },
+      {
+        "host": "etf_broker",
+        "type": "put",
+        "target" : "${HOME}/run/sptinit/csv",
+        "items": ["${SIM_PLATFORM_HOME}/csvfiles/broker/etf/SG107"]
+      },
+      {
+        "host": "stock_exchange",
+        "type": "put",
+        "target" : "${HOME}/run/tinit/dump",
+        "items": ["${SIM_PLATFORM_HOME}/csvfiles/exchange/00101"]
+      },
+      {
+        "host": "stock_exchange",
+        "type": "put",
+        "target" : "${HOME}/run/mdreceiver/bin",
+        "items": ["${SIM_PLATFORM_HOME}/csvfiles/exchange/00101/md"]
+      }
+    ]
+}

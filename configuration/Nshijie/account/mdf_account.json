@@ -1,0 +1,9 @@
+{
+  "mysqlId" : "simplatform_base",
+  "accounts" : [{
+    "id": "00020002",
+    "name": "测试",
+    "openId":"11111111112",
+    "password":"11111111"
+  }]
+}

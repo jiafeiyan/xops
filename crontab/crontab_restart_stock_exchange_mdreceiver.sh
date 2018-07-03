@@ -8,7 +8,7 @@ now_date=`date +%Y%m%d`
 echo "${now_date} crontab_restart_stock_exchange_mdreceiver.sh start..." | tee -a crontab.log
 
 # 判断是否交易日
-trading_day=`sh ${SIM_PLATFORM_HOME}/appshell/get_stock_tradingday.sh`
+trading_day=`sh ${SIM_PLATFORM_HOME}/appshell/stock/get_stock_tradingday.sh`
 
 if [ "${trading_day}" != "${now_date}" ]; then
     echo "当前日期[${now_date}]非当前交易日[${trading_day}]..." | tee -a crontab.log
@@ -17,10 +17,10 @@ fi
 
 # 1) shutdown future exchange mdreceiver 
 echo "start stop_stock_exchange_mdreceiver.sh ... "
-sh ${SIM_PLATFORM_HOME}/appshell/stop_stock_exchange_mdreceiver.sh >> crontab.log
+sh ${SIM_PLATFORM_HOME}/appshell/stock/stop_stock_exchange_mdreceiver.sh >> crontab.log
 
 # 2) start stock exchange mdreceiver
 echo "start start_stock_exchange_mdreceiver.sh ... "
-sh ${SIM_PLATFORM_HOME}/appshell/start_stock_exchange_mdreceiver.sh >> crontab.log
+sh ${SIM_PLATFORM_HOME}/appshell/stock/start_stock_exchange_mdreceiver.sh >> crontab.log
 
 echo "${now_date} crontab_restart_stock_exchange_mdreceiver.sh finished..." | tee -a crontab.log
