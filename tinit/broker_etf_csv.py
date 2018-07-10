@@ -49,6 +49,7 @@ class broker_etf_csv:
         self.__data_to_csv("SSEInvestorLimitPositionParam", mysqlDB)
         self.__data_to_csv("SSEInvestorMarginFee", mysqlDB)
         self.__data_to_csv("SSEInvestorTradingFee", mysqlDB)
+        self.__data_to_csv("InvestorCondOrderLimitParam", mysqlDB)
 
     def __data_to_csv(self, csv_name, mysqlDB):
         table_sqls = dict(
@@ -173,8 +174,10 @@ class broker_etf_csv:
                                       "ShortFrozen", "LongFrozenAmount", "ShortFrozenAmount", "OpenVolume",
                                       "CloseVolume", "OpenAmount", "CloseAmount", "Margin", "FrozenMargin",
                                       "FrozenCash", "FrozenCommission", "CashIn", "Commission", "StrikeFrozen",
-                                      "StrikeFrozenAmount", "PrePosition", "HistoryPosPrice", "HistoryCombPos", "TodayCombPos",
-                                      "HistoryCombPosSplitFrozen", "TodayCombPosSplitFrozen", "HistoryPosCombFrozen", "TodayPosCombFrozen"),
+                                      "StrikeFrozenAmount", "PrePosition", "HistoryPosPrice", "HistoryCombPos",
+                                      "TodayCombPos",
+                                      "HistoryCombPosSplitFrozen", "TodayCombPosSplitFrozen", "HistoryPosCombFrozen",
+                                      "TodayPosCombFrozen"),
                              sql="""SELECT t1.InvestorID AS InvestorID,t1.InvestorID AS BusinessUnitID,'1' AS MarketID,
                                         t.ClientID AS ShareholderID,t2.TradingDay AS TradingDay,'1' AS ExchangeID,
                                         t.InstrumentID AS SecurityID,t.PosiDirection AS PosiDirection,
@@ -195,17 +198,18 @@ class broker_etf_csv:
                                     AND t3.TradeSystemID = t2.TradeSystemID
                                     AND t.SettlementGroupID = %s""",
                              params=(self.settlementGroupID,)),
-            SSESecurity=dict(columns=("ExchangeID", "SecurityID", "ExchSecurityID", "SecurityName", "UnderlyingSecurityID",
-                                      "UnderlyingSecurityName", "UnderlyingMultiple", "StrikeMode", "OptionsType",
-                                      "MarketID", "ProductID", "SecurityType", "CurrencyID", "OrderUnit",
-                                      "BuyTradingUnit", "SellTradingUnit", "MaxMarketOrderBuyVolume",
-                                      "MinMarketOrderBuyVolume", "MaxLimitOrderBuyVolume", "MinLimitOrderBuyVolume",
-                                      "MaxMarketOrderSellVolume", "MinMarketOrderSellVolume",
-                                      "MaxLimitOrderSellVolume", "MinLimitOrderSellVolume", "VolumeMultiple",
-                                      "PriceTick", "PositionType", "SecurityStatus", "StrikePrice", "FirstDate",
-                                      "LastDate", "StrikeDate", "ExpireDate", "DelivDate", "IsUpDownLimit",
-                                      "MarginUnit", "PreSettlemetPrice", "PreClosePrice", "UnderlyingPreClosePrice"),
-                             sql="""SELECT '1' AS ExchangeID,
+            SSESecurity=dict(
+                columns=("ExchangeID", "SecurityID", "ExchSecurityID", "SecurityName", "UnderlyingSecurityID",
+                         "UnderlyingSecurityName", "UnderlyingMultiple", "StrikeMode", "OptionsType",
+                         "MarketID", "ProductID", "SecurityType", "CurrencyID", "OrderUnit",
+                         "BuyTradingUnit", "SellTradingUnit", "MaxMarketOrderBuyVolume",
+                         "MinMarketOrderBuyVolume", "MaxLimitOrderBuyVolume", "MinLimitOrderBuyVolume",
+                         "MaxMarketOrderSellVolume", "MinMarketOrderSellVolume",
+                         "MaxLimitOrderSellVolume", "MinLimitOrderSellVolume", "VolumeMultiple",
+                         "PriceTick", "PositionType", "SecurityStatus", "StrikePrice", "FirstDate",
+                         "LastDate", "StrikeDate", "ExpireDate", "DelivDate", "IsUpDownLimit",
+                         "MarginUnit", "PreSettlemetPrice", "PreClosePrice", "UnderlyingPreClosePrice"),
+                sql="""SELECT '1' AS ExchangeID,
                                         t.InstrumentID AS SecurityID,
                                         t.ExchInstrumentID AS ExchSecurityID,
                                         t.InstrumentName AS SecurityName,
@@ -259,7 +263,7 @@ class broker_etf_csv:
                                     AND t.SettlementGroupID = t2.SettlementGroupID
                                     AND t.SettlementGroupID = t3.SettlementGroupID
                                     AND t.SettlementGroupID = %s""",
-                             params=(self.settlementGroupID,)),
+                params=(self.settlementGroupID,)),
             SSEShareholderAccount=dict(columns=("ExchangeID", "ShareholderID", "MarketID", "InvestorID",
                                                 "ShareholderIDType", "PbuID", "BranchID"),
                                        sql="""SELECT '1' AS ExchangeID,t.ClientID AS ShareholderID,'1' AS MarketID,
@@ -435,6 +439,9 @@ class broker_etf_csv:
                                        params=(self.settlementGroupID, self.settlementGroupID, self.settlementGroupID,
                                                self.settlementGroupID, self.settlementGroupID, self.settlementGroupID,
                                                self.settlementGroupID,)),
+            InvestorCondOrderLimitParam=dict(columns=("InvestorID", "MaxCondOrderLimitCnt", "CurrCondOrderCnt"),
+                                             sql="""select InvestorID, '100' as MaxCondOrderLimitCnt, 
+                                                    '0' as CurrCondOrderCnt from siminfo.t_investor""")
         )
         # 查询siminfo数据库数据内容
         csv_data = mysqlDB.select(table_sqls[csv_name]["sql"], table_sqls[csv_name].get("params"))

@@ -30,7 +30,13 @@ def settle_stock(context, conf):
         logger.info("[get current trading day] current_trading_day = %s" % (current_trading_day))
 
         logger.info("[get next trading day]......")
-        sql = """SELECT DAY FROM siminfo.t_TradingCalendar t WHERE t.day > %s AND t.tra = '1' ORDER BY DAY LIMIT 1"""
+
+        # 判断是否跳过节假日
+        holiday = conf.get("holiday")
+        if holiday is True or holiday is None:
+            sql = """SELECT DAY FROM siminfo.t_TradingCalendar t WHERE t.day > %s AND t.tra = '1' ORDER BY DAY LIMIT 1"""
+        else:
+            sql = """SELECT DAY FROM siminfo.t_TradingCalendar t WHERE t.day > %s ORDER BY DAY LIMIT 1"""
         cursor.execute(sql, (current_trading_day,))
         row = cursor.fetchone()
 
@@ -68,7 +74,7 @@ def settle_stock(context, conf):
                                                                                 LEFT JOIN (SELECT settlementgroupid, securityid, beforerate, afterrate, price FROM siminfo.t_securityprofit WHERE securitytype = 'GP' AND profittype = 'P' AND cqdate = %s) t3
                                                                                 ON (t.settlementgroupid = t3.settlementgroupid AND t.instrumentid = t3.securityid)
                                                                                 WHERE t.tradingday = %s AND t.settlementgroupid = %s AND t.settlementid = %s) t1
-                            SET t.settlementprice = t1.settlementprice WHERE t .tradingday = %s AND t.settlementgroupid = %s AND t.settlementid = %s and t.tradingday = t1.tradingday
+                            SET t.settlementprice = t1.settlementprice, t.closeprice = t1.settlementprice WHERE t .tradingday = %s AND t.settlementgroupid = %s AND t.settlementid = %s and t.tradingday = t1.tradingday
                                   AND t.settlementgroupid = t1.settlementgroupid AND t.settlementid = t1.settlementid AND t.instrumentid = t1.instrumentid"""
             cursor.execute(sql, (next_trading_day, next_trading_day, next_trading_day, current_trading_day, settlement_group_id, settlement_id, current_trading_day, settlement_group_id, settlement_id))
 

@@ -1,4 +1,5 @@
 {
   "mysqlId" : "simplatform_base",
-  "tradeSystemId" : "00102"
+  "tradeSystemId" : "00102",
+  "holiday": false
 }

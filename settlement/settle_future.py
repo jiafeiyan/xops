@@ -35,7 +35,13 @@ def settle_future(context, conf):
         logger.info("[get current trading day] current_trading_day = %s" % current_trading_day)
 
         logger.info("[get next trading day]......")
-        sql = """SELECT DAY FROM siminfo.t_TradingCalendar t WHERE t.day > %s AND t.tra = '1' ORDER BY DAY LIMIT 1"""
+
+        # 判断是否跳过节假日
+        holiday = conf.get("holiday")
+        if holiday is True or holiday is None:
+            sql = """SELECT DAY FROM siminfo.t_TradingCalendar t WHERE t.day > %s AND t.tra = '1' ORDER BY DAY LIMIT 1"""
+        else:
+            sql = """SELECT DAY FROM siminfo.t_TradingCalendar t WHERE t.day > %s ORDER BY DAY LIMIT 1"""
         cursor.execute(sql, (current_trading_day,))
         row = cursor.fetchone()
 
@@ -387,9 +393,9 @@ def sett_future(logger, cursor, current_trading_day, next_trading_day, settlemen
                                 ),2 
                             ) AS profit
                     FROM siminfo.t_clientposition t1 
-                    LEFT JOIN dbclear.t_marketdata t3 ON ( t1.InstrumentID = t3.InstrumentID AND t1.TradingDay = t3.TradingDay ) 
-                    LEFT JOIN siminfo.t_instrument t4 on ( t1.InstrumentID = t4.InstrumentID ) 
-                  LEFT JOIN siminfo.t_partroleaccount t5 on ( t5.SettlementGroupID = t1.SettlementGroupID and t5.ParticipantID = t1.ParticipantID)
+                      LEFT JOIN dbclear.t_marketdata t3 ON ( t1.InstrumentID = t3.InstrumentID AND t1.TradingDay = t3.TradingDay and t1.SettlementGroupID = t3.SettlementGroupID) 
+                      LEFT JOIN siminfo.t_instrument t4 on ( t1.InstrumentID = t4.InstrumentID and t1.SettlementGroupID = t4.SettlementGroupID) 
+                      LEFT JOIN siminfo.t_partroleaccount t5 on ( t5.SettlementGroupID = t1.SettlementGroupID and t5.ParticipantID = t1.ParticipantID)
                     WHERE
                         t1.tradingday = %s
                         and t1.SettlementGroupID = %s
@@ -1211,16 +1217,14 @@ def sett_future_option(logger, cursor, current_trading_day, next_trading_day, se
                                         t2.openfeeratio
                                        when t1.offsetflag = '3' or t1.offsetflag = '1' or  t1.offsetflag = '4' then
                                         t2.closetodayfeeratio
-                               end),
-                               2) * t1.volume ,
+                               end) * t1.volume, 2),
                            round((case
                                        when t1.offsetflag = '0' or
                                         t1.offsetflag = '2' then
                                         t2.openfeeratio
                                        when t1.offsetflag = '3' or t1.offsetflag = '1' or  t1.offsetflag = '4' then
                                         t2.closetodayfeeratio
-                               end) * t1.price * t3.volumemultiple,
-                               2) * t1.volume ) as transfee,
+                               end) * t1.price * t3.volumemultiple * t1.volume,2)) as transfee,
                                                t1.OrderSysID,
                                                '0' as Minfee,
                                                '0' as MaxFee
@@ -1260,16 +1264,14 @@ def sett_future_option(logger, cursor, current_trading_day, next_trading_day, se
                                         t2.openfeeratio
                                        when t1.offsetflag = '3' or t1.offsetflag = '1' or  t1.offsetflag = '4' then
                                         t2.closetodayfeeratio
-                               end),
-                               2) * t1.volume ,
+                               end) * t1.volume, 2) ,
                            round((case
                                        when t1.offsetflag = '0' or
                                         t1.offsetflag = '2' then
                                         t2.openfeeratio
                                        when t1.offsetflag = '3' or t1.offsetflag = '1' or  t1.offsetflag = '4' then
                                         t2.closetodayfeeratio
-                               end) * t1.price * t3.volumemultiple,
-                               2) * t1.volume ) as transfee,
+                               end) * t1.price * t3.volumemultiple * t1.volume, 2)) as transfee,
                                                t1.OrderSysID,
                                                '0' as Minfee,
                                                '0' as MaxFee
@@ -1353,7 +1355,7 @@ def sett_future_option(logger, cursor, current_trading_day, next_trading_day, se
                             SELECT
                                 t1.TradingDay,t1.SettlementGroupID,t1.SettlementID,t1.Direction,t1.ParticipantID,t1.ClientID,t1.AccountID,
                                 t1.InstrumentID,if (t1.OffsetFlag = '0',t1.Volume, -1 * t1.Volume ) as Volume,t1.UserID,
-                                ROUND( IF ( t1.Direction = '0', - 1 * Price * t2.VolumeMultiple * t2.UnderlyingMultiple, Price * t2.VolumeMultiple * t2.UnderlyingMultiple) * t1.Volume, 2 )  AS Premium 
+                                ROUND( IF ( t1.Direction = '0', - 1 * Price * t2.VolumeMultiple * t2.UnderlyingMultiple, Price * t2.VolumeMultiple * t2.UnderlyingMultiple) * t1.Volume ,2) AS Premium 
                             FROM
                                 dbclear.t_trade t1,siminfo.t_instrument t2 
                             WHERE
@@ -1420,7 +1422,7 @@ def sett_future_option(logger, cursor, current_trading_day, next_trading_day, se
                             and t2.SettlementGroupID = t1.SettlementGroupID
                             and t2.ParticipantID = t1.ParticipantID
                             AND t1.tradingday = t3.tradingday 
-			                and t1.hedgeflag = t5.HedgeFlag			    
+			                and t1.hedgeflag = t5.HedgeFlag	    
                             and t4.underlyinginstrid = t5.InstrumentID                            
 			                AND t1.instrumentid = t4.instrumentid 
                             and t1.InstrumentID = t3.InstrumentID

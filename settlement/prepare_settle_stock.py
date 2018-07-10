@@ -270,8 +270,10 @@ def prepare_settle_stock(context, conf):
 
             # 更新etf期权结算价，收盘价
             logger.info("[update etf closeprice settlementprice to dbclear]......")
-            etf_sql = "update dbclear.t_marketdata t set t.ClosePrice = %s , t.SettlementPrice = %s " \
-                      "where t.InstrumentID = %s and t.TradingDay = %s and t.SettlementID = %s"
+            etf_sql = """update dbclear.t_marketdata t, siminfo.t_tradesystemsettlementgroup t2 
+                                set t.ClosePrice = %s, t.SettlementPrice = %s where t.InstrumentID = %s
+                                and t.TradingDay = %s and t.SettlementID = %s and t.SettlementGroupID = t2.SettlementGroupID
+                                and t2.TradeSystemID = %s"""
             etf_params = []
             with open(os.path.join(data_target_dir, "clpr03%m%d.txt".replace("%m", current_trading_day[4:6]).replace("%d", current_trading_day[6:8]))) as etf_file:
                 for row in etf_file:
@@ -279,7 +281,7 @@ def prepare_settle_stock(context, conf):
                     instrumentId = row[1].strip()
                     closeprice = row[2].strip()
                     settlementprice = row[3].strip()
-                    etf_params.append((closeprice, settlementprice, instrumentId, current_trading_day, settlement_id))
+                    etf_params.append((closeprice, settlementprice, instrumentId, current_trading_day, settlement_id, trade_system_id))
             cursor.executemany(etf_sql, etf_params)
         mysql_conn.commit()
     except Exception as e:

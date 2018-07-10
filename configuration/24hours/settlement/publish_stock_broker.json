@@ -8,5 +8,6 @@
     "settlementGroupId" : "SG102",
     "settlementId" : "1"
     }
-  ]
+  ],
+  "holiday": false
 }

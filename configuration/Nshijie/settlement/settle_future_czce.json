@@ -3,5 +3,6 @@
   "exchangeId" : "CZCE",
   "settlementGroupId" : "SG05",
   "settlementId" : "1",
-  "marginSingleBigSide": false
+  "marginSingleBigSide": false,
+  "holiday": true
 }

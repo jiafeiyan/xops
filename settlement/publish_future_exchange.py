@@ -33,7 +33,13 @@ def publish_future(context, conf):
         logger.info("[get current trading day] current_trading_day = %s" % current_trading_day)
 
         logger.info("[get next trading day]......")
-        sql = """SELECT DAY FROM siminfo.t_TradingCalendar t WHERE t.day > %s AND t.tra = '1' ORDER BY DAY LIMIT 1"""
+        
+        # 判断是否跳过节假日
+        holiday = conf.get("holiday")
+        if holiday is True or holiday is None:
+            sql = """SELECT DAY FROM siminfo.t_TradingCalendar t WHERE t.day > %s AND t.tra = '1' ORDER BY DAY LIMIT 1"""
+        else:
+            sql = """SELECT DAY FROM siminfo.t_TradingCalendar t WHERE t.day > %s ORDER BY DAY LIMIT 1"""
         cursor.execute(sql, (current_trading_day,))
         row = cursor.fetchone()
 

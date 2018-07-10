@@ -248,12 +248,14 @@ def prepare_settle_future(context, conf):
 
             # 更新结算价
             logger.info("[update future settlementprice to dbclear]......")
-            sql = "update dbclear.t_marketdata t set t.SettlementPrice = %s " \
-                  "where t.InstrumentID = %s and t.TradingDay = %s and t.SettlementID = %s"
+            sql = """update dbclear.t_marketdata t, siminfo.t_tradesystemsettlementgroup t2 
+                    set t.SettlementPrice = %s where t.InstrumentID = %s
+                    and t.TradingDay = %s and t.SettlementID = %s and t.SettlementGroupID = t2.SettlementGroupID
+                    and t2.TradeSystemID = %s"""
             params = []
             marketdata = [row for row in csv.DictReader(open(os.path.join(data_target_dir, "future_depthmarketdata.csv")))]
             for data in marketdata:
-                params.append((data['SettlementPrice'], data['InstrumentID'], current_trading_day, settlement_id))
+                params.append((data['SettlementPrice'], data['InstrumentID'], current_trading_day, settlement_id, trade_system_id))
             cursor.executemany(sql, params)
         mysql_conn.commit()
     except Exception as e:
