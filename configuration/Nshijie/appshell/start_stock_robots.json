@@ -1,0 +1,4 @@
+{
+  "host" : "stock_robot",
+  "command" : "sh ${HOME}/xops/robotshell/start_pro_stock_robots.sh"
+}

@@ -1,9 +1,19 @@
 #!/bin/sh
 
+echo "check file close ..."
+sh ${SIM_PLATFORM_HOME}/appshell/${SIM_RELEASE}/stock/check_stock_file_close.sh
+
 echo "starting sync_dump_csvs..."
 python ${SIM_PLATFORM_HOME}/settlement/sync_dump_csvs.py -conf settlement/sync_dump_csvs_stock.json
 if [ $? != 0 ]; then
         echo "sync_dump_csvs stock error..."
+        exit 1
+fi
+
+echo "starting clear_robot_data..."
+sh ${SIM_PLATFORM_HOME}/appshell/clear_robot_data.sh 0001 1
+if [ $? != 0 ]; then
+        echo "clear_robot_data stock error..."
         exit 1
 fi
 

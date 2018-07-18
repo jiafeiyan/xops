@@ -9,6 +9,9 @@ def settle_activity(context, conf):
     result_code = 0
     logger = log.get_logger(category="SettleActivity")
 
+    bench_stock_id = conf.get("BenchStockID", "sh000300")
+    statistic_rank_no = conf.get("StatisticRankNo", 10)
+
     logger.info("[settle activity %s] begin" % (json.dumps(conf, encoding="UTF-8", ensure_ascii=False)))
     mysql_pool = mysql(configs=context.get("mysql").get(conf.get("mysqlId")))
     mysql_conn = mysql_pool.get_cnx()
@@ -44,7 +47,8 @@ def settle_activity(context, conf):
             cursor.execute(sql, (activity_id, term_no,))
             row = cursor.fetchone()
 
-            if "0" == str(row[0]):
+            activity_status = str(row[0])
+            if "0" == activity_status:
                 sql = """DELETE FROM siminfo.t_activityinvestorevaluation WHERE activityid = %s AND termno = %s"""
                 cursor.execute(sql, (activity_id, term_no,))
 
@@ -57,12 +61,6 @@ def settle_activity(context, conf):
                                         AND enddate > %s
                                         THEN '1' 
                                         ELSE activitystatus 
-                                      END,
-                                      termno = 
-                                      CASE
-                                        WHEN activitytype = '2'
-                                        THEN termno + 1
-                                        ELSE termno 
                                       END
                                     WHERE activityid = %s AND termno = %s AND activitystatus = '0'"""
             cursor.execute(sql, (current_trading_day, current_trading_day, activity_id, term_no))
@@ -79,6 +77,14 @@ def settle_activity(context, conf):
             ranking_rule = str(row[3])
             activity_type = str(row[4])
 
+            if activity_status != str(row[0]) and "1" == str(row[0]):
+                sql = """UPDATE siminfo.t_activity 
+                                                    SET
+                                                      termno = %s
+                                                    WHERE activityid = %s AND termno = %s"""
+                cursor.execute(sql, (term_no + 1, activity_id, term_no))
+                term_no += 1
+
             if activity_type == '0':
                 # 默认赛事投资者数据
                 logger.info("[insert default activity investor]......")
@@ -88,7 +94,7 @@ def settle_activity(context, conf):
                                                 WHERE t.investoraccounttype = '0' and t.investorstatus = '1'
                                                     AND (t.investorid > (SELECT MAX(investorid) FROM siminfo.t_activityinvestor t1 WHERE t1.activityid = %s)
                                                         OR t.investorid < (SELECT MIN(investorid) FROM siminfo.t_activityinvestor t2 WHERE t2.activityid = %s)
-                                                        OR (SELECT count(investorid) FROM siminfo.t_activityinvestor t2 WHERE t2.activityid = %s) = 0)"""
+                                                        OR (SELECT count(investorid) FROM siminfo.t_activityinvestor t2 WHERE t2.activityid = %s AND t.investorid = t2.investorid) = 0)"""
                 cursor.execute(sql, (activity_id, activity_id, activity_id, activity_id))
 
             if join_mode == '2':
@@ -148,7 +154,7 @@ def settle_activity(context, conf):
 
             # 赛事新参与投资者评估信息
             sql = """INSERT INTO siminfo.t_activityinvestorevaluation(ActivityID,TermNo, InvestorID,InitialAsset,PreMonthAsset, PreWeekAsset,PreAsset,CurrentAsset,TotalReturnRate,ReturnRateOfMonth,ReturnRateOfWeek,ReturnRateOf1Day)
-                                SELECT t2.activityid, %s, t1.investorid, SUM(t1.initialasset) AS initialasset, SUM(t1.premonthasset) AS premonthasset, SUM(t1.preweekasset) AS preweekasset, SUM(t1.preasset) AS preasset, SUM(t1.currentasset) AS currasset, 0, 0, 0, 0  FROM siminfo.t_investorfund t1,
+                                SELECT t2.activityid, %s, t1.investorid, SUM(t1.currentasset) AS initialasset, SUM(t1.premonthasset) AS premonthasset, SUM(t1.preweekasset) AS preweekasset, SUM(t1.preasset) AS preasset, SUM(t1.currentasset) AS currasset, 0, 0, 0, 0  FROM siminfo.t_investorfund t1,
                                     (SELECT DISTINCT t1.activityid, t2.brokersystemid, t3.investorid FROM siminfo.t_activitysettlementgroup t1, siminfo.t_brokersystemsettlementgroup t2, siminfo.t_activityinvestor t3, siminfo.t_activity t4
                                     WHERE t1.activityid = %s AND t3.joinstatus = '0' AND t1.settlementgroupid = t2.settlementgroupid AND t1.activityid = t3.activityid AND t1.activityid = t4.activityid AND t4.activitystatus = '1') t2
                                     WHERE t1.investorid = t2.investorid AND t1.brokersystemid = t2.brokersystemid
@@ -225,11 +231,107 @@ def settle_activity(context, conf):
             cursor.execute(sql, (activity_id, term_no,))
 
             # 设置参与人数
+            logger.info("[update activity joincount]......")
             sql = """UPDATE siminfo.t_activity t, 
                                     (SELECT COUNT(1) as joincount FROM siminfo.t_activityinvestor t3 WHERE t3.activityid = %s) t1
                                     SET t.joincount = t1.joincount 
                                     WHERE t.activityid = %s AND t.termno = %s"""
             cursor.execute(sql, (activity_id, activity_id, term_no,))
+
+            # 更新赛事持仓、资金数据
+            logger.info("[update activity investor fund and position]......")
+            sql = """DELETE FROM siminfo.t_activityinvestorfund WHERE activityid = %s AND termno = %s"""
+            cursor.execute(sql, (activity_id, term_no,))
+            sql = """INSERT INTO siminfo.t_activityinvestorfund(TradingDay,ActivityID,TermNo,BrokerSystemID,InvestorID,PreBalance,CurrMargin,CloseProfit,Premium,Deposit,Withdraw,Balance,Available,PreMargin,FuturesMargin,OptionsMargin,PositionProfit,Profit,Interest,Fee,TotalCollateral,CollateralForMargin,PreAccmulateInterest,AccumulateInterest,AccumulateFee,ForzenDeposit,
+                                                                                            AccountStatus,InitialAsset,PreMonthAsset,PreWeekAsset,PreAsset,CurrentAsset,PreStockValue,StockValue)
+                                    SELECT distinct %s,%s,%s,t1.BrokerSystemID,t1.InvestorID,t1.PreBalance,t1.CurrMargin,t1.CloseProfit,t1.Premium,t1.Deposit,t1.Withdraw,t1.Balance,t1.Available,t1.PreMargin,t1.FuturesMargin,t1.OptionsMargin,t1.PositionProfit,t1.Profit,t1.Interest,t1.Fee,t1.TotalCollateral,t1.CollateralForMargin,t1.PreAccmulateInterest,t1.AccumulateInterest,t1.AccumulateFee,t1.ForzenDeposit,t1.AccountStatus,
+                                                      t1.InitialAsset,t1.PreMonthAsset,t1.PreWeekAsset,t1.PreAsset,t1.CurrentAsset,t1.PreStockValue,t1.StockValue
+                                    FROM siminfo.t_investorfund t1, (SELECT DISTINCT
+                                                                                                t2.brokersystemid 
+                                                                                                FROM
+                                                                                                siminfo.t_activitysettlementgroup t1,
+                                                                                                siminfo.t_brokersystemsettlementgroup t2 
+                                                                                                WHERE t1.settlementgroupid = t2.settlementgroupid 
+                                                                                                AND t1.activityid = %s) t2, siminfo.t_activityinvestor t3
+                                    WHERE t1.brokersystemid = t2.brokersystemid AND t1.investorid = t3.investorid AND t3.activityid = %s"""
+            cursor.execute(sql, (last_trading_day, activity_id, term_no, activity_id, activity_id,))
+            sql = """DELETE FROM siminfo.t_activityinvestorposition WHERE activityid = %s and termno = %s"""
+            cursor.execute(sql, (activity_id, term_no,))
+            sql = """INSERT INTO siminfo.t_activityinvestorposition(TradingDay,SettlementGroupID,SettlementID,HedgeFlag,PosiDirection,YdPosition,Position,LongFrozen,ShortFrozen,YdLongFrozen,YdShortFrozen,BuyTradeVolume,SellTradeVolume,PositionCost,YdPositionCost,UseMargin,FrozenMargin,LongFrozenMargin,ShortFrozenMargin,
+                                                                                                                FrozenPremium,InstrumentID,ParticipantID,ClientID,InvestorID,ActivityID,TermNo)
+                                    SELECT distinct %s,t1.SettlementGroupID,t1.SettlementID,t1.HedgeFlag,t1.PosiDirection,t1.YdPosition,t1.Position,t1.LongFrozen,t1.ShortFrozen,t1.YdLongFrozen,t1.YdShortFrozen,t1.BuyTradeVolume,t1.SellTradeVolume,t1.PositionCost,t1.YdPositionCost,t1.UseMargin,t1.FrozenMargin,t1.LongFrozenMargin,t1.ShortFrozenMargin,
+                                                      t1.FrozenPremium,t1.InstrumentID,t1.ParticipantID,t1.ClientID,t3.InvestorID,%s,%s
+                                    FROM siminfo.t_clientposition t1, (SELECT DISTINCT
+                                                                                                t1.settlementgroupid 
+                                                                                                FROM
+                                                                                                siminfo.t_activitysettlementgroup t1
+                                                                                                WHERE t1.activityid = %s) t2, siminfo.t_investorclient t3, siminfo.t_activityinvestor t4
+                                    WHERE t1.settlementgroupid = t2.settlementgroupid AND t1.clientid = t3.clientid AND t1.settlementgroupid = t3.settlementgroupid
+                                        AND t3.investorid = t4.investorid AND t4.activityid = %s AND t1.tradingday = %s"""
+            cursor.execute(sql, (last_trading_day, activity_id, term_no, activity_id, activity_id, current_trading_day,))
+
+            # 更新赛事前N平均收益率和基准收益率
+            sql = """INSERT INTO siminfo.t_tradematchdailyavgreturndata(TradingDay, StatisticRankNo, ActivityID, TermNo, MatchTotalProfit, BenchmarkTotalProfit)
+                                  SELECT 
+                                              %s AS tradingday,
+                                              %s AS statisticrankno,
+                                              t1.activityid,
+                                              t1.termno,
+                                              t1.MatchTotalProfit,
+                                              ROUND(
+                                                (
+                                                  t3.closingprice - t2.initialclosingprice
+                                                ) / t2.initialclosingprice,
+                                                4
+                                              ) AS BenchmarkTotalProfit 
+                                            FROM
+                                              (SELECT 
+                                                ActivityID,
+                                                TermNo,
+                                                ROUND(AVG(TotalReturnRate), 4) AS MatchTotalProfit 
+                                              FROM
+                                                (SELECT 
+                                                  a.activityid,
+                                                  a.termno,
+                                                  a.investorid,
+                                                  (@i := @i + 1) AS newranking,
+                                                  a.totalreturnrate 
+                                                FROM
+                                                  siminfo.t_activityinvestorevaluation a,
+                                                  (SELECT 
+                                                    @i := 0) AS it 
+                                                WHERE a.ActivityID = %s
+                                                  -- AND a.RankingStatus = '1' 
+                                                  AND a.termNo = %s 
+                                                ORDER BY ActivityID,
+                                                  TermNo,
+                                                  a.totalreturnrate DESC,
+                                                  a.currentasset DESC,
+                                                  a.returnrateof1day DESC,
+                                                  a.investorid) b 
+                                              WHERE newranking <= %s
+                                              GROUP BY ActivityID,
+                                                TermNo) t1,
+                                              (SELECT 
+                                                t.lastclosingprice AS initialclosingprice 
+                                              FROM
+                                                siminfo.t_benchmarkmarket t 
+                                              WHERE t.stockid = %s AND t.tradingday = 
+                                                (SELECT 
+                                                  MIN(t1.day) 
+                                                FROM
+                                                  siminfo.t_tradingcalendar t1 
+                                                WHERE t1.day >= 
+                                                  (SELECT 
+                                                    t.begindate 
+                                                  FROM
+                                                    siminfo.t_activity t 
+                                                  WHERE t.activityid = %s
+                                                    AND t.termno = %s) 
+                                                  AND t1.tra = 1)) t2,
+                                              siminfo.t_benchmarkmarket t3 
+                                            WHERE t3.stockid = %s AND t3.tradingday = %s"""
+            #cursor.execute(sql, (last_trading_day, statistic_rank_no, activity_id, term_no, statistic_rank_no, bench_stock_id, activity_id, term_no, bench_stock_id, last_trading_day, ))
 
             # 赛事结束状态设置
             sql = """UPDATE siminfo.t_activity 
@@ -252,20 +354,21 @@ def settle_activity(context, conf):
                 if "2" == str(row[0]):
                     circle_freq = str(row[5])
                     duration = int(row[6])
-                    begin_date = current_trading_day
+                    begin_date = current_trading_day[0:6] + "01"
                     end_date = None
                     if circle_freq == "1":
-                        sql = """SELECT MAX(t.day) FROM siminfo.t_tradingcalendar t WHERE t.day LIKE CONCAT(SUBSTR(DATE_FORMAT(DATE_ADD(%s, INTERVAL %s QUARTER), '%Y%m%d'), 1, 6), '%') AND t.tra = 1"""
+                        sql = """SELECT MAX(t.day) FROM siminfo.t_tradingcalendar t WHERE t.day LIKE CONCAT(SUBSTR(DATE_FORMAT(DATE_ADD(%s, INTERVAL %s QUARTER), '%Y%m%d'), 1, 6), '%') """
                         cursor.execute(sql, (last_trading_day, duration))
                         row = cursor.fetchone()
                         end_date = str(row[0])
                     elif circle_freq == "2":
-                        sql = """SELECT MAX(t.day) FROM siminfo.t_tradingcalendar t WHERE t.day LIKE CONCAT(SUBSTR(DATE_FORMAT(DATE_ADD(%s, INTERVAL %s MONTH), '%Y%m%d'), 1, 6), '%') AND t.tra = 1"""
+                        sql = """SELECT MAX(t.day) FROM siminfo.t_tradingcalendar t WHERE t.day LIKE CONCAT(SUBSTR(DATE_FORMAT(DATE_ADD(%s, INTERVAL %s MONTH), '%Y%m%d'), 1, 6), '%') """
                         cursor.execute(sql, (last_trading_day, duration))
                         row = cursor.fetchone()
                         end_date = str(row[0])
 
                     if end_date is not None:
+                        logger.info("[gen term %s of circle activity %s]......" % (term_no + 1, activity_id,))
                         sql = """INSERT INTO siminfo.t_activity(activityid, termno, activityname, activitytype, activitystatus, initialbalance, joinmode, rankingrule, CircleFreq, Duration, JoinCount, createdate, createtime, begindate, enddate, updatedate, updatetime)
                                                             SELECT %s, t.termno+1, activityname, activitytype, '1', initialbalance, joinmode, rankingrule, CircleFreq, Duration, JoinCount, DATE_FORMAT(NOW(), '%Y%m%d'), DATE_FORMAT(NOW(), '%H:%i:%S'), %s, %s, DATE_FORMAT(NOW(), '%Y%m%d'), DATE_FORMAT(NOW(), '%H:%i:%S')
                                                             FROM siminfo.t_activity t
@@ -276,6 +379,32 @@ def settle_activity(context, conf):
                                                         FROM siminfo.t_activityinvestorevaluation
                                                         WHERE activityid = %s AND termno = %s"""
                         cursor.execute(sql, (activity_id, activity_id, term_no,))
+                        # 插入资金、持仓数据
+                        sql = """INSERT INTO siminfo.t_activityinvestorfund(TradingDay,ActivityID,TermNo,BrokerSystemID,InvestorID,PreBalance,CurrMargin,CloseProfit,Premium,Deposit,Withdraw,Balance,Available,PreMargin,FuturesMargin,OptionsMargin,PositionProfit,Profit,Interest,Fee,TotalCollateral,CollateralForMargin,PreAccmulateInterest,AccumulateInterest,AccumulateFee,ForzenDeposit,
+                                                                                                        AccountStatus,InitialAsset,PreMonthAsset,PreWeekAsset,PreAsset,CurrentAsset,PreStockValue,StockValue)
+                                                SELECT %s,%s,%s,t1.BrokerSystemID,t1.InvestorID,t1.PreBalance,t1.CurrMargin,t1.CloseProfit,t1.Premium,t1.Deposit,t1.Withdraw,t1.Balance,t1.Available,t1.PreMargin,t1.FuturesMargin,t1.OptionsMargin,t1.PositionProfit,t1.Profit,t1.Interest,t1.Fee,t1.TotalCollateral,t1.CollateralForMargin,t1.PreAccmulateInterest,t1.AccumulateInterest,t1.AccumulateFee,t1.ForzenDeposit,t1.AccountStatus,
+                                                                  t1.InitialAsset,t1.PreMonthAsset,t1.PreWeekAsset,t1.PreAsset,t1.CurrentAsset,t1.PreStockValue,t1.StockValue
+                                                FROM siminfo.t_investorfund t1, (SELECT DISTINCT
+                                                                                                            t2.brokersystemid 
+                                                                                                            FROM
+                                                                                                            siminfo.t_activitysettlementgroup t1,
+                                                                                                            siminfo.t_brokersystemsettlementgroup t2 
+                                                                                                            WHERE t1.settlementgroupid = t2.settlementgroupid 
+                                                                                                            AND t1.activityid = %s) t2, siminfo.t_activityinvestor t3
+                                    WHERE t1.brokersystemid = t2.brokersystemid AND t1.investorid = t3.investorid AND t3.activityid = %s"""
+                        cursor.execute(sql, (last_trading_day, activity_id, term_no + 1, activity_id, activity_id,))
+                        sql = """INSERT INTO siminfo.t_activityinvestorposition(TradingDay,SettlementGroupID,SettlementID,HedgeFlag,PosiDirection,YdPosition,Position,LongFrozen,ShortFrozen,YdLongFrozen,YdShortFrozen,BuyTradeVolume,SellTradeVolume,PositionCost,YdPositionCost,UseMargin,FrozenMargin,LongFrozenMargin,ShortFrozenMargin,
+                                                                                                                            FrozenPremium,InstrumentID,ParticipantID,ClientID,InvestorID,ActivityID,TermNo)
+                                                SELECT %s,t1.SettlementGroupID,t1.SettlementID,t1.HedgeFlag,t1.PosiDirection,t1.YdPosition,t1.Position,t1.LongFrozen,t1.ShortFrozen,t1.YdLongFrozen,t1.YdShortFrozen,t1.BuyTradeVolume,t1.SellTradeVolume,t1.PositionCost,t1.YdPositionCost,t1.UseMargin,t1.FrozenMargin,t1.LongFrozenMargin,t1.ShortFrozenMargin,
+                                                                  t1.FrozenPremium,t1.InstrumentID,t1.ParticipantID,t1.ClientID,t3.InvestorID,%s,%s
+                                                FROM siminfo.t_clientposition t1, (SELECT DISTINCT
+                                                                                                            t1.settlementgroupid 
+                                                                                                            FROM
+                                                                                                            siminfo.t_activitysettlementgroup t1
+                                                                                                            WHERE t1.activityid = %s) t2, siminfo.t_investorclient t3, siminfo.t_activityinvestor t4
+                                    WHERE t1.settlementgroupid = t2.settlementgroupid AND t1.clientid = t3.clientid AND t1.settlementgroupid = t3.settlementgroupid
+                                        AND t3.investorid = t4.investorid AND t4.activityid = %s AND t1.tradingday = %s"""
+                        cursor.execute(sql, (last_trading_day, activity_id, term_no + 1, activity_id, activity_id, current_trading_day,))
 
         mysql_conn.commit()
     except Exception as e:
@@ -283,7 +412,7 @@ def settle_activity(context, conf):
         result_code = -1
     finally:
         mysql_conn.close()
-    	logger.info("[settle activity] end")
+        logger.info("[settle activity] end")
     return result_code
 
 

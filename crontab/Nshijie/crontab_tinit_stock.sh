@@ -32,8 +32,8 @@ echo "start sync_stock_broker_csvs.py ... "
 python ${SIM_PLATFORM_HOME}/settlement/sync_stock_broker_csvs.py >> crontab.log
 
 # 5) settle_stock_userpwd.py
-echo "start settle_stock_userpwd.py ... "
-python ${SIM_PLATFORM_HOME}/settlement/settle_stock_userpwd.py >> crontab.log
+# echo "start settle_stock_userpwd.py ... "
+# python ${SIM_PLATFORM_HOME}/settlement/settle_stock_userpwd.py >> crontab.log
 
 # 6) sync_stock_prepare_data.py
 echo "start sync_stock_prepare_data.py ... "
@@ -59,6 +59,9 @@ sh ${SIM_PLATFORM_HOME}/appshell/${SIM_RELEASE}/stock/stock_csv_all.sh >> cronta
 echo "start stock_csv_all ... "
 sh ${SIM_PLATFORM_HOME}/appshell/${SIM_RELEASE}/stock/etf_csv_all.sh >> crontab.log
 
+echo "start exchange_append ... "
+sh ${SIM_PLATFORM_HOME}/robotshell/ex_exchange_stock_csv.sh >> crontab.log
+
 # 11) tinit.sh
 echo "start tinit.sh ... "
 sh ${SIM_PLATFORM_HOME}/appshell/${SIM_RELEASE}/stock/tinit_stock.sh >> crontab.log
@@ -75,5 +78,8 @@ sh ${SIM_PLATFORM_HOME}/appshell/${SIM_RELEASE}/stock/start_stock_broker.sh >> c
 echo "start start_etf_broker.sh ... "
 sh ${SIM_PLATFORM_HOME}/appshell/${SIM_RELEASE}/stock/start_etf_broker.sh >> crontab.log
 
+# 15) start robot
+echo "start start_stock_robots.sh ... "
+sh ${SIM_PLATFORM_HOME}/appshell/${SIM_RELEASE}/stock/start_stock_robots.sh >> crontab.log
 
 echo "${now_date} crontab_tinit_stock.sh finished..." | tee -a crontab.log

@@ -1,0 +1,11 @@
+{
+  "cif" : {
+    "user": "mncg",
+    "password": "mncg",
+    "host": "10.188.15.8",
+    "port": 1521,
+    "sid": "cifbkn",
+    "pool_min": 5,
+    "pool_max": 20
+  }
+}

@@ -36,7 +36,7 @@ class OpenAccountHandler(tornado.web.RequestHandler):
         try:
             result = open_account(conn, {"id": open_id, "name":  open_name, "activity": activity_id})
         except:
-            self.logger.error(sys.exc_info()[0])
+            self.logger.error(sys.exc_info())
         finally:
             conn.close()
 
@@ -72,7 +72,7 @@ class OpenVIPAccountHandler(tornado.web.RequestHandler):
         try:
             result = open_vip_account(conn, {"id": open_id, "name":  open_name, "activity": activity_id, "account" : account})
         except:
-            self.logger.error(sys.exc_info()[0])
+            self.logger.error(sys.exc_info())
         finally:
             conn.close()
 
@@ -106,7 +106,7 @@ class JoinActivityHandler(tornado.web.RequestHandler):
         try:
             result = join_activity(conn, {"id": open_id, "activity": activity_id})
         except:
-            self.logger.error(sys.exc_info()[0])
+            self.logger.error(sys.exc_info())
         finally:
             conn.close()
 
@@ -142,7 +142,7 @@ class QueryActivityRankingHandler(tornado.web.RequestHandler):
         try:
             result = query_activity_ranking(conn, {"activity": activity_id, "investor": investor_id, "type": query_type, "count": query_count})
         except:
-            self.logger.error(sys.exc_info()[0])
+            self.logger.error(sys.exc_info())
         finally:
             conn.close()
 
@@ -176,7 +176,7 @@ class QueryActivityJoinStatusHandler(tornado.web.RequestHandler):
         try:
             result = query_activity_joinstatus(conn, {"activity": activity_id, "id": open_id})
         except:
-            self.logger.error(sys.exc_info()[0])
+            self.logger.error(sys.exc_info())
         finally:
             conn.close()
 

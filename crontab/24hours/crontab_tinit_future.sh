@@ -25,8 +25,8 @@ echo "start stop_stock_exchange.sh ... "
 sh ${SIM_PLATFORM_HOME}/appshell/${SIM_RELEASE}/future/stop_future_exchange.sh >> crontab.log
 
 # 3) load ctp info
-echo "start load_ctp_info.sh ..."
-sh ${SIM_PLATFORM_HOME}/appshell/${SIM_RELEASE}/future/load_ctp_info.sh >> crontab.log
+# echo "start load_ctp_info.sh ..."
+# sh ${SIM_PLATFORM_HOME}/appshell/${SIM_RELEASE}/future/load_ctp_info.sh >> crontab.log
 
 # 4) data trans
 echo "start trans_futureinfo.sh ..."

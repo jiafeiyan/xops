@@ -1,0 +1,47 @@
+{
+    "localhost" : {
+        "host" : "127.0.0.1",
+        "user" : "xapp",
+        "password" : "111111"
+    },
+    "etf_broker" : {
+        "host" : "10.188.172.82",
+        "user" : "trade",
+        "password" : "trade"
+    },
+    "stock_broker" : {
+        "host" : "127.0.0.1",
+        "user" : "trade",
+        "password" : "trade"
+    },
+    "stock_exchange" : {
+        "host" : "10.188.172.86",
+        "user" : "trade",
+        "password" : "trade"
+    },
+    "future_broker" : {
+        "host" : "10.188.172.84",
+        "user" : "trade",
+        "password" : "111111"
+    },
+    "future_exchange" : {
+        "host" : "10.188.172.88",
+        "user" : "trade",
+        "password" : "trade"
+    },
+    "remote_xapp" : {
+        "host" : "10.188.172.16",
+        "user" : "xapp",
+        "password" : "xapp"
+    },
+    "remote_stock_exchange" : {
+        "host" : "10.188.172.22",
+        "user" : "trade",
+        "password" : "trade"
+    },
+    "remote_future_exchange" : {
+        "host" : "10.188.172.24",
+        "user" : "trade",
+        "password" : "trade"
+    }
+}

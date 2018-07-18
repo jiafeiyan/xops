@@ -1,0 +1,6 @@
+{
+  "init_base": {
+    "initTable": "${SIM_PLATFORM_HOME}/configuration/${SIM_RELEASE}/initialization/data",
+    "initTemplate": "${SIM_PLATFORM_HOME}/configuration/${SIM_RELEASE}/initialization/template"
+  }
+}

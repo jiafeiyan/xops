@@ -1,3 +1,3 @@
 #!/bin/sh
 echo "starting ex_exchange_stock_csv..."
-python ${SIM_PLATFORM_HOME}/extrader/robotinit/ex_exchange_csv.py -conf extrader/robotinit/ex_exchange_stock_csv.json
+python ${SIM_PLATFORM_HOME}/extrader/robotinit/ex_exchange_csv.py -conf extrader/ex_exchange_stock_csv.json

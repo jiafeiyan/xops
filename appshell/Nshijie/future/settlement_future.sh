@@ -1,5 +1,8 @@
 #!/bin/sh
 
+echo "check file close ..."
+sh ${SIM_PLATFORM_HOME}/appshell/${SIM_RELEASE}/future/check_future_file_close.sh
+
 echo "starting sync_dump_csvs..."
 python ${SIM_PLATFORM_HOME}/settlement/sync_dump_csvs.py -conf settlement/sync_dump_csvs_future.json
 if [ $? != 0 ]; then
@@ -7,10 +10,24 @@ if [ $? != 0 ]; then
         exit 1
 fi
 
+echo "starting load_ctp_settle_data..."
+sh ${SIM_PLATFORM_HOME}/appshell/${SIM_RELEASE}/future/load_ctp_settle_future.sh
+if [ $? != 0 ]; then
+        echo "load_ctp_settle_data future error..."
+        exit 1
+fi
+
 echo "starting prepare_settle_futures..."
 python ${SIM_PLATFORM_HOME}/settlement/prepare_settle_futures.py
 if [ $? != 0 ]; then
         echo "prepare_settle_futures error..."
+        exit 1
+fi
+
+echo "starting clear_robot_data..."
+sh ${SIM_PLATFORM_HOME}/appshell/clear_robot_data.sh 0002 1
+if [ $? != 0 ]; then
+        echo "clear_robot_data future error..."
         exit 1
 fi
 

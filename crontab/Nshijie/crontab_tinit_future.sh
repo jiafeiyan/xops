@@ -40,6 +40,9 @@ sh ${SIM_PLATFORM_HOME}/appshell/${SIM_RELEASE}/future/toSyncAll_future.sh >> cr
 echo "start future_csv_all ... "
 sh ${SIM_PLATFORM_HOME}/appshell/${SIM_RELEASE}/future/future_csv_all.sh >> crontab.log
 
+echo "start exchange_append ... "
+sh ${SIM_PLATFORM_HOME}/robotshell/ex_exchange_future_csv.sh >> crontab.log
+
 # 7) tinit.sh
 echo "start tinit.sh ... "
 sh ${SIM_PLATFORM_HOME}/appshell/${SIM_RELEASE}/future/tinit_future.sh >> crontab.log
@@ -61,5 +64,8 @@ sleep 30
 echo "start start_future_exchange.sh ... "
 sh ${SIM_PLATFORM_HOME}/appshell/${SIM_RELEASE}/future/start_future_exchange.sh >> crontab.log
 
+# 12) start robot
+echo "start start_stock_robots.sh ... "
+sh ${SIM_PLATFORM_HOME}/appshell/${SIM_RELEASE}/future/start_future_robots.sh >> crontab.log
 
 echo "${now_date} crontab_tinit_future.sh finished..." | tee -a crontab.log

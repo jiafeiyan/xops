@@ -1,0 +1,4 @@
+{
+  "host" : "future_robot",
+  "command" : "${HOME}/xops/robotshell/start_pro_future_robots.sh"
+}

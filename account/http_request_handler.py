@@ -226,7 +226,109 @@ def open_account(mysql_conn, parameters):
             response.update({"error": error})
             result.update({"code": code, "response": response})
 
+    if code == "0":
+        register_user(mysql_conn, open_id, open_name)
+
     return result
+
+
+def register_user(mysql_conn, open_id, open_name):
+    mysql_conn.start_transaction()
+    cursor = mysql_conn.cursor()
+
+    sql = """select tableid from simtrade.t_tableid where tablename = 't_User_uid_' for update"""
+    cursor.execute(sql)
+    row = cursor.fetchone()
+
+    if row is not None:
+        current_user_id = str(row[0])
+
+        sql = """SELECT COUNT(1) FROM simtrade.t_user where mobile = %s"""
+        cursor.execute(sql, (open_id,))
+        row = cursor.fetchone()
+
+        user_not_registered = False if int(row[0]) == 1 else True
+        if user_not_registered:
+            sql = """INSERT INTO simtrade.t_user (
+                                                                        ExchangeID,
+                                                                        UserID,
+                                                                        UserName,
+                                                                        Mobile,
+                                                                        IsActive,
+                                                                        NoActiveReason,
+                                                                        RegDate,
+                                                                        LoginStatus,
+                                                                        UserType,
+                                                                        VersionNo
+                                                                    )
+                                                                    VALUES
+                                                                    (
+                                                                        '01',
+                                                                        CONCAT(
+                                                                            'uid_',
+                                                                            lpad(substring(%s, 5) + 1, 8, 0)
+                                                                        ),
+                                                                        %s,
+                                                                        %s,
+                                                                        '1',
+                                                                        NULL,
+                                                                        DATE_FORMAT(NOW(), '%Y%m%d'),
+                                                                        '0',
+                                                                        '1',
+                                                                        1
+                                                                    )"""
+            cursor.execute(sql, (current_user_id, open_name, open_id,))
+            sql = """insert into simtrade.t_UserExtent (
+                                                                                        UserID
+                                                                                        ,PersonalizedSign
+                                                                                        ,FullName
+                                                                                        ,Gender
+                                                                                        ,Email
+                                                                                        ,Address
+                                                                                        ,BirthDay
+                                                                                        ,InvitationCode
+                                                                                        ,BonusPoints
+                                                                                        ,GradeLevel
+                                                                                        ,HeadImageName
+                                                                                        ,HeadImagePath
+                                                                                        ,AttentionRate
+                                                                                        ,InviterCode
+                                                                                        ,ReccrtDate
+                                                                                        ,ReccrtTime
+                                                                                        ,VersionNo
+                                                                                    )
+                                                                                    values
+                                                                                    (
+                                                                                        CONCAT(
+                                                                                            'uid_',
+                                                                                            lpad(substring(%s, 5) + 1, 8, 0)
+                                                                                        )
+                                                                                        ,null
+                                                                                        ,null
+                                                                                        ,null
+                                                                                        ,null
+                                                                                        ,null
+                                                                                        ,null
+                                                                                        ,'0'
+                                                                                        ,0
+                                                                                        ,1
+                                                                                        ,null
+                                                                                        ,null
+                                                                                        ,0
+                                                                                        ,null
+                                                                                        ,DATE_FORMAT(NOW(), '%Y%m%d')
+                                                                                        ,DATE_FORMAT(NOW(), '%H:%i:%S')
+                                                                                        ,1
+                                                                                    )"""
+            cursor.execute(sql, (current_user_id,))
+            sql = """UPDATE simtrade.t_tableid SET tableid = CONCAT(
+                                                                                            'uid_',
+                                                                                            lpad(substring(%s, 5) + 1, 8, 0)
+                                                                                        ) WHERE tablename = 't_User_uid_' """
+            cursor.execute(sql, (current_user_id,))
+
+    mysql_conn.commit()
+    cursor.close()
 
 
 def open_activity_account(mysql_conn, parameters):
@@ -609,6 +711,13 @@ def join_activity_with_account(mysql_conn, parameters):
 
                         response.update({"error": error})
                         result.update({"code": code, "response": response})
+                    else:
+                        # 设置参与人数
+                        sql = """UPDATE siminfo.t_activity t, 
+                                                (SELECT COUNT(1) as joincount FROM siminfo.t_activityinvestor t3 WHERE t3.activityid = %s) t1
+                                                SET t.joincount = t1.joincount 
+                                                WHERE t.activityid = %s AND t.termno = %s"""
+                        cursor.execute(sql, (activity, activity, term_no,))
 
     mysql_conn.commit()
 

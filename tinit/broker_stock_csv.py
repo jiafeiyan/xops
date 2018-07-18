@@ -14,6 +14,7 @@ from utils import Configuration
 from utils import mysql
 from utils import csv_tool
 
+
 class broker_stock_csv:
     def __init__(self, context, configs):
         # 初始化settlementGroupID
@@ -101,13 +102,13 @@ class broker_stock_csv:
                                         AND t1.SettlementGroupID = t2.SettlementGroupID
                                         AND t2.SettlementGroupID = t3.SettlementGroupID
                                         AND t3.BrokerSystemID = %s""",
-                                    params=(self.brokerSystemID,self.brokerSystemID)),
+                                    params=(self.brokerSystemID, self.brokerSystemID)),
             Investor=dict(columns=("InvestorID", "DepartmentID", "InvestorType", "InvestorName", "IdCardType",
                                    "IdCardNo", "ContractNo", "BirthDate", "Gender", "Professional", "Country",
                                    "TaxNo", "LicenseNo", "RegisteredCapital", "RegisteredCurrency", "Mobile",
                                    "RiskLevel", "Remark", "OpenDate", "CloseDate", "Status", "Contacter", "Fax",
                                    "Telephone", "Email", "Address", "ZipCode", "InnerBranchID", "Operways",
-                                   "CRiskLevel", "ProfInvestorType", "InvestKinds"),
+                                   "CRiskLevel", "ProfInvestorType", "InvestKinds", "FeeTemplateID"),
                           sql="""SELECT DISTINCT t.InvestorID,'0001' AS DepartmentID,'0' AS InvestorType,
                                         t.InvestorName,'1' AS IdCardType,t.OpenID AS IdCardNo,'' AS ContractNo,
                                         '' AS BirthDate,'' AS Gender,'' AS Professional,'' AS Country,'' AS TaxNo,
@@ -115,7 +116,8 @@ class broker_stock_csv:
                                         '' AS RiskLevel,'' AS Remark,'' AS OpenDate,'' AS CloseDate,'1' AS STATUS,
                                         '' AS Contacter,'' AS Fax,'' AS Telephone,'' AS Email,'' AS Address,
                                         '' AS ZipCode,'' AS InnerBranchID,'' AS Operways, 
-                                        '' AS CRiskLevel, '' AS ProfInvestorType, '' AS InvestKinds
+                                        '' AS CRiskLevel, '' AS ProfInvestorType, '' AS InvestKinds,
+                                        'default' AS FeeTemplateID
                                     FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1,
                                          siminfo.t_BrokerSystemSettlementGroup t2
                                     WHERE t.InvestorID = t1.InvestorID
@@ -134,15 +136,23 @@ class broker_stock_csv:
                                             t.InvestorID AS AccountOwner,'0001' AS DepartmentID
                                         FROM siminfo.t_InvestorFund t WHERE t.BrokerSystemID = %s""",
                                 params=(self.brokerSystemID,)),
-            TradingAgreement=dict(columns=("InvestorID", "TradingAgreementType", "EffectDay", "ExpireDay"),
-                                  sql="""SELECT DISTINCT t.InvestorID,'0' AS TradingAgreementType,
+            TradingAgreement=dict(columns=("InvestorID", "TradingAgreementType", "Direction", "EffectDay", "ExpireDay"),
+                                  sql="""SELECT DISTINCT t.InvestorID,'0' AS TradingAgreementType, "0" AS Direction,
+                                                '20170101' AS EffectDay,'20500101' AS ExpireDay
+                                            FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1,
+                                                siminfo.t_BrokerSystemSettlementGroup t2
+                                            WHERE t.InvestorID = t1.InvestorID
+                                            AND t1.SettlementGroupID = t2.SettlementGroupID
+                                            AND t2.BrokerSystemID = %s
+                                         UNION ALL
+                                         SELECT DISTINCT t.InvestorID,'0' AS TradingAgreementType, "0" AS Direction,
                                                 '20170101' AS EffectDay,'20500101' AS ExpireDay
                                             FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1,
                                                 siminfo.t_BrokerSystemSettlementGroup t2
                                             WHERE t.InvestorID = t1.InvestorID
                                             AND t1.SettlementGroupID = t2.SettlementGroupID
                                             AND t2.BrokerSystemID = %s""",
-                                  params=(self.brokerSystemID,)),
+                                  params=(self.brokerSystemID, self.brokerSystemID)),
             User=dict(columns=("UserID", "UserName", "UserType", "DepartmentID", "UserPassword", "LoginLimit",
                                "PasswordFailLimit", "Status", "Contacter", "Fax", "Telephone", "Email", "Address",
                                "ZipCode", "OpenDate", "CloseDate", "CommFlux"),

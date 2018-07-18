@@ -12,8 +12,8 @@ def sync_all_prepare_data(context, conf):
 
     # 初始化数据库连接
     mysqlDB = mysql(configs=context.get("mysql").get(conf.get("mysqlId")))
-    # 查询当前交易日
-    sql = """SELECT t1.tradingday FROM siminfo.t_tradesystemtradingday t1 WHERE t1.tradesystemid = %s"""
+    # 查询实盘行情上一个交易日
+    sql = """SELECT t1.lasttradingday FROM siminfo.t_tradesystemtradingday t1 WHERE t1.tradesystemid = %s"""
     res = mysqlDB.select(sql, (conf.get("tradesystemid"),))
     current_trading_day = str(res[0][0])
 

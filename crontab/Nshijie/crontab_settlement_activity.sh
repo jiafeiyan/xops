@@ -11,4 +11,4 @@ trading_day=`sh ${SIM_PLATFORM_HOME}/appshell/${SIM_RELEASE}/stock/get_stock_tra
 # settlement_stock.sh
 sh ${SIM_PLATFORM_HOME}/appshell/settlement_activity.sh >> crontab.log
 
-echo "${now_date} crontab_settlement_stock finished..." | tee -a crontab.log
+echo "${now_date} crontab_settlement_activity finished..." | tee -a crontab.log

@@ -50,7 +50,8 @@ class broker_sse_csv:
                                         "BidVolume1", "AskVolume1", "BidPrice2", "BidVolume2", "AskPrice2",
                                         "AskVolume2", "BidPrice3", "BidVolume3", "AskPrice3", "AskVolume3",
                                         "BidPrice4", "BidVolume4", "AskPrice4", "AskVolume4", "BidPrice5", "BidVolume5",
-                                        "AskPrice5", "AskVolume5", "UpdateTime", "UpdateMillisec", "ClosePrice", "MDSecurityStat"],
+                                        "AskPrice5", "AskVolume5", "UpdateTime", "UpdateMillisec", "ClosePrice",
+                                        "MDSecurityStat"],
                                sql="""SELECT t.TradingDay AS TradingDay,t.InstrumentID AS SecurityID,
                                                 '1' AS ExchangeID,t2.InstrumentName AS SecurityName,
                                                 t.PreSettlementPrice AS PreClosePrice,t.OpenPrice AS OpenPrice,
@@ -79,7 +80,7 @@ class broker_sse_csv:
                                       "VolumeMultiple", "PriceTick", "OpenDate", "CloseDate", "PositionType",
                                       "ParValue", "SecurityStatus", "BondInterest", "ConversionRate", "TotalEquity",
                                       "CirculationEquity", "IsSupportPur", "IsSupportRed", "IsSupportTrade",
-                                      "IsCancelOrder", "IsCollateral"),
+                                      "IsCancelOrder", "IsCollateral", "QualificationClass"),
                              sql="""SELECT t.InstrumentID AS SecurityID,'1' AS ExchangeID,
                                            t.InstrumentName AS SecurityName,t.InstrumentID AS UnderlyingSecurityID,
                                            '1' AS MarketID,'1' AS ProductID,'a' AS SecurityType,
@@ -93,7 +94,7 @@ class broker_sse_csv:
                                      '0' AS SecurityStatus,'0' AS BondInterest,'0' AS ConversionRate,
                                      t.TotalEquity AS TotalEquity,t.CirculationEquity AS CirculationEquity,
                                      '0' AS IsSupportPur,'0' AS IsSupportRed,'1' AS IsSupportTrade,
-                                     '1' AS IsCancelOrder,'1' AS IsCollateral
+                                     '1' AS IsCancelOrder,'1' AS IsCollateral,'' AS QualificationClass
                                     FROM siminfo.t_Instrument t,siminfo.t_SettlementGroup t1,siminfo.t_InstrumentProperty t4
                                     WHERE t.SettlementGroupID = t1.SettlementGroupID
                                     AND t.InstrumentID = t4.InstrumentID
@@ -154,24 +155,24 @@ class broker_sse_csv:
                                         AND t.SettlementGroupID = t1.SettlementGroupID
                                         AND t.SettlementGroupID = %s""",
                              params=(self.settlementGroupID,)),
-            SSEShareholderAccount=dict(columns=("ExchangeID", "ShareholderID", "MarketID", "InvestorID",
-                                                "TradingCodeClass", "TradingCodeEx", "PbuID",
-                                                "BranchID", "bProperControl"),
+            SSEShareholderAccount=dict(columns=("ExchangeID", "ShareholderID", "MarketID", "TradingCodeClass",
+                                                "InvestorID", "TradingCodeEx", "PbuID", "BranchID",
+                                                "bProperControl", "TradingRightTemplateID"),
                                        sql="""SELECT '1' AS ExchangeID,t.ClientID AS ShareholderID,'1' AS MarketID,
-                                                    t.InvestorID AS InvestorID,'a' AS TradingCodeClass,
-                                                    '' AS TradingCodeEx,'28637' AS PbuID,'04005' AS BranchID,
-                                                    '0' AS bProperControl
+                                                        'a' AS TradingCodeClass,t.InvestorID AS InvestorID,
+                                                        '' AS TradingCodeEx,'28637' AS PbuID,'04005' AS BranchID,
+                                                        '0' AS bProperControl,'default' AS TradingRightTemplateID
                                                 FROM siminfo.t_InvestorClient t
                                                 WHERE t.SettlementGroupID = %s""",
                                        params=(self.settlementGroupID,)),
             SSEInvestorTradingFee=dict(columns=("InvestorID", "ExchangeID", "ProductID", "SecurityType", "SecurityID",
                                                 "BizClass", "BrokerageType", "RatioByAmt", "RatioByPar", "FeePerOrder",
-                                                "FeeMin", "FeeMax", "FeeByVolume", "DepartmentID"),
+                                                "FeeMin", "FeeMax", "FeeByVolume", "DepartmentID", "RangeMode"),
                                        sql="""SELECT '00000000' AS InvestorID,'1' AS ExchangeID,'0' AS ProductID,
                                                 '0' AS SecurityType,'00000000' AS SecurityID,'0' AS BizClass,
                                                 '0' AS BrokerageType,t.OpenFeeRatio AS RatioByAmt,'0' AS RatioByPar,
                                                 '0' AS FeePerOrder,t.MinOpenFee AS FeeMin,t.MaxOpenFee AS FeeMax,
-                                                '0' AS FeeByVolume,'00000000' AS DepartmentID
+                                                '0' AS FeeByVolume,'00000000' AS DepartmentID, '0' as RangeMode
                                             FROM siminfo.t_TransFeeRateDetail t
                                             WHERE t.SettlementGroupID = %s
                                             UNION ALL 
@@ -179,7 +180,7 @@ class broker_sse_csv:
                                                 '0' AS SecurityType,'00000000' AS SecurityID,'1' AS BizClass,
                                                 '0' AS BrokerageType,t.OpenFeeRatio AS RatioByAmt,'0' AS RatioByPar,
                                                 '0' AS FeePerOrder,t.MinOpenFee AS FeeMin,t.MaxOpenFee AS FeeMax,
-                                                '0' AS FeeByVolume,'00000000' AS DepartmentID
+                                                '0' AS FeeByVolume,'00000000' AS DepartmentID,'0' as RangeMode
                                             FROM siminfo.t_TransFeeRateDetail t
                                             WHERE t.SettlementGroupID = %s""",
                                        params=(self.settlementGroupID, self.settlementGroupID,)),
