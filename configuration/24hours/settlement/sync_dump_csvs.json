@@ -13,7 +13,7 @@
                   "${HOME}/run/tkernel1/dump/Trade.csv"]
       },
       {
-        "host": "stock_exchange",
+        "host": "remote_stock_exchange",
         "items": ["${HOME}/security_share/info/clpr03%m%d.txt"]
       }
 

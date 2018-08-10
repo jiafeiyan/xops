@@ -145,7 +145,7 @@ class broker_stock_csv:
                                             AND t1.SettlementGroupID = t2.SettlementGroupID
                                             AND t2.BrokerSystemID = %s
                                          UNION ALL
-                                         SELECT DISTINCT t.InvestorID,'0' AS TradingAgreementType, "0" AS Direction,
+                                         SELECT DISTINCT t.InvestorID,'0' AS TradingAgreementType, "1" AS Direction,
                                                 '20170101' AS EffectDay,'20500101' AS ExpireDay
                                             FROM siminfo.t_Investor t,siminfo.t_InvestorClient t1,
                                                 siminfo.t_BrokerSystemSettlementGroup t2

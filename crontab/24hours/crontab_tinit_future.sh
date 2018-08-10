@@ -44,6 +44,9 @@ sh ${SIM_PLATFORM_HOME}/appshell/${SIM_RELEASE}/future/future_csv_all.sh >> cron
 echo "start tinit.sh ... "
 sh ${SIM_PLATFORM_HOME}/appshell/${SIM_RELEASE}/future/tinit_future.sh >> crontab.log
 
+echo "handle md ... "
+python ${SIM_PLATFORM_HOME}/tinit/tinit_md.py -conf tinit/tinit_md_future.json >> crontab.log
+
 # 9) start future broker
 echo "start start_future_broker.sh ... "
 sh ${SIM_PLATFORM_HOME}/appshell/${SIM_RELEASE}/future/start_future_broker.sh >> crontab.log

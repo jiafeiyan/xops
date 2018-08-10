@@ -269,13 +269,20 @@ def prepare_settle_stock(context, conf):
             cursor.execute(sql, (settlement_id, current_trading_day, current_trading_day, trade_system_id))
 
             # 更新etf期权结算价，收盘价
+            sql = """select DAY from siminfo.t_tradingcalendar where day <= 
+                        (select TradingDay from siminfo.t_tradesystemtradingday where TradeSystemID = %s) 
+                        and Tra = 1 order by Day desc limit 1"""
+            cursor.execute(sql, (trade_system_id,))
+            row = cursor.fetchone()
+            current_day = str(row[0])
+
             logger.info("[update etf closeprice settlementprice to dbclear]......")
             etf_sql = """update dbclear.t_marketdata t, siminfo.t_tradesystemsettlementgroup t2 
                                 set t.ClosePrice = %s, t.SettlementPrice = %s where t.InstrumentID = %s
                                 and t.TradingDay = %s and t.SettlementID = %s and t.SettlementGroupID = t2.SettlementGroupID
                                 and t2.TradeSystemID = %s"""
             etf_params = []
-            with open(os.path.join(data_target_dir, "clpr03%m%d.txt".replace("%m", current_trading_day[4:6]).replace("%d", current_trading_day[6:8]))) as etf_file:
+            with open(os.path.join(data_target_dir, "clpr03%m%d.txt".replace("%m", current_day[4:6]).replace("%d", current_day[6:8]))) as etf_file:
                 for row in etf_file:
                     row = row.split("|")
                     instrumentId = row[1].strip()

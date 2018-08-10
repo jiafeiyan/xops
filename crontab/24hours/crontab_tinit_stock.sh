@@ -63,6 +63,9 @@ sh ${SIM_PLATFORM_HOME}/appshell/${SIM_RELEASE}/stock/etf_csv_all.sh >> crontab.
 echo "start tinit.sh ... "
 sh ${SIM_PLATFORM_HOME}/appshell/${SIM_RELEASE}/stock/tinit_stock.sh >> crontab.log
 
+echo "handle md ... "
+python ${SIM_PLATFORM_HOME}/tinit/tinit_md.py -conf tinit/tinit_md_stock.json >> crontab.log
+
 # 12) start stock exchange
 echo "start start_stock_exchange.sh ... "
 sh ${SIM_PLATFORM_HOME}/appshell/${SIM_RELEASE}/stock/start_stock_exchange.sh >> crontab.log

@@ -2,6 +2,7 @@
   "csv_base": {
     "exchange": "${SIM_PLATFORM_HOME}/csvfiles/exchange",
     "broker": "${SIM_PLATFORM_HOME}/csvfiles/broker",
-    "stock_exp": "${SIM_PLATFORM_HOME}/csvfiles/exp"
+    "stock_exp": "${SIM_PLATFORM_HOME}/csvfiles/exp",
+    "quant": "${SIM_PLATFORM_HOME}/csvfiles/quant"
   }
 }

@@ -703,8 +703,8 @@ def join_activity_with_account(mysql_conn, parameters):
 
                             join_status = '1'
 
-                    sql = """INSERT INTO siminfo.t_activityinvestor(activityid, investorid, joindate, joinstatus) VALUES(%s, %s, DATE_FORMAT(NOW(), '%Y%m%d'), %s)"""
-                    cursor.execute(sql, (activity, investor_id, join_status))
+                    sql = """INSERT INTO siminfo.t_activityinvestor(activityid, termno, investorid, joindate, joinstatus) VALUES(%s, %s, %s, DATE_FORMAT(NOW(), '%Y%m%d'), %s)"""
+                    cursor.execute(sql, (activity, term_no, investor_id, join_status))
                     if cursor.rowcount == 0:
                         code = "-1"
                         error = "参加赛事活动失败"

@@ -138,6 +138,88 @@ def settle_etf(context, conf):
                                                     or Position = '0'"""
             cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id,
                                  current_trading_day, settlement_group_id, settlement_id))
+            # 4) 计算行权盈亏
+            sql = """INSERT INTO dbclear.t_clientdelivprofit(TradingDay, SettlementGroupID, SettlementID, ParticipantID, AccountID, ClientID, HedgeFlag, InstrumentID, PosiDirection, POSITION, OptionsType, VolumeMultiple, UnderlyingMultiple, StrikePrice, SettlementPrice, Profit)
+                                                SELECT 
+                                                  t1.tradingday,
+                                                  t1.settlementgroupid,
+                                                  t1.settlementid,
+                                                  t1.participantid,
+                                                  t2.accountid,
+                                                  t1.clientid,
+                                                  t1.hedgeflag,
+                                                  t1.instrumentid,
+                                                  t1.posidirection,
+                                                  t1.position,
+                                                  t3.optionstype,
+                                                  t3.volumemultiple,
+                                                  t3.underlyingmultiple,
+                                                  t3.strikeprice,
+                                                  t3.settlementprice,
+                                                  CASE
+                                                    WHEN t3.optionstype = '1' 
+                                                    THEN IF(t1.posidirection = '2', 1, - 1) * (
+                                                      t3.settlementprice - t3.strikeprice
+                                                    ) * t1.position * t3.volumemultiple * t3.underlyingmultiple 
+                                                    WHEN t3.optionstype = '2' 
+                                                    THEN IF(t1.posidirection = '2', - 1, 1) * (
+                                                      t3.settlementprice - t3.strikeprice
+                                                    ) * t1.position * t3.volumemultiple * t3.underlyingmultiple 
+                                                    ELSE 0 
+                                                  END AS delivprofit 
+                                                FROM
+                                                  (SELECT 
+                                                    t1.*,
+                                                    t2.tradingrole 
+                                                  FROM
+                                                    dbclear.t_clientdelivposition t1,
+                                                    siminfo.t_client t2 
+                                                  WHERE t1.clientid = t2.clientid) t1,
+                                                  siminfo.t_PartRoleAccount t2,
+                                                  (SELECT 
+                                                    t2.tradingday,
+                                                    t1.settlementgroupid,
+                                                    t2.settlementid,
+                                                    t1.instrumentid,
+                                                    t1.strikeprice,
+                                                    t1.optionstype,
+                                                    t1.volumemultiple,
+                                                    t1.underlyingmultiple,
+                                                    t2.UnderlyingClosePx as settlementprice 
+                                                  FROM
+                                                    siminfo.t_instrument t1,
+                                                    dbclear.t_marketdata t2 
+                                                  WHERE t1.settlementgroupid = %s
+                                                    AND t2.tradingday = %s
+                                                    AND t2.settlementid = %s
+                                                    AND (
+                                                      (
+                                                        t1.optionstype = '1' 
+                                                        AND t1.strikeprice < t2.settlementprice
+                                                      ) 
+                                                      OR (
+                                                        t1.optionstype = '2' 
+                                                        AND t1.strikeprice > t2.settlementprice
+                                                      )
+                                                    ) 
+                                                    AND t1.SettlementGroupID = t2.SettlementGroupID 
+                                                    AND t1.instrumentid = t2.instrumentid) t3 
+                                                WHERE t2.TradingRole = t1.TradingRole 
+                                                  AND t2.SettlementGroupID = t1.SettlementGroupID 
+                                                  AND t2.ParticipantID = t1.ParticipantID 
+                                                  AND t1.instrumentid = t3.instrumentid 
+                                                  AND t1.tradingday = t3.tradingday 
+                                                  AND t1.settlementgroupid = t3.settlementgroupid 
+                                                  AND t1.settlementid = t3.settlementid 
+                                                  AND (
+                                                    t1.posidirection = '2' 
+                                                    OR t1.posidirection = '3'
+                                                  ) 
+                                                  AND t1.tradingday = %s
+                                                  AND t1.settlementgroupid = %s
+                                                  AND t1.settlementid = %s
+                                          """
+            cursor.execute(sql, (settlement_group_id, current_trading_day, settlement_id, current_trading_day, settlement_group_id, settlement_id,))
 
             # 交割手续费
             sql = """"""
@@ -458,7 +540,7 @@ def settle_etf(context, conf):
             # 3）更新profit
             sql = """insert into dbclear.t_clientfund (TradingDay,SettlementGroupID,SettlementID,ParticipantID,ClientID,AccountID,TransFee,DelivFee,PositionMargin,Profit,available,StockValue)
                                            (select t.tradingday,t.settlementgroupid,t.settlementid,t.participantid,t.clientid,t.accountid,0,0,0,sum(t.profit) as profit,0,0
-                                           from dbclear.t_clienttradeprofit t where t.tradingday = %s and t.settlementgroupid = %s and t.settlementid = %s
+                                           from dbclear.t_clientdelivprofit t where t.tradingday = %s and t.settlementgroupid = %s and t.settlementid = %s
                                            group by t.tradingday,t.settlementgroupid,t.settlementid,t.participantid,t.clientid,t.accountid)
                                            ON DUPLICATE KEY UPDATE dbclear.t_clientfund.profit = values(profit)"""
             cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id))
@@ -475,6 +557,53 @@ def settle_etf(context, conf):
                                           from dbclear.t_clientpositionmargin t where t.tradingday = %s and t.settlementgroupid = %s and t.settlementid = %s
                                           group by t.tradingday,t.settlementgroupid,t.settlementid,t.participantid,t.clientid,t.accountid) 
                                           ON DUPLICATE KEY UPDATE dbclear.t_clientfund.positionmargin = values(positionmargin)"""
+            cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id))
+            # 6）更新stockvalue
+            sql = """insert into dbclear.t_clientfund (TradingDay,SettlementGroupID,SettlementID,ParticipantID,ClientID,AccountID,TransFee,DelivFee,PositionMargin,Profit,available,StockValue)
+                                          (SELECT  t1.tradingday, t1.settlementgroupid, t1.settlementid, t1.participantid, t2.accountid, t1.clientid, 0 AS transfee, 0 AS delivfee, 0 AS positionmargin, 0 AS profit, 0 AS available,
+                                                          ROUND(SUM(
+                                                            CASE
+                                                              WHEN t1.posidirection = '2' 
+                                                              THEN t1.position * t3.settlementprice * t4.underlyingmultiple 
+                                                              WHEN t1.posidirection = '3' 
+                                                              THEN - 1 * t1.position * t3.settlementprice * t4.underlyingmultiple 
+                                                              ELSE 0 
+                                                            END
+                                                          ), 2) AS stockvalue 
+                                                        FROM
+                                                          (SELECT 
+                                                            t1.*,
+                                                            t2.tradingrole 
+                                                          FROM
+                                                            dbclear.t_clientposition t1,
+                                                            siminfo.t_client t2 
+                                                          WHERE t1.clientid = t2.clientid) t1,
+                                                          siminfo.t_PartRoleAccount t2,
+                                                          dbclear.t_marketdata t3,
+                                                          siminfo.t_instrument t4 
+                                                        WHERE t2.TradingRole = t1.TradingRole 
+                                                          AND t2.SettlementGroupID = t1.SettlementGroupID 
+                                                          AND t2.ParticipantID = t1.ParticipantID 
+                                                          AND t1.instrumentid = t3.instrumentid 
+                                                          AND t1.tradingday = t3.tradingday 
+                                                          AND t1.settlementgroupid = t3.settlementgroupid 
+                                                          AND t1.settlementid = t3.settlementid 
+                                                          AND t1.settlementgroupid = t4.settlementgroupid 
+                                                          AND t1.instrumentid = t4.instrumentid 
+                                                          AND (
+                                                            t1.posidirection = '2' 
+                                                            OR t1.posidirection = '3'
+                                                          ) 
+                                                          AND t1.tradingday = %s
+                                                          AND t1.settlementgroupid = %s
+                                                          AND t1.settlementid = %s
+                                                        GROUP BY t1.tradingday,
+                                                          t1.settlementgroupid,
+                                                          t1.settlementid,
+                                                          t1.participantid,
+                                                          t2.accountid,
+                                                          t1.clientid) 
+                                          ON DUPLICATE KEY UPDATE dbclear.t_clientfund.stockvalue = values(stockvalue)"""
             cursor.execute(sql, (current_trading_day, settlement_group_id, settlement_id))
 
             # 更新结算状态

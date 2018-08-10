@@ -12,6 +12,7 @@ def gen_investors(context, conf):
     begin = conf["begin"]
     count = conf["count"]
     end = conf["end"]
+    investor_account_type = conf["type"]
 
     logger.info("[gen %d investors start with %d count %s end %s] begin" % (count, begin, count, end))
 
@@ -45,7 +46,7 @@ def gen_investors(context, conf):
         cursor = mysql_conn.cursor()
 
         for id_list in id_list_all:
-            sql = '''INSERT INTO siminfo.t_investor(investorid, password, investorstatus) VALUES (%s, SUBSTR(CONCAT('', FLOOR(RAND() * 10000000 + RAND() * 10 * 10000000)),1, 8), '9')'''
+            sql = """INSERT INTO siminfo.t_investor(investorid, password, investoraccounttype, investorstatus) VALUES (%s, SUBSTR(CONCAT('', FLOOR(RAND() * 10000000 + RAND() * 10 * 10000000)),1, 8), '""" + investor_account_type + """', '9')"""
             cursor.executemany(sql, id_list)
 
         sql = '''INSERT INTO siminfo.t_investorclient(settlementgroupid, investorid, clientid)

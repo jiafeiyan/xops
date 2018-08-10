@@ -202,7 +202,8 @@ def publish_future(context, conf):
                                         t2.transfee,
                                         t2.DelivFee,
                                         t2.positionmargin,
-                                        t2.profit
+                                        t2.profit,
+                                        t2.stockvalue
                                     FROM
                                         siminfo.t_investorclient t1,
                                         siminfo.t_clientfund t2,
@@ -220,7 +221,7 @@ def publish_future(context, conf):
                                     t1.fee = t1.fee + t2.transfee,
                                     t1.currmargin = t1.currmargin + t2.positionmargin,
                                     t1.premium = t1.premium + t2.available,
-                                    t1.currentasset = t1.currentasset + t2.available - t2.transfee - t2.DelivFee + t2.profit
+                                    t1.currentasset = t1.currentasset + t2.available - t2.transfee - t2.DelivFee + t2.stockvalue + t2.profit
                                 WHERE
                                     t1.brokersystemid = t2.brokersystemid 
                                     AND t1.investorid = t2.investorid"""

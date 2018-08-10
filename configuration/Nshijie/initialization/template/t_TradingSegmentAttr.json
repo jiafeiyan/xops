@@ -30,7 +30,7 @@
 		"future": {
 			"day": ["hc", "bu", "rb", "ru", "wr", "fu", "cu", "al", "ni", "sn", "zn", "pb", "au", "ag"],
 			"night_1": ["cu", "al", "ni", "sn", "zn", "pb"],
-			"night_2": ["hc", "bu", "rb", "ru"],
+			"night_2": ["hc", "bu", "rb", "ru", "fu"],
 			"night_3": ["au", "ag"]
 		},
 		"tradingTime": {
@@ -142,7 +142,7 @@
 	"SG06": {
 		"future": {
 			"day": ["IF", "IH", "IC"],
-			"day_1": ["T", "TF"]
+			"day_1": ["T", "TF", "TS"]
 		},
 		"tradingTime": {
 			"day": [

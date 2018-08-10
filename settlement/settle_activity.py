@@ -88,14 +88,14 @@ def settle_activity(context, conf):
             if activity_type == '0':
                 # 默认赛事投资者数据
                 logger.info("[insert default activity investor]......")
-                sql = """INSERT INTO siminfo.t_activityinvestor(activityid, investorid, joindate, joinstatus)
-                                                SELECT %s, t.investorid, DATE_FORMAT(NOW(), '%Y%m%d'), '0'
+                sql = """INSERT INTO siminfo.t_activityinvestor(activityid, termno, investorid, joindate, joinstatus)
+                                                SELECT %s, %s, t.investorid, DATE_FORMAT(NOW(), '%Y%m%d'), '0'
                                                 FROM siminfo.t_investor t
                                                 WHERE t.investoraccounttype = '0' and t.investorstatus = '1'
                                                     AND (t.investorid > (SELECT MAX(investorid) FROM siminfo.t_activityinvestor t1 WHERE t1.activityid = %s)
                                                         OR t.investorid < (SELECT MIN(investorid) FROM siminfo.t_activityinvestor t2 WHERE t2.activityid = %s)
                                                         OR (SELECT count(investorid) FROM siminfo.t_activityinvestor t2 WHERE t2.activityid = %s AND t.investorid = t2.investorid) = 0)"""
-                cursor.execute(sql, (activity_id, activity_id, activity_id, activity_id))
+                cursor.execute(sql, (activity_id, term_no, activity_id, activity_id, activity_id))
 
             if join_mode == '2':
                 # 赛事新参与投资者数据重置
@@ -154,7 +154,7 @@ def settle_activity(context, conf):
 
             # 赛事新参与投资者评估信息
             sql = """INSERT INTO siminfo.t_activityinvestorevaluation(ActivityID,TermNo, InvestorID,InitialAsset,PreMonthAsset, PreWeekAsset,PreAsset,CurrentAsset,TotalReturnRate,ReturnRateOfMonth,ReturnRateOfWeek,ReturnRateOf1Day)
-                                SELECT t2.activityid, %s, t1.investorid, SUM(t1.currentasset) AS initialasset, SUM(t1.premonthasset) AS premonthasset, SUM(t1.preweekasset) AS preweekasset, SUM(t1.preasset) AS preasset, SUM(t1.currentasset) AS currasset, 0, 0, 0, 0  FROM siminfo.t_investorfund t1,
+                                SELECT t2.activityid, %s, t1.investorid, SUM(t1.preasset) AS initialasset, SUM(t1.premonthasset) AS premonthasset, SUM(t1.preweekasset) AS preweekasset, SUM(t1.preasset) AS preasset, SUM(t1.currentasset) AS currasset, 0, 0, 0, 0  FROM siminfo.t_investorfund t1,
                                     (SELECT DISTINCT t1.activityid, t2.brokersystemid, t3.investorid FROM siminfo.t_activitysettlementgroup t1, siminfo.t_brokersystemsettlementgroup t2, siminfo.t_activityinvestor t3, siminfo.t_activity t4
                                     WHERE t1.activityid = %s AND t3.joinstatus = '0' AND t1.settlementgroupid = t2.settlementgroupid AND t1.activityid = t3.activityid AND t1.activityid = t4.activityid AND t4.activitystatus = '1') t2
                                     WHERE t1.investorid = t2.investorid AND t1.brokersystemid = t2.brokersystemid
@@ -194,7 +194,7 @@ def settle_activity(context, conf):
                 # 排序规则为00时，全部参与排序
                 sql = """UPDATE siminfo.t_activityinvestorevaluation t
                                            SET t.rankingstatus = 1
-                                           WHERE t.activityid = %s and t1.termno = %s"""
+                                           WHERE t.activityid = %s and t.termno = %s"""
                 cursor.execute(sql, (activity_id, term_no,))
             elif ranking_rule == "01":
                 # 排序规则为01时，根据投资者设置确定是否参与排名
@@ -215,11 +215,16 @@ def settle_activity(context, conf):
                                             WHERE t.activityid = %s AND t.termno = %s AND t.activityid = t1.activityid AND t.investorid = t1.investorid"""
                 cursor.execute(sql, (activity_id,activity_id, term_no,))
 
-                # 根据是否参与交易设置rankingstatus，昨资产或今资产不为初始资产置为1，否则置为0
-                sql = """UPDATE siminfo.t_activityinvestorevaluation t
-                                            SET t.rankingstatus = 0
-                                            WHERE t.activityid = %s AND t.termno = %s AND t.preasset = t.initialasset AND t.currentasset = t.initialasset"""
-                cursor.execute(sql, (activity_id, term_no,))
+            # 废弃用户不参与排名
+            sql = """UPDATE siminfo.t_activityinvestorevaluation t1, (SELECT investorid FROM siminfo.t_investor WHERE openid LIKE '%_o') t2
+                                        SET t1.rankingstatus = '0' WHERE t1.activityid = %s AND t1.termno = %s AND t1.investorid = t2.investorid"""
+            cursor.execute(sql, (activity_id, term_no,))
+
+            # 根据是否参与交易设置rankingstatus，昨资产或今资产不为初始资产置为1，否则置为0
+            sql = """UPDATE siminfo.t_activityinvestorevaluation t
+                                        SET t.rankingstatus = 0
+                                        WHERE t.activityid = %s AND t.termno = %s AND t.preasset = t.initialasset AND t.currentasset = t.initialasset"""
+            cursor.execute(sql, (activity_id, term_no,))
 
             # 设置总收益率排名
             sql = """UPDATE siminfo.t_activityinvestorevaluation t, 

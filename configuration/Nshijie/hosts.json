@@ -38,5 +38,10 @@
         "host" : "10.188.172.24",
         "user" : "robot",
         "password" : "robot"
+    },
+    "quant": {
+        "host" : "10.188.172.128",
+        "user" : "mddepot",
+        "password" : "111111"
     }
 }

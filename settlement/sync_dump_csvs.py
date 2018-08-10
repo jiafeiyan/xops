@@ -17,9 +17,13 @@ def sync_dump_csvs(context, conf):
     # 初始化数据库连接
     mysqlDB = mysql(configs=context.get("mysql").get(conf.get("mysqlId")))
     # 查询当前交易日
-    sql = """SELECT t1.tradingday FROM siminfo.t_tradesystemtradingday t1 WHERE t1.tradesystemid = %s"""
+    sql = """select DAY from siminfo.t_tradingcalendar where day <= 
+                (select TradingDay from siminfo.t_tradesystemtradingday where TradeSystemID = %s) 
+                and Tra = 1 order by Day desc limit 1"""
     res = mysqlDB.select(sql, (trade_system_id,))
     current_trading_day = str(res[0][0])
+
+
 
     # 拷贝目标地址
     base_dir = conf.get("baseDataHome")

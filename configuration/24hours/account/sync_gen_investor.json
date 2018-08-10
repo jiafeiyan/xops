@@ -1,0 +1,10 @@
+{
+    "Syncs": [
+      {
+        "host": "quant",
+        "type": "put",
+        "target" : "${HOME}/mddepot",
+        "items": ["${SIM_PLATFORM_HOME}/csvfiles/quant/user.csv"]
+      }
+    ]
+}
