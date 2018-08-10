@@ -181,12 +181,12 @@ def settle_activity(context, conf):
                                             SET t1.currentasset = t2.currasset, t1.premonthasset = t2.premonthasset, t1.preweekasset = t2.preweekasset, t1.preasset = t2.preasset
                                             WHERE t1.activityid = t2.activityid AND t1.investorid = t2.investorid AND t1.termno = %s"""
             cursor.execute(sql, (activity_id, term_no))
-            # 月份、周变动时计算月盈利率、周盈利率
+            # 计算月盈利率、周盈利率
             sql = """UPDATE siminfo.t_activityinvestorevaluation t1
                                             SET t1.totalreturnrate = IF(t1.initialasset =0 , 0, round((t1.currentasset - t1.initialasset) / t1.initialasset, 4)), 
                                                   t1.returnrateof1day = IF(t1.preasset = 0, 0, round((t1.currentasset - t1.preasset) / t1.preasset, 4)),                               
-                                                  t1.returnrateofmonth = IF(MONTH(%s) - MONTH(%s) = 0, t1.returnrateofmonth, IF(t1.premonthasset = 0, 0, round((t1.currentasset - t1.premonthasset) / t1.premonthasset, 4))),
-                                                  t1.returnrateofweek = IF(WEEK(%s, 1) - WEEK(%s, 1) = 0, t1.returnrateofweek, IF(t1.preweekasset = 0, 0, round((t1.currentasset - t1.preweekasset) / t1.preweekasset, 4)))
+                                                  t1.returnrateofmonth = IF(t1.premonthasset = 0, 0, round((t1.currentasset - t1.premonthasset) / t1.premonthasset, 4)),
+                                                  t1.returnrateofweek = IF(t1.preweekasset = 0, 0, round((t1.currentasset - t1.preweekasset) / t1.preweekasset, 4))
                                             WHERE t1.activityid = %s AND t1.termno = %s"""
             cursor.execute(sql, (current_trading_day, last_trading_day, current_trading_day, last_trading_day, activity_id, term_no))
 

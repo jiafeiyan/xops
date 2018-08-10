@@ -77,6 +77,9 @@ def settle_future(context, conf):
             logger.info("[delete t_delivinstrument ... ]")
             sql = "delete from dbclear.t_delivinstrument where settlementgroupid = %s and settlementid = %s and tradingday = %s "
             cursor.execute(sql, (settlement_group_id, settlement_id, current_trading_day))
+            logger.info("[delete t_clientdelivposition ... ]")
+            sql = "delete from dbclear.t_clientdelivposition where settlementgroupid = %s and settlementid = %s and tradingday = %s "
+            cursor.execute(sql, (settlement_group_id, settlement_id, current_trading_day))
             logger.info("[delete t_clientdelivfee ... ]")
             sql = "delete from dbclear.t_clientdelivfee where settlementgroupid = %s and settlementid = %s and tradingday = %s "
             cursor.execute(sql, (settlement_group_id, settlement_id, current_trading_day))
@@ -1192,9 +1195,6 @@ def sett_future_option(logger, cursor, current_trading_day, next_trading_day, se
 
     # 交收持仓处理
     logger.info("[Move Options DelivPosition] is processing......")
-    sql = "delete from dbclear.t_delivinstrument where settlementgroupid = %s and settlementid = %s and tradingday = %s "
-    cursor.execute(sql, (settlement_group_id, settlement_id, current_trading_day))
-    sql = "delete from dbclear.t_clientdelivposition where settlementgroupid = %s and settlementid = %s and tradingday = %s "
     # 1）插入到t_delivinstrument表
     sql = """insert into dbclear.t_delivinstrument(TradingDay, SettlementGroupID, SettlementID, InstrumentID
                                            )select %s, t.SettlementGroupID, %s, t.instrumentid
