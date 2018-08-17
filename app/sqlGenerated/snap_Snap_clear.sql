@@ -160,3 +160,15 @@ truncate table snap.t_S_PartFund;
 -- 清空期货合约持仓明细表
 truncate table snap.t_S_FuturePositionDtl;
 
+-- 清空未知探索活动表
+truncate table snap.t_S_DiscoveryActivity;
+
+-- 清空未知探索活动结算组关系表
+truncate table snap.t_S_DiscoveryActSettleGroup;
+
+-- 清空未知探索活动投资者关系表
+truncate table snap.t_S_DiscoveryActivityInvestor;
+
+-- 清空投资者未知探索评估信息表
+truncate table snap.t_S_DiscoveryActInvestorEval;
+

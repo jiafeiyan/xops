@@ -20,6 +20,8 @@
 	<Entity name="BrokerSystem" title="柜台系统" description="柜台系统基本信息">
 		<Ref entity="BrokerSystemRef"/>
 		<Field name="BrokerSystemName" type="BrokerSystemName" notnull="yes" label="柜台系统名称" description="柜台系统的名称"/>
+		<Field name="BrokerSystemType" type="BrokerSystemType" notnull="yes" label="柜台系统类型" description="柜台系统类型"/>
+		<Field name="TradingAddress" type="TradingAddress" notnull="yes" label="柜台系统交易地址" description="柜台系统交易地址"/>
 	</Entity>
 	<Entity name="BrokerSystem_Snap" title="柜台系统" description="柜台系统基本信息">
 		<Ref entity="TradingDayRef"/>
@@ -32,6 +34,7 @@
 	<Entity name="TradeSystemTradingDay" title="交易系统交易日" description="交易系统交易日">
 		<Ref entity="TradeSystemRef"/>
 		<Ref entity="TradingDayRef" iskey="no"/>
+		<Field name="LastTradingDay" type="Date" notnull="no" label="前一交易日" description="前一交易日"/>
 	</Entity>
 	<Entity name="TradeSystemBrokerSystem" title="交易系统柜台系统对应关系" description="交易系统柜台系统对应关系">
 		<Ref entity="TradeSystemRef"/>
@@ -93,10 +96,16 @@
 	</Entity>
 	<Entity name="Activity" title="赛事活动" description="赛事活动">
 		<Field name="ActivityID" type="ActivityID" notnull="yes" label="赛事活动代码" description="赛事活动代码，唯一标识一个赛事活动" iskey="yes"/>
+		<Field name="TermNo" type="TermNo" notnull="yes" default="0" label="赛事活动期号" description="赛事活动期号" iskey="yes"/>
 		<Field name="ActivityName" type="ActivityName" notnull="yes" label="赛事活动名称" description="赛事活动的名称"/>
 		<Field name="ActivityType" type="ActivityType" notnull="yes" label="赛事活动类型" description="赛事活动类型"/>
 		<Field name="ActivityStatus" type="ActivityStatus" notnull="yes" label="赛事活动状态" description="赛事活动状态"/>
 		<Field name="InitialBalance" type="Money" notnull="yes" default="100000" label="初始资金" description="初始资金"/>
+		<Field name="JoinMode" type="JoinMode" notnull="yes" default="0" label="参与方式" description="参与方式"/>
+		<Field name="RankingRule" type="RankingRule" notnull="yes" default="00" label="排名规则" description="排名规则"/>
+		<Field name="CircleFreq" type="CircleFreq" notnull="yes" default="0" label="循环频率" description="循环频率 0 不循环 1 季度 2 月"/>
+		<Field name="Duration" type="Duration" notnull="yes" default="0" label="持续时间" description="持续时间"/>
+		<Field name="JoinCount" type="JoinCount" notnull="yes" default="0" label="参赛人数" description="参赛人数"/>
 		<Field name="CreateDate" type="Date" notnull="yes" label="创建日期" description="创建日期"/>
 		<Field name="CreateTime" type="Time" notnull="yes" label="创建时间" description="创建时间"/>
 		<Field name="BeginDate" type="Date" notnull="no" label="开始日期" description="开始日期"/>
@@ -230,6 +239,7 @@
 		<Field name="InvestorName" type="InvestorName" notnull="no" label="投资者名称" description="投资者名称"/>
 		<Field name="OpenID" type="OpenID" notnull="no" label="投资者开户使用的身份认证代码" description="投资者开户使用的身份认证代码，现为手机号"/>
 		<Field name="Password" type="Password" notnull="yes" label="投资者登录密码" description="投资者登录交易终端的密码"/>
+		<Field name="InvestorAccountType" type="InvestorAccountType" notnull="yes" default="0" label="投资者账户类型" description="投资者账户类型"/>
 		<Field name="InvestorStatus" type="InvestorStatus" notnull="yes" label="投资者状态" description="投资者状态"/>
 	</Entity>
 	<Entity name="Investor_Snap" title="投资者信息" description="投资者信息">
@@ -248,9 +258,11 @@
 	<Entity name="ActivityInvestor" title="赛事活动投资者关系" description="赛事活动投资者关系">
 		<Field name="ID" type="AutoIncrementID" notnull="yes" label="自增ID" description="自增ID" iskey="yes"/>
 		<Field name="ActivityID" type="ActivityID" notnull="yes" label="赛事活动代码" description="赛事活动代码，唯一标识一个赛事活动" iskey="yes"/>
+		<Field name="TermNo" type="TermNo" notnull="yes" default="0" label="赛事活动期号" description="赛事活动期号"/>
 		<Field name="InvestorID" type="InvestorID" notnull="yes" label="投资者代码" description="投资者代码" iskey="yes"/>
 		<Field name="JoinDate" type="Date" notnull="no" label="参与日期" description="参与日期"/>
 		<Field name="JoinStatus" type="JoinStatus" notnull="no" default="0" label="参与状态" description="参与状态"/>
+		<Field name="Rankable" type="Bool" notnull="no" default="1" label="是否参与排名" description="是否参与排名"/>
 	</Entity>
 	<Entity name="ActivityInvestor_Snap" title="赛事活动投资者关系" description="赛事活动投资者关系">
 		<Ref entity="ActivityInvestor"/>
@@ -258,12 +270,17 @@
 	</Entity>
 	<Entity name="ActivityInvestorEvaluation" title="投资者赛事评估信息" description="投资者赛事评估信息">
 		<Field name="ActivityID" type="ActivityID" notnull="yes" label="赛事活动代码" description="赛事活动代码，唯一标识一个赛事活动" iskey="yes"/>
+		<Field name="TermNo" type="TermNo" notnull="yes" default="0" label="赛事活动期号" description="赛事活动期号" iskey="yes"/>
 		<Field name="InvestorID" type="InvestorID" notnull="yes" label="投资者代码" description="投资者代码" iskey="yes"/>
-		<Field name="InitialAsset" type="Money" notnull="yes" label="期初资产" description="期初资产"/>
-		<Field name="PreAsset" type="Money" notnull="yes" label="昨资产" description="昨资产"/>
-		<Field name="CurrentAsset" type="Money" notnull="yes" label="当前资产" description="当前资产"/>
-		<Field name="TotalReturnRate" type="Ratio" notnull="yes" label="总收益率" description="总收益率"/>
-		<Field name="ReturnRateOf1Day" type="Ratio" notnull="yes" label="日收益率" description="日收益率"/>
+		<Field name="InitialAsset" type="Money" notnull="yes" default="0" label="期初资产" description="期初资产"/>
+		<Field name="PreMonthAsset" type="Money" notnull="yes" default="0" label="上月资产" description="上月资产"/>
+		<Field name="PreWeekAsset" type="Money" notnull="yes" default="0" label="上周资产" description="上周资产"/>
+		<Field name="PreAsset" type="Money" notnull="yes" default="0" label="昨资产" description="昨资产"/>
+		<Field name="CurrentAsset" type="Money" notnull="yes" default="0" label="当前资产" description="当前资产"/>
+		<Field name="TotalReturnRate" type="Ratio" notnull="yes" default="0" label="总收益率" description="总收益率"/>
+		<Field name="ReturnRateOfMonth" type="Ratio" notnull="yes" default="0" label="月收益率" description="月收益率"/>
+		<Field name="ReturnRateOfWeek" type="Ratio" notnull="yes" default="0" label="周收益率" description="周收益率"/>
+		<Field name="ReturnRateOf1Day" type="Ratio" notnull="yes" default="0" label="日收益率" description="日收益率"/>
 		<Field name="RankingStatus" type="RankingStatus" default="0" notnull="yes" label="是否参与排名" description="是否参与排名"/>
 		<Field name="PreRanking" type="Ranking" default="0" notnull="yes" label="总收益率昨排名" description="总收益率昨排名"/>
 		<Field name="Ranking" type="Ranking" default="0" notnull="yes" label="总收益率排名" description="总收益率排名"/>
@@ -402,6 +419,7 @@
 		<Field name="UnderlyingInstrID" type="InstrumentID" notnull="no" label="基础商品代码" description="基础商品在系统中的编号，仅对衍生品的衍生品有效"/>
 		<Field name="ProductClass" type="ProductClass" notnull="yes" label="产品类型" description="产品类型（1．期货2．期权3．组合4．即期）"/>
 		<Field name="PositionType" type="PositionType" notnull="yes" label="持仓类型" description="表明合约的持仓类型"/>
+		<Field name="PositionDateType" type="PositionDateType" notnull="yes" default="1" label="持仓日期类型" description="持仓日期类型"/>
 		<Field name="UnderlyingType" type="UnderlyingType" notnull="no" label="标的类型" description="期权专用"/>
 		<Field name="StrikeType" type="StrikeType" notnull="no" label="行权类型" description="期权专用"/>
 		<Field name="StrikePrice" type="Price" notnull="no" label="执行价" description="期权专用"/>
@@ -836,6 +854,17 @@
 		<Field name="ParticipantID" type="ParticipantID" notnull="yes" label="会员代码" description="每一位会员在系统中的编码，编号唯一且遵循交易所制定的编码规则" iskey="yes"/>
 		<Field name="ClientID" type="ClientID" notnull="yes" label="客户代码" description="客户在系统中的编号，编号唯一且遵循交易所制定的编码规则" iskey="yes"/>
 	</Entity>
+	<Entity name="ActivityInvestorPosition" title="投资者比赛合约持仓" description="投资者比赛合约持仓">
+		<Ref entity="SettlementGroupSettlementRef"/>
+		<Ref entity="BasePosition"/>
+		<Ref entity="TradingPosition"/>
+		<Field name="InstrumentID" type="InstrumentID" notnull="yes" label="合约代码" description="合约在系统中的编号" iskey="yes"/>
+		<Field name="ParticipantID" type="ParticipantID" notnull="yes" label="会员代码" description="每一位会员在系统中的编码，编号唯一且遵循交易所制定的编码规则" iskey="yes"/>
+		<Field name="ClientID" type="ClientID" notnull="yes" label="客户代码" description="客户在系统中的编号，编号唯一且遵循交易所制定的编码规则" iskey="yes"/>
+		<Field name="InvestorID" type="InvestorID" default="0" notnull="yes" label="投资者代码" description="投资者代码" iskey="yes"/>
+		<Field name="ActivityID" type="ActivityID" notnull="yes" label="赛事活动代码" description="赛事活动代码，唯一标识一个赛事活动" iskey="yes"/>
+		<Field name="TermNo" type="TermNo" notnull="yes" default="0" label="赛事活动期号" description="赛事活动期号" iskey="yes"/>
+	</Entity>
 	<Entity name="ClientPosition_Sync" title="客户合约持仓" description="说明客户当前持仓信息">
 		<Ref entity="TradeSystemRef"/>
 		<Ref entity="ClientPosition"/>
@@ -941,6 +970,34 @@
 		<Ref entity="SettlementGroupSettlementRef"/>
 		<Ref entity="BaseMarketData"/>
 		<Field name="InstrumentID" type="InstrumentID" notnull="yes" label="合约代码" description="合约在系统中的编号" iskey="yes"/>
+	</Entity>
+	<Entity name="DepthMarketData" title="深度行情" description="深度行情">
+		<Ref entity="SettlementGroupSettlementRef"/>
+		<Ref entity="BaseMarketData"/>
+		<Field name="InstrumentID" type="InstrumentID" notnull="yes" label="合约代码" description="合约在系统中的编号" iskey="yes"/>
+		<Field name="BidPrice1" type="Price" notnull="no" label="买一价" description="买一价"/>
+		<Field name="BidVolume1" type="Volume" notnull="no" label="买一量" description="买一量"/>
+		<Field name="AskPrice1" type="Price" notnull="no" label="卖一价" description="卖一价"/>
+		<Field name="AskVolume1" type="Volume" notnull="no" label="卖一量" description="卖一量"/>
+		<Field name="BidPrice2" type="Price" notnull="no" label="买二价" description="买二价"/>
+		<Field name="BidVolume2" type="Volume" notnull="no" label="买二量" description="买二量"/>
+		<Field name="AskPrice2" type="Price" notnull="no" label="卖二价" description="卖二价"/>
+		<Field name="AskVolume2" type="Volume" notnull="no" label="卖二量" description="卖二量"/>
+		<Field name="BidPrice3" type="Price" notnull="no" label="买三价" description="买三价"/>
+		<Field name="BidVolume3" type="Volume" notnull="no" label="买三量" description="买三量"/>
+		<Field name="AskPrice3" type="Price" notnull="no" label="卖三价" description="卖三价"/>
+		<Field name="AskVolume3" type="Volume" notnull="no" label="卖三量" description="卖三量"/>
+		<Field name="BidPrice4" type="Price" notnull="no" label="买四价" description="买四价"/>
+		<Field name="BidVolume4" type="Volume" notnull="no" label="买四量" description="买四量"/>
+		<Field name="AskPrice4" type="Price" notnull="no" label="卖四价" description="卖四价"/>
+		<Field name="AskVolume4" type="Volume" notnull="no" label="卖四量" description="卖四量"/>
+		<Field name="BidPrice5" type="Price" notnull="no" label="买五价" description="买五价"/>
+		<Field name="BidVolume5" type="Volume" notnull="no" label="买五量" description="买五量"/>
+		<Field name="AskPrice5" type="Price" notnull="no" label="卖五价" description="卖五价"/>
+		<Field name="AskVolume5" type="Volume" notnull="no" label="卖五量" description="卖五量"/>
+		<Field name="BandingUpperPrice" type="Price" notnull="no" label="上限价格" description="上限价格"/>
+		<Field name="BandingLowerPrice" type="Price" notnull="no" label="下限价格" description="下限价格"/>
+		<Field name="ReferencePrice" type="Price" notnull="no" label="参考价格" description="参考价格"/>
 	</Entity>
 	<Entity name="Trade" title="成交" description="说明成交的详细内容">
 		<Ref entity="SettlementGroupSettlementRef"/>
@@ -1064,6 +1121,22 @@
 		<Field name="SettlementPositionCost" type="Money" notnull="yes" label="今结算持仓成本" description="今结算持仓成本"/>
 		<Field name="PositionProfit" type="Money" notnull="yes" label="持仓盈亏" description="持仓盈亏"/>
 	</Entity>
+	<Entity name="ClientDelivProfit" title="客户合约交割/行权盈亏" description="客户合约交割/行权盈亏">
+		<Ref entity="SettlementGroupSettlementRef"/>
+		<Field name="InstrumentID" type="InstrumentID" notnull="yes" label="合约代码" description="合约的编号" iskey="yes"/>
+		<Field name="ParticipantID" type="ParticipantID" notnull="yes" label="会员代码" description="或采用缺省会员代码表示缺省保证金率" iskey="yes"/>
+		<Field name="ClientID" type="ClientID" notnull="yes" label="客户代码" description="客户代码" iskey="yes"/>
+		<Field name="AccountID" type="AccountID" notnull="yes" label="资金帐号" description="内部资金帐号的标识" iskey="yes"/>
+		<Field name="HedgeFlag" type="HedgeFlag" notnull="yes" label="投机套保标志" description="投机还是套期保值" iskey="yes"/>
+		<Field name="PosiDirection" type="PosiDirection" notnull="yes" label="持仓多空方向" description="1．净2．多3．空" iskey="yes"/>
+		<Field name="Position" type="Volume" notnull="yes" label="交割持仓量" description="交割持仓量"/>
+		<Field name="OptionsType" type="OptionsType" notnull="no" label="期权类型" description="看涨、看跌"/>
+		<Field name="VolumeMultiple" type="VolumeMultiple" notnull="yes" label="合约数量乘数" description="品种的每手交易的规定数量，针对基础的商品"/>
+		<Field name="UnderlyingMultiple" type="UnderlyingMultiple" notnull="yes" label="合约基础商品乘数" description="品种的每手交易的规定数量，针对基础商品的商品，仅对衍生品的衍生品有效，对于直接衍生品，应当设为1"/>
+		<Field name="StrikePrice" type="Price" notnull="no" label="执行价" description="期权专用"/>
+		<Field name="SettlementPrice" type="Price" notnull="no" label="结算价" description="结算价"/>
+		<Field name="Profit" type="Money" notnull="yes" label="交割/行权盈亏" description="交割/行权盈亏"/>
+	</Entity>
 	<Entity name="ClientTransFee" title="客户合约交易手续费" description="客户合约交易手续费">
 		<Ref entity="SettlementGroupSettlementRef"/>
 		<Field name="InstrumentID" type="InstrumentID" notnull="yes" label="合约代码" description="合约的编号" iskey="yes"/>
@@ -1155,8 +1228,19 @@
 		<Field name="InvestorID" type="InvestorID" notnull="yes" label="投资者代码" description="投资者代码" iskey="yes"/>
 		<Ref entity="AccountBase"/>
 		<Ref entity="AccountDetail"/>
+		<Field name="InitialAsset" type="Money" notnull="yes" default="0" label="初始资产总额" description="初始资产总额"/>
+		<Field name="PreMonthAsset" type="Money" notnull="yes" default="0" label="上月资产总额" description="上月资产总额"/>
+		<Field name="PreWeekAsset" type="Money" notnull="yes" default="0" label="上周资产总额" description="上周资产总额"/>
+		<Field name="PreAsset" type="Money" notnull="yes" default="0" label="昨日资产总额" description="昨日资产总额"/>
+		<Field name="CurrentAsset" type="Money" notnull="yes" default="0" label="今日资产总额" description="今日资产总额"/>
 		<Field name="PreStockValue" type="Money" notnull="yes" label="昨股票市值" description="昨股票市值"/>
 		<Field name="StockValue" type="Money" notnull="yes" label="股票市值" description="股票市值"/>
+	</Entity>
+	<Entity name="ActivityInvestorFund" title="投资者比赛资金" description="投资者比赛资金">
+		<Field name="TradingDay" type="Date" notnull="yes" label="交易日" description="交易发生的日期" iskey="yes"/>
+		<Field name="ActivityID" type="ActivityID" notnull="yes" label="赛事活动代码" description="赛事活动代码，唯一标识一个赛事活动" iskey="yes"/>
+		<Field name="TermNo" type="TermNo" notnull="yes" default="0" label="赛事活动期号" description="赛事活动期号" iskey="yes"/>
+		<Ref entity="InvestorFund_SimInfo"/>
 	</Entity>
 	<Entity name="InvestorFund_Snap" title="投资者资金" description="投资者资金">
 		<Ref entity="TradingDayRef"/>
@@ -1175,5 +1259,128 @@
 	</Entity>
 	<Entity name="PartFund_Snap" title="会员资金" description="会员资金">
 		<Ref entity="PartFund"/>
+	</Entity>
+	<Entity name="BenchmarkMarket" title="基准行情" description="记录每日基准行情">
+		<Ref entity="TradingDayRef"/>
+		<Field name="StockID" type="StockID" notnull="yes" label="证券代码" description="基准股票代码" iskey="yes"/>
+		<Field name="LastClosingPrice" type="Price" notnull="yes" label="昨收盘价" description="昨收盘价"/>
+		<Field name="OpeningPrice" type="Price" notnull="yes" label="开盘价" description="开盘价"/>
+		<Field name="ClosingPrice" type="Price" notnull="yes" label="收盘价" description="收盘价"/>
+		<Field name="TopPrice" type="Price" notnull="yes" label="最高价" description="最高价"/>
+		<Field name="FloorPrice" type="Price" notnull="yes" label="最低价" description="最低价"/>
+		<Field name="TradingVolume" type="LongVolume" notnull="yes" label="成交量" description="成交量"/>
+	</Entity>
+	<Entity name="TradeMatchDailyAvgReturnData" title="仿真大赛每日平均收益数据" description="仿真大赛每日平均收益数据">
+		<Ref entity="TradingDayRef"/>
+		<Field name="StatisticRankNo" type="StockID" notnull="yes" label="统计样本排名" description="按大赛排名前N位计算每日平均收益" iskey="yes"/>
+		<Field name="ActivityID" type="ActivityID" notnull="yes" label="赛事活动代码" description="赛事活动代码，唯一标识一个赛事活动" iskey="yes"/>
+		<Field name="TermNo" type="TermNo" notnull="yes" default="0" label="赛事活动期号" description="赛事活动期号" iskey="yes"/>
+		<Field name="MatchTotalProfit" type="Ratio" notnull="yes" label="大赛累计平均收益率" description="大赛累计平均收益率"/>
+		<Field name="BenchmarkTotalProfit" type="Ratio" notnull="yes" label="基准累计收益率" description="基准累计收益率"/>
+	</Entity>
+	<Entity name="DiscoveryActivity" title="未知探索活动" description="未知探索活动">
+		<Field name="ActivityID" type="ActivityID" notnull="yes" label="活动代码" description="活动代码，唯一标识一个赛事活动" iskey="yes"/>
+		<Field name="TermNo" type="TermNo" notnull="yes" default="0" label="活动期号" description="活动期号" iskey="yes"/>
+		<Field name="ActivityName" type="ActivityName" notnull="yes" label="活动名称" description="活动的名称"/>
+		<Field name="ActivityType" type="ActivityType" notnull="yes" label="活动类型" description="活动类型"/>
+		<Field name="ActivityStatus" type="ActivityStatus" notnull="yes" label="活动状态" description="活动状态"/>
+		<Field name="InitialBalance" type="Money" notnull="yes" default="100000" label="初始资金" description="初始资金"/>
+		<Field name="JoinMode" type="JoinMode" notnull="yes" default="0" label="参与方式" description="参与方式"/>
+		<Field name="RankingRule" type="RankingRule" notnull="yes" default="00" label="排名规则" description="排名规则"/>
+		<Field name="CircleFreq" type="CircleFreq" notnull="yes" default="0" label="循环频率" description="循环频率 0 不循环 1 季度 2 月"/>
+		<Field name="Duration" type="Duration" notnull="yes" default="0" label="持续时间" description="持续时间"/>
+		<Field name="JoinCount" type="JoinCount" notnull="yes" default="0" label="参加人数" description="参加人数"/>
+		<Field name="CreateDate" type="Date" notnull="yes" label="创建日期" description="创建日期"/>
+		<Field name="CreateTime" type="Time" notnull="yes" label="创建时间" description="创建时间"/>
+		<Field name="BeginDate" type="Date" notnull="no" label="开始日期" description="开始日期"/>
+		<Field name="EndDate" type="Date" notnull="no" label="结束日期" description="结束日期"/>
+		<Field name="UpdateDate" type="Date" notnull="yes" label="最后修改日期" description="最后修改日期"/>
+		<Field name="UpdateTime" type="Time" notnull="yes" label="最后修改时间" description="最后修改时间"/>
+	</Entity>
+	<Entity name="DiscoveryActivity_Snap" title="未知探索活动" description="未知探索活动">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="DiscoveryActivity"/>
+	</Entity>
+	<Entity name="DiscoveryActSettleGroup" title="未知探索活动结算组关系" description="未知探索活动结算组关系">
+		<Field name="ActivityID" type="ActivityID" notnull="yes" label="活动代码" description="活动代码，唯一标识一个赛事活动" iskey="yes"/>
+		<Ref entity="SettlementGroupRef"/>
+	</Entity>
+	<Entity name="DiscoveryActSettleGroup_Snap" title="未知探索活动结算组关系" description="未知探索活动结算组关系">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="DiscoveryActSettleGroup"/>
+	</Entity>
+	<Entity name="DiscoveryActivityInvestor" title="未知探索活动投资者关系" description="未知探索活动投资者关系">
+		<Field name="ID" type="AutoIncrementID" notnull="yes" label="自增ID" description="自增ID" iskey="yes"/>
+		<Field name="ActivityID" type="ActivityID" notnull="yes" label="未知探索活动代码" description="未知探索活动代码，唯一标识一个未知探索活动" iskey="yes"/>
+		<Field name="TermNo" type="TermNo" notnull="yes" default="0" label="未知探索活动期号" description="未知探索活动期号"/>
+		<Field name="InvestorID" type="InvestorID" notnull="yes" label="投资者代码" description="投资者代码" iskey="yes"/>
+		<Field name="JoinDate" type="Date" notnull="no" label="参与日期" description="参与日期"/>
+		<Field name="JoinStatus" type="JoinStatus" notnull="no" default="0" label="参与状态" description="参与状态"/>
+		<Field name="Rankable" type="Bool" notnull="no" default="1" label="是否参与排名" description="是否参与排名"/>
+	</Entity>
+	<Entity name="DiscoveryActivityInvestor_Snap" title="未知探索活动投资者关系" description="未知探索活动投资者关系">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="DiscoveryActivityInvestor"/>
+	</Entity>
+	<Entity name="DiscoveryActInvestorEval" title="投资者未知探索评估信息" description="投资者未知探索评估信息">
+		<Field name="ActivityID" type="ActivityID" notnull="yes" label="未知探索活动代码" description="未知探索活动代码，唯一标识一个未知探索活动" iskey="yes"/>
+		<Field name="TermNo" type="TermNo" notnull="yes" default="0" label="未知探索活动期号" description="未知探索活动期号" iskey="yes"/>
+		<Field name="InvestorID" type="InvestorID" notnull="yes" label="投资者代码" description="投资者代码" iskey="yes"/>
+		<Field name="InitialAsset" type="Money" notnull="yes" default="0" label="期初资产" description="期初资产"/>
+		<Field name="PreMonthAsset" type="Money" notnull="yes" default="0" label="上月资产" description="上月资产"/>
+		<Field name="PreWeekAsset" type="Money" notnull="yes" default="0" label="上周资产" description="上周资产"/>
+		<Field name="PreAsset" type="Money" notnull="yes" default="0" label="昨资产" description="昨资产"/>
+		<Field name="CurrentAsset" type="Money" notnull="yes" default="0" label="当前资产" description="当前资产"/>
+		<Field name="TotalReturnRate" type="Ratio" notnull="yes" default="0" label="总收益率" description="总收益率"/>
+		<Field name="ReturnRateOfMonth" type="Ratio" notnull="yes" default="0" label="月收益率" description="月收益率"/>
+		<Field name="ReturnRateOfWeek" type="Ratio" notnull="yes" default="0" label="周收益率" description="周收益率"/>
+		<Field name="ReturnRateOf1Day" type="Ratio" notnull="yes" default="0" label="日收益率" description="日收益率"/>
+		<Field name="RankingStatus" type="RankingStatus" default="0" notnull="yes" label="是否参与排名" description="是否参与排名"/>
+		<Field name="PreRanking" type="Ranking" default="0" notnull="yes" label="总收益率昨排名" description="总收益率昨排名"/>
+		<Field name="Ranking" type="Ranking" default="0" notnull="yes" label="总收益率排名" description="总收益率排名"/>
+		<Field name="IntegratedScores" type="IntegratedScores" notnull="yes" label="综合积分" description="综合积分"/>
+	</Entity>
+	<Entity name="DiscoveryActInvestorEval_Snap" title="投资者未知探索评估信息" description="投资者未知探索评估信息">
+		<Ref entity="TradingDayRef"/>
+		<Ref entity="DiscoveryActInvestorEval"/>
+	</Entity>
+	<Entity name="DiscoveryActRankableInvestor" title="未知探索活动可排名投资者" description="未知探索活动可排名投资者">
+		<Field name="ActivityID" type="ActivityID" notnull="yes" label="未知探索活动代码" description="未知探索活动代码，唯一标识一个未知探索活动" iskey="yes"/>
+		<Field name="InvestorID" type="InvestorID" default="0" notnull="yes" label="投资者代码" description="投资者代码" iskey="yes"/>
+		<Field name="OpenID" type="OpenID" notnull="no" iskey="yes" label="投资者开户使用的身份认证代码" description="投资者开户使用的身份认证代码，现为手机号"/>
+	</Entity>
+	<Entity name="DiscoveryActInvestorFund" title="投资者未知探索活动资金" description="投资者未知探索活动资金">
+		<Field name="ActivityID" type="ActivityID" notnull="yes" label="未知探索活动代码" description="未知探索活动代码，唯一标识一个未知探索活动" iskey="yes"/>
+		<Field name="TermNo" type="TermNo" notnull="yes" default="0" label="未知探索活动期号" description="未知探索活动期号" iskey="yes"/>
+		<Ref entity="InvestorFund_SimInfo"/>
+	</Entity>
+	<Entity name="DiscoveryActInvestorPosition" title="投资者未知探索活动合约持仓" description="投资者未知探索活动合约持仓">
+		<Ref entity="SettlementGroupSettlementRef"/>
+		<Ref entity="BasePosition"/>
+		<Ref entity="TradingPosition"/>
+		<Field name="InstrumentID" type="InstrumentID" notnull="yes" label="合约代码" description="合约在系统中的编号" iskey="yes"/>
+		<Field name="ParticipantID" type="ParticipantID" notnull="yes" label="会员代码" description="每一位会员在系统中的编码，编号唯一且遵循交易所制定的编码规则" iskey="yes"/>
+		<Field name="ClientID" type="ClientID" notnull="yes" label="客户代码" description="客户在系统中的编号，编号唯一且遵循交易所制定的编码规则" iskey="yes"/>
+		<Field name="InvestorID" type="InvestorID" default="0" notnull="yes" label="投资者代码" description="投资者代码" iskey="yes"/>
+		<Field name="ActivityID" type="ActivityID" notnull="yes" label="未知探索活动代码" description="未知探索活动代码，唯一标识一个未知探索活动" iskey="yes"/>
+		<Field name="TermNo" type="TermNo" notnull="yes" default="0" label="未知探索活动期号" description="未知探索活动期号" iskey="yes"/>
+	</Entity>
+	<Entity name="PresettingBenchmarkMarket" title="预设基准行情" description="记录每日预设基准行情">
+		<Ref entity="TradingDayRef"/>
+		<Field name="StockID" type="StockID" notnull="yes" label="证券代码" description="基准股票代码" iskey="yes"/>
+		<Field name="LastClosingPrice" type="Price" notnull="yes" label="昨收盘价" description="昨收盘价"/>
+		<Field name="OpeningPrice" type="Price" notnull="yes" label="开盘价" description="开盘价"/>
+		<Field name="ClosingPrice" type="Price" notnull="yes" label="收盘价" description="收盘价"/>
+		<Field name="TopPrice" type="Price" notnull="yes" label="最高价" description="最高价"/>
+		<Field name="FloorPrice" type="Price" notnull="yes" label="最低价" description="最低价"/>
+		<Field name="TradingVolume" type="LongVolume" notnull="yes" label="成交量" description="成交量"/>
+	</Entity>
+	<Entity name="DiscoveryActDayAvgRetData" title="未知探索活动每日平均收益数据" description="未知探索活动每日平均收益数据">
+		<Ref entity="TradingDayRef"/>
+		<Field name="StatisticRankNo" type="StockID" notnull="yes" label="统计样本排名" description="按未知探索活动排名前N位计算每日平均收益" iskey="yes"/>
+		<Field name="ActivityID" type="ActivityID" notnull="yes" label="未知探索活动代码" description="未知探索活动代码，唯一标识一个赛事活动" iskey="yes"/>
+		<Field name="TermNo" type="TermNo" notnull="yes" default="0" label="未知探索活动期号" description="未知探索活动期号" iskey="yes"/>
+		<Field name="MatchTotalProfit" type="Ratio" notnull="yes" label="未知探索活动累计平均收益率" description="大赛累计平均收益率"/>
+		<Field name="BenchmarkTotalProfit" type="Ratio" notnull="yes" label="基准累计收益率" description="基准累计收益率"/>
 	</Entity>
 </UFEntityModel>

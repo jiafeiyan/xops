@@ -136,6 +136,62 @@ create table dbclear.t_MarketData
 
 
 -- ******************************
+-- 创建深度行情表
+-- ******************************
+create table dbclear.t_DepthMarketData
+(
+	TradingDay   varchar(8) binary  not null COMMENT '交易日'
+	,SettlementGroupID   varchar(8) binary  not null COMMENT '结算组代码'
+	,SettlementID   INTEGER   not null COMMENT '结算编号'
+	,LastPrice 	   decimal(16,6)    COMMENT '最新价'
+	,PreSettlementPrice 	   decimal(16,6)    COMMENT '昨结算'
+	,PreClosePrice 	   decimal(16,6)    COMMENT '昨收盘'
+	,UnderlyingClosePx 	   decimal(16,6)    COMMENT '标的昨收盘'
+	,PreOpenInterest 	   decimal(19,3)   not null COMMENT '昨持仓量'
+	,OpenPrice 	   decimal(16,6)    COMMENT '今开盘'
+	,HighestPrice 	   decimal(16,6)    COMMENT '最高价'
+	,LowestPrice 	   decimal(16,6)    COMMENT '最低价'
+	,Volume    bigInt(10)     COMMENT '数量'
+	,Turnover 	   decimal(19,3)    COMMENT '成交金额'
+	,OpenInterest 	   decimal(19,3)    COMMENT '持仓量'
+	,ClosePrice 	   decimal(16,6)    COMMENT '今收盘'
+	,SettlementPrice 	   decimal(16,6)    COMMENT '今结算'
+	,UpperLimitPrice 	   decimal(16,6)    COMMENT '涨停板价'
+	,LowerLimitPrice 	   decimal(16,6)    COMMENT '跌停板价'
+	,PreDelta 	   decimal(22,6)    COMMENT '昨虚实度'
+	,CurrDelta 	   decimal(22,6)    COMMENT '今虚实度'
+	,UpdateTime   varchar(8) binary   COMMENT '最后修改时间'
+	,UpdateMillisec   INTEGER    COMMENT '最后修改毫秒'
+	,InstrumentID   varchar(30) binary  not null COMMENT '合约代码'
+	,BidPrice1 	   decimal(16,6)    COMMENT '买一价'
+	,BidVolume1    bigInt(10)     COMMENT '买一量'
+	,AskPrice1 	   decimal(16,6)    COMMENT '卖一价'
+	,AskVolume1    bigInt(10)     COMMENT '卖一量'
+	,BidPrice2 	   decimal(16,6)    COMMENT '买二价'
+	,BidVolume2    bigInt(10)     COMMENT '买二量'
+	,AskPrice2 	   decimal(16,6)    COMMENT '卖二价'
+	,AskVolume2    bigInt(10)     COMMENT '卖二量'
+	,BidPrice3 	   decimal(16,6)    COMMENT '买三价'
+	,BidVolume3    bigInt(10)     COMMENT '买三量'
+	,AskPrice3 	   decimal(16,6)    COMMENT '卖三价'
+	,AskVolume3    bigInt(10)     COMMENT '卖三量'
+	,BidPrice4 	   decimal(16,6)    COMMENT '买四价'
+	,BidVolume4    bigInt(10)     COMMENT '买四量'
+	,AskPrice4 	   decimal(16,6)    COMMENT '卖四价'
+	,AskVolume4    bigInt(10)     COMMENT '卖四量'
+	,BidPrice5 	   decimal(16,6)    COMMENT '买五价'
+	,BidVolume5    bigInt(10)     COMMENT '买五量'
+	,AskPrice5 	   decimal(16,6)    COMMENT '卖五价'
+	,AskVolume5    bigInt(10)     COMMENT '卖五量'
+	,BandingUpperPrice 	   decimal(16,6)    COMMENT '上限价格'
+	,BandingLowerPrice 	   decimal(16,6)    COMMENT '下限价格'
+	,ReferencePrice 	   decimal(16,6)    COMMENT '参考价格'
+	  ,PRIMARY KEY (TradingDay,SettlementGroupID,SettlementID,InstrumentID)
+) COMMENT='深度行情';
+
+
+
+-- ******************************
 -- 创建成交表
 -- ******************************
 create table dbclear.t_Trade
@@ -360,6 +416,32 @@ create table dbclear.t_ClientPositionProfit
 	,PositionProfit 	   decimal(19,3)   not null COMMENT '持仓盈亏'
 	  ,PRIMARY KEY (TradingDay,SettlementGroupID,SettlementID,InstrumentID,ParticipantID,ClientID,HedgeFlag,PosiDirection)
 ) COMMENT='客户合约持仓盈亏';
+
+
+
+-- ******************************
+-- 创建客户合约交割/行权盈亏表
+-- ******************************
+create table dbclear.t_ClientDelivProfit
+(
+	TradingDay   varchar(8) binary  not null COMMENT '交易日'
+	,SettlementGroupID   varchar(8) binary  not null COMMENT '结算组代码'
+	,SettlementID   INTEGER   not null COMMENT '结算编号'
+	,InstrumentID   varchar(30) binary  not null COMMENT '合约代码'
+	,ParticipantID   varchar(10) binary  not null COMMENT '会员代码'
+	,ClientID   varchar(10) binary  not null COMMENT '客户代码'
+	,AccountID   varchar(12) binary  not null COMMENT '资金帐号'
+	,HedgeFlag   char(1) binary  not null COMMENT '投机套保标志'
+	,PosiDirection   char(1) binary  not null COMMENT '持仓多空方向'
+	,Position    bigInt(10)    not null COMMENT '交割持仓量'
+	,OptionsType   char(1) binary   COMMENT '期权类型'
+	,VolumeMultiple   INTEGER   not null COMMENT '合约数量乘数'
+	,UnderlyingMultiple 	   decimal(9,3)   not null COMMENT '合约基础商品乘数'
+	,StrikePrice 	   decimal(16,6)    COMMENT '执行价'
+	,SettlementPrice 	   decimal(16,6)    COMMENT '结算价'
+	,Profit 	   decimal(19,3)   not null COMMENT '交割/行权盈亏'
+	  ,PRIMARY KEY (TradingDay,SettlementGroupID,SettlementID,InstrumentID,ParticipantID,ClientID,AccountID,HedgeFlag,PosiDirection)
+) COMMENT='客户合约交割/行权盈亏';
 
 
 

@@ -13,6 +13,9 @@ truncate table dbclear.t_ClientPositionForSecurityProfit;
 -- 清空市场行情表
 truncate table dbclear.t_MarketData;
 
+-- 清空深度行情表
+truncate table dbclear.t_DepthMarketData;
+
 -- 清空成交表
 truncate table dbclear.t_Trade;
 
@@ -36,6 +39,9 @@ truncate table dbclear.t_ClientTradeProfit;
 
 -- 清空客户合约持仓盈亏表
 truncate table dbclear.t_ClientPositionProfit;
+
+-- 清空客户合约交割/行权盈亏表
+truncate table dbclear.t_ClientDelivProfit;
 
 -- 清空客户合约交易手续费率表
 truncate table dbclear.t_ClientTransFeeRatio;

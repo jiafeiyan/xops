@@ -360,6 +360,7 @@ create table sync.t_Instrument
 	,UnderlyingInstrID   varchar(30) binary   COMMENT '基础商品代码'
 	,ProductClass   char(1) binary  not null COMMENT '产品类型'
 	,PositionType   char(1) binary  not null COMMENT '持仓类型'
+	,PositionDateType   char(1) binary   default '1' not null COMMENT '持仓日期类型'
 	,UnderlyingType   char(1) binary   COMMENT '标的类型'
 	,StrikeType   char(1) binary   COMMENT '行权类型'
 	,StrikePrice 	   decimal(16,6)    COMMENT '执行价'

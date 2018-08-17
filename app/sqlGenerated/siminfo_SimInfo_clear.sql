@@ -14,7 +14,7 @@ truncate table siminfo.t_BrokerSystemSettlementGroup;
 truncate table siminfo.t_Exchange;
 
 -- 清空交易系统交易日表
--- truncate table siminfo.t_TradeSystemTradingDay;
+truncate table siminfo.t_TradeSystemTradingDay;
 
 -- 清空结算组表
 truncate table siminfo.t_SettlementGroup;
@@ -31,11 +31,17 @@ truncate table siminfo.t_ActivitySettlementGroup;
 -- 清空赛事活动投资者关系表
 truncate table siminfo.t_ActivityInvestor;
 
+-- 清空投资者比赛持仓信息表
+truncate table siminfo.t_ActivityInvestorPosition;
+
+-- 清空投资者比赛资金信息表
+truncate table siminfo.t_ActivityInvestorFund;
+
 -- 清空赛事活动可排名投资者表
 truncate table siminfo.t_ActivityRankableInvestor;
 
 -- 清空日历表
--- truncate table siminfo.t_TradingCalendar;
+truncate table siminfo.t_TradingCalendar;
 
 -- 清空交易资金账户信息表
 truncate table siminfo.t_TradingAccount;
@@ -171,4 +177,37 @@ truncate table siminfo.t_PartPosition;
 
 -- 清空期货合约持仓明细表
 truncate table siminfo.t_FuturePositionDtl;
+
+-- 清空基准行情表
+truncate table siminfo.t_BenchmarkMarket;
+
+-- 清空仿真大赛每日平均收益数据表
+truncate table siminfo.t_TradeMatchDailyAvgReturnData;
+
+-- 清空未知探索活动表
+truncate table siminfo.t_DiscoveryActivity;
+
+-- 清空未知探索活动结算组关系表
+truncate table siminfo.t_DiscoveryActSettleGroup;
+
+-- 清空未知探索活动投资者关系表
+truncate table siminfo.t_DiscoveryActivityInvestor;
+
+-- 清空投资者未知探索评估信息表
+truncate table siminfo.t_DiscoveryActInvestorEval;
+
+-- 清空未知探索活动可排名投资者表
+truncate table siminfo.t_DiscoveryActRankableInvestor;
+
+-- 清空投资者未知探索活动资金表
+truncate table siminfo.t_DiscoveryActInvestorFund;
+
+-- 清空投资者未知探索活动合约持仓表
+truncate table siminfo.t_DiscoveryActInvestorPosition;
+
+-- 清空预设基准行情表
+truncate table siminfo.t_PresettingBenchmarkMarket;
+
+-- 清空未知探索活动每日平均收益数据表
+truncate table siminfo.t_DiscoveryActDayAvgRetData;
 

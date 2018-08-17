@@ -31,6 +31,12 @@ drop table IF EXISTS siminfo.t_ActivitySettlementGroup;
 -- 删除赛事活动投资者关系表
 drop table IF EXISTS siminfo.t_ActivityInvestor;
 
+-- 删除投资者比赛持仓信息表
+drop table IF EXISTS siminfo.t_ActivityInvestorPosition;
+
+-- 删除投资者比赛资金信息表
+drop table IF EXISTS siminfo.t_ActivityInvestorFund;
+
 -- 删除赛事活动可排名投资者表
 drop table IF EXISTS siminfo.t_ActivityRankableInvestor;
 
@@ -173,4 +179,37 @@ drop table IF EXISTS siminfo.t_PartPosition;
 
 -- 删除期货合约持仓明细表
 drop table IF EXISTS siminfo.t_FuturePositionDtl;
+
+-- 删除基准行情表
+drop table IF EXISTS siminfo.t_BenchmarkMarket;
+
+-- 删除仿真大赛每日平均收益数据表
+drop table IF EXISTS siminfo.t_TradeMatchDailyAvgReturnData;
+
+-- 删除未知探索活动表
+drop table IF EXISTS siminfo.t_DiscoveryActivity;
+
+-- 删除未知探索活动结算组关系表
+drop table IF EXISTS siminfo.t_DiscoveryActSettleGroup;
+
+-- 删除未知探索活动投资者关系表
+drop table IF EXISTS siminfo.t_DiscoveryActivityInvestor;
+
+-- 删除投资者未知探索评估信息表
+drop table IF EXISTS siminfo.t_DiscoveryActInvestorEval;
+
+-- 删除未知探索活动可排名投资者表
+drop table IF EXISTS siminfo.t_DiscoveryActRankableInvestor;
+
+-- 删除投资者未知探索活动资金表
+drop table IF EXISTS siminfo.t_DiscoveryActInvestorFund;
+
+-- 删除投资者未知探索活动合约持仓表
+drop table IF EXISTS siminfo.t_DiscoveryActInvestorPosition;
+
+-- 删除预设基准行情表
+drop table IF EXISTS siminfo.t_PresettingBenchmarkMarket;
+
+-- 删除未知探索活动每日平均收益数据表
+drop table IF EXISTS siminfo.t_DiscoveryActDayAvgRetData;
 

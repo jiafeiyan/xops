@@ -160,3 +160,15 @@ drop table IF EXISTS snap.t_S_PartFund;
 -- 删除期货合约持仓明细表
 drop table IF EXISTS snap.t_S_FuturePositionDtl;
 
+-- 删除未知探索活动表
+drop table IF EXISTS snap.t_S_DiscoveryActivity;
+
+-- 删除未知探索活动结算组关系表
+drop table IF EXISTS snap.t_S_DiscoveryActSettleGroup;
+
+-- 删除未知探索活动投资者关系表
+drop table IF EXISTS snap.t_S_DiscoveryActivityInvestor;
+
+-- 删除投资者未知探索评估信息表
+drop table IF EXISTS snap.t_S_DiscoveryActInvestorEval;
+

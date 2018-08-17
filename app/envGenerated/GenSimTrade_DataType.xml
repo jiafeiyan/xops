@@ -6,6 +6,7 @@
 	<Int typename="MonthCount" length="3" label="月份数量"/>
 	<Int typename="TradingSegmentSN" length="2" label="交易阶段编号"/>
 	<Int typename="Volume" length="10" label="数量"/>
+	<Int typename="LongVolume" length="15" label="数量"/>
 	<Int typename="TimeSortID" length="10" label="按时间排队的序号"/>
 	<Int typename="Seconds" length="8" label="秒钟数量"/>
 	<Int typename="MarketDataDepth" length="2" label="市场行情深度"/>
@@ -15,6 +16,9 @@
 	<Int typename="SettlePriceSeconds" length="8" label="结算取样时间"/>
 	<Int typename="AutoIncrementID" length="10" label="自增ID"/>
 	<Int typename="DayOffset" length="4" label="日期偏移量"/>
+	<Int typename="TermNo" length="4" label="期号"/>
+	<Int typename="Duration" length="4" label="持续时间"/>
+	<Int typename="JoinCount" length="8" label="参赛人数"/>
 	<Int typename="Ranking" length="10" label="排名"/>
 	<VString typename="ParticipantID" length="10" label="会员代码"/>
 	<VString typename="ParticipantName" length="50" label="会员名称"/>
@@ -24,6 +28,7 @@
 	<VString typename="OpenID" length="20" label="投资者认证代码"/>
 	<VString typename="InvestorID" length="10" label="投资者代码"/>
 	<VString typename="InvestorName" length="20" label="投资者名称"/>
+	<VString typename="InvestorAccountType" length="4" label="投资者账户类型 0 普通账户 xxxx 对应比赛账户"/>
 	<VString typename="ClientID" length="10" label="客户代码"/>
 	<VString typename="InstrumentID" length="30" label="合约代码"/>
 	<VString typename="ProductID" length="16" label="产品代码"/>
@@ -42,6 +47,7 @@
 	<VString typename="TradeSystemName" length="20" label="交易系统名称"/>
 	<VString typename="BrokerSystemID" length="8" label="柜台系统代码"/>
 	<VString typename="BrokerSystemName" length="20" label="柜台系统名称"/>
+	<VString typename="TradingAddress" length="40" label="柜台系统交易地址"/>
 	<VString typename="SettlementGroupID" length="8" label="结算组代码"/>
 	<VString typename="SettlementGroupName" length="20" label="结算组名称"/>
 	<VString typename="ActivityID" length="8" label="赛事活动代码"/>
@@ -61,6 +67,9 @@
 	<VString typename="BusinessUnit" length="20" label="业务单元"/>
 	<VString typename="SecurityType" length="4" label="证券类型代码"/>
 	<VString typename="ProfitType" length="4" label="权益类型代码"/>
+	<VString typename="StockID" length="10" label="股票标的代码"/>
+	<VString typename="StockName" label="标的名称" length="80"/>
+	<Float typename="IntegratedScores" length="10" precision="3" label="综合积分"/>
 	<EnumChar typename="AccountStatus" label="帐户状态" prefix="ACCS">
 		<enum name="Enable" value="0" label="激活状态"/>
 		<enum name="Disable" value="1" label="停止状态"/>
@@ -197,6 +206,10 @@
 		<enum name="Net" value="1" label="净持仓"/>
 		<enum name="Gross" value="2" label="综合持仓"/>
 	</EnumChar>
+	<EnumChar typename="PositionDateType" label="持仓日期类型" prefix="PDT">
+		<enum name="UseHis" value="1" label="使用历史持仓"/>
+		<enum name="NotUseHis" value="2" label="不使用历史持仓"/>
+	</EnumChar>
 	<EnumChar typename="PriceLimitType" label="限价类型" prefix="PL">
 		<enum name="Dynamic" value="1" label="动态"/>
 		<enum name="Static" value="2" label="静态"/>
@@ -248,11 +261,20 @@
 		<enum name="NonActive" value="2" label="不活跃"/>
 		<enum name="Canceled" value="3" label="注销"/>
 	</EnumChar>
+	<EnumChar typename="InvestorAccountType" label="投资者账户类型" prefix="IAT">
+		<enum name="DefaultAccount" value="0" label="默认账户"/>
+		<enum name="ActivityAccount" value="1" label="比赛账户"/>
+	</EnumChar>
 	<EnumChar typename="ActivityStatus" label="赛事活动状态" prefix="IS">
 		<enum name="UnUsed" value="0" label="未开始"/>
 		<enum name="Active" value="1" label="活跃"/>
 		<enum name="NonActive" value="2" label="不活跃"/>
 		<enum name="Canceled" value="3" label="注销"/>
+	</EnumChar>
+	<EnumChar typename="JoinMode" label="参与方式" prefix="JM">
+		<enum name="CurrAccount" value="0" label="使用现有账户"/>
+		<enum name="NewAccount" value="1" label="新建账户"/>
+		<enum name="ResetAccount" value="2" label="重置账户"/>
 	</EnumChar>
 	<EnumChar typename="SecurityMarketID" label="证券市场代码" prefix="SMI">
 		<enum name="ID1" value="1" label="未知1"/>
@@ -281,6 +303,16 @@
 		<enum name="RS0" value="0" label="不参与排名"/>
 		<enum name="RS1" value="1" label="参与排名"/>
 	</EnumChar>
+	<EnumChar typename="CircleFreq" label="循环频率" prefix="RS">
+		<enum name="CF0" value="0" label="不循环"/>
+		<enum name="CF1" value="1" label="按季度"/>
+		<enum name="CF2" value="2" label="按月"/>
+	</EnumChar>
+	<EnumChar typename="BrokerSystemType" label="柜台系统类型" prefix="BST">
+		<enum name="BST1" value="1" label="证券"/>
+		<enum name="BST2" value="2" label="个股期权"/>
+		<enum name="BST3" value="3" label="期货"/>
+	</EnumChar>
 	<RangeInt typename="Year" length="4" from="1900" to="2100" label="年份"/>
 	<RangeInt typename="Month" length="2" from="1" to="12" label="月份"/>
 	<RangeInt typename="Day" length="2" from="1" to="31" label="日期"/>
@@ -290,6 +322,7 @@
 	<FixNumber typename="UnderlyingMultiple" length="9" precision="3" label="合约基础商品乘数"/>
 	<VString typename="CombOffsetFlag" length="4" label="组合开平标志"/>
 	<VString typename="CombHedgeFlag" length="4" label="组合投机套保标志"/>
+	<VString typename="RankingRule" length="2" label="排名规则"/>
 	<Float typename="SecurityProfit" length="22" precision="8" label="证券权益收益"/>
 	<Float typename="Ratio" length="22" precision="6" label="比率"/>
 	<Float typename="Money" length="19" precision="3" label="资金"/>

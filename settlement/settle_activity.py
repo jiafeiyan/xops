@@ -188,7 +188,7 @@ def settle_activity(context, conf):
                                                   t1.returnrateofmonth = IF(t1.premonthasset = 0, 0, round((t1.currentasset - t1.premonthasset) / t1.premonthasset, 4)),
                                                   t1.returnrateofweek = IF(t1.preweekasset = 0, 0, round((t1.currentasset - t1.preweekasset) / t1.preweekasset, 4))
                                             WHERE t1.activityid = %s AND t1.termno = %s"""
-            cursor.execute(sql, (current_trading_day, last_trading_day, current_trading_day, last_trading_day, activity_id, term_no))
+            cursor.execute(sql, (activity_id, term_no))
 
             if ranking_rule == "00":
                 # 排序规则为00时，全部参与排序

@@ -13,6 +13,9 @@ drop table IF EXISTS dbclear.t_ClientPositionForSecurityProfit;
 -- 删除市场行情表
 drop table IF EXISTS dbclear.t_MarketData;
 
+-- 删除深度行情表
+drop table IF EXISTS dbclear.t_DepthMarketData;
+
 -- 删除成交表
 drop table IF EXISTS dbclear.t_Trade;
 
@@ -36,6 +39,9 @@ drop table IF EXISTS dbclear.t_ClientTradeProfit;
 
 -- 删除客户合约持仓盈亏表
 drop table IF EXISTS dbclear.t_ClientPositionProfit;
+
+-- 删除客户合约交割/行权盈亏表
+drop table IF EXISTS dbclear.t_ClientDelivProfit;
 
 -- 删除客户合约交易手续费率表
 drop table IF EXISTS dbclear.t_ClientTransFeeRatio;

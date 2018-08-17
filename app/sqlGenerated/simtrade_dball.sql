@@ -32,6 +32,12 @@ drop table IF EXISTS siminfo.t_ActivitySettlementGroup;
 -- 删除赛事活动投资者关系表
 drop table IF EXISTS siminfo.t_ActivityInvestor;
 
+-- 删除投资者比赛持仓信息表
+drop table IF EXISTS siminfo.t_ActivityInvestorPosition;
+
+-- 删除投资者比赛资金信息表
+drop table IF EXISTS siminfo.t_ActivityInvestorFund;
+
 -- 删除赛事活动可排名投资者表
 drop table IF EXISTS siminfo.t_ActivityRankableInvestor;
 
@@ -175,6 +181,39 @@ drop table IF EXISTS siminfo.t_PartPosition;
 -- 删除期货合约持仓明细表
 drop table IF EXISTS siminfo.t_FuturePositionDtl;
 
+-- 删除基准行情表
+drop table IF EXISTS siminfo.t_BenchmarkMarket;
+
+-- 删除仿真大赛每日平均收益数据表
+drop table IF EXISTS siminfo.t_TradeMatchDailyAvgReturnData;
+
+-- 删除未知探索活动表
+drop table IF EXISTS siminfo.t_DiscoveryActivity;
+
+-- 删除未知探索活动结算组关系表
+drop table IF EXISTS siminfo.t_DiscoveryActSettleGroup;
+
+-- 删除未知探索活动投资者关系表
+drop table IF EXISTS siminfo.t_DiscoveryActivityInvestor;
+
+-- 删除投资者未知探索评估信息表
+drop table IF EXISTS siminfo.t_DiscoveryActInvestorEval;
+
+-- 删除未知探索活动可排名投资者表
+drop table IF EXISTS siminfo.t_DiscoveryActRankableInvestor;
+
+-- 删除投资者未知探索活动资金表
+drop table IF EXISTS siminfo.t_DiscoveryActInvestorFund;
+
+-- 删除投资者未知探索活动合约持仓表
+drop table IF EXISTS siminfo.t_DiscoveryActInvestorPosition;
+
+-- 删除预设基准行情表
+drop table IF EXISTS siminfo.t_PresettingBenchmarkMarket;
+
+-- 删除未知探索活动每日平均收益数据表
+drop table IF EXISTS siminfo.t_DiscoveryActDayAvgRetData;
+
 ----\siminfo_SimInfo_create.sql
 -- ******************************
 -- 创建交易系统表
@@ -195,6 +234,8 @@ create table siminfo.t_BrokerSystem
 (
 	BrokerSystemID   varchar(8) binary  not null COMMENT '柜台系统代码'
 	,BrokerSystemName   varchar(20) binary  not null COMMENT '柜台系统名称'
+	,BrokerSystemType   char(1) binary  not null COMMENT '柜台系统类型'
+	,TradingAddress   varchar(40) binary  not null COMMENT '柜台系统交易地址'
 	  ,PRIMARY KEY (BrokerSystemID)
 ) COMMENT='柜台系统';
 
@@ -243,6 +284,7 @@ create table siminfo.t_TradeSystemTradingDay
 (
 	TradeSystemID   varchar(8) binary  not null COMMENT '交易系统代码'
 	,TradingDay   varchar(8) binary  not null COMMENT '交易日'
+	,LastTradingDay   varchar(8) binary   COMMENT '前一交易日'
 	  ,PRIMARY KEY (TradeSystemID)
 ) COMMENT='交易系统交易日';
 
@@ -281,17 +323,23 @@ create table siminfo.t_TradeSystemSettlementGroup
 create table siminfo.t_Activity
 (
 	ActivityID   varchar(8) binary  not null COMMENT '赛事活动代码'
+	,TermNo   INTEGER    default '0' not null COMMENT '赛事活动期号'
 	,ActivityName   varchar(20) binary  not null COMMENT '赛事活动名称'
 	,ActivityType   varchar(4) binary  not null COMMENT '赛事活动类型'
 	,ActivityStatus   char(1) binary  not null COMMENT '赛事活动状态'
 	,InitialBalance 	   decimal(19,3)    default '100000' not null COMMENT '初始资金'
+	,JoinMode   char(1) binary   default '0' not null COMMENT '参与方式'
+	,RankingRule   varchar(2) binary   default '00' not null COMMENT '排名规则'
+	,CircleFreq   char(1) binary   default '0' not null COMMENT '循环频率'
+	,Duration   INTEGER    default '0' not null COMMENT '持续时间'
+	,JoinCount   INTEGER    default '0' not null COMMENT '参赛人数'
 	,CreateDate   varchar(8) binary  not null COMMENT '创建日期'
 	,CreateTime   varchar(8) binary  not null COMMENT '创建时间'
 	,BeginDate   varchar(8) binary   COMMENT '开始日期'
 	,EndDate   varchar(8) binary   COMMENT '结束日期'
 	,UpdateDate   varchar(8) binary  not null COMMENT '最后修改日期'
 	,UpdateTime   varchar(8) binary  not null COMMENT '最后修改时间'
-	  ,PRIMARY KEY (ActivityID)
+	  ,PRIMARY KEY (ActivityID,TermNo)
 ) COMMENT='赛事活动';
 
 
@@ -315,11 +363,93 @@ create table siminfo.t_ActivityInvestor
 (
 	ID    bigInt(10)  auto_increment    not null COMMENT '自增ID'
 	,ActivityID   varchar(8) binary  not null COMMENT '赛事活动代码'
+	,TermNo   INTEGER    default '0' not null COMMENT '赛事活动期号'
 	,InvestorID   varchar(10) binary  not null COMMENT '投资者代码'
 	,JoinDate   varchar(8) binary   COMMENT '参与日期'
 	,JoinStatus   char(1) binary   default '0'  COMMENT '参与状态'
+	,Rankable   INTEGER    default '1'  COMMENT '是否参与排名'
 	  ,PRIMARY KEY (ID,ActivityID,InvestorID)
 ) COMMENT='赛事活动投资者关系';
+
+
+
+-- ******************************
+-- 创建投资者比赛持仓信息表
+-- ******************************
+create table siminfo.t_ActivityInvestorPosition
+(
+	TradingDay   varchar(8) binary  not null COMMENT '交易日'
+	,SettlementGroupID   varchar(8) binary  not null COMMENT '结算组代码'
+	,SettlementID   INTEGER   not null COMMENT '结算编号'
+	,HedgeFlag   char(1) binary  not null COMMENT '投机套保标志'
+	,PosiDirection   char(1) binary  not null COMMENT '持仓多空方向'
+	,YdPosition    bigInt(10)    not null COMMENT '上日持仓'
+	,Position    bigInt(10)    not null COMMENT '今日持仓'
+	,LongFrozen    bigInt(10)    not null COMMENT '多头冻结'
+	,ShortFrozen    bigInt(10)    not null COMMENT '空头冻结'
+	,YdLongFrozen    bigInt(10)    not null COMMENT '昨日多头冻结'
+	,YdShortFrozen    bigInt(10)    not null COMMENT '昨日空头冻结'
+	,BuyTradeVolume    bigInt(10)    not null COMMENT '当日买成交量'
+	,SellTradeVolume    bigInt(10)    not null COMMENT '当日卖成交量'
+	,PositionCost 	   decimal(19,3)   not null COMMENT '持仓成本'
+	,YdPositionCost 	   decimal(19,3)   not null COMMENT '昨日持仓成本'
+	,UseMargin 	   decimal(19,3)   not null COMMENT '占用的保证金'
+	,FrozenMargin 	   decimal(19,3)   not null COMMENT '冻结的保证金'
+	,LongFrozenMargin 	   decimal(19,3)   not null COMMENT '多头冻结的保证金'
+	,ShortFrozenMargin 	   decimal(19,3)   not null COMMENT '空头冻结的保证金'
+	,FrozenPremium 	   decimal(19,3)   not null COMMENT '冻结的权利金'
+	,InstrumentID   varchar(30) binary  not null COMMENT '合约代码'
+	,ParticipantID   varchar(10) binary  not null COMMENT '会员代码'
+	,ClientID   varchar(10) binary  not null COMMENT '客户代码'
+	,InvestorID   varchar(10) binary   default '0' not null COMMENT '投资者代码'
+	,ActivityID   varchar(8) binary  not null COMMENT '赛事活动代码'
+	,TermNo   INTEGER    default '0' not null COMMENT '赛事活动期号'
+	  ,PRIMARY KEY (TradingDay,SettlementGroupID,SettlementID,HedgeFlag,PosiDirection,InstrumentID,ParticipantID,ClientID,InvestorID,ActivityID,TermNo)
+) COMMENT='投资者比赛持仓信息';
+
+
+
+-- ******************************
+-- 创建投资者比赛资金信息表
+-- ******************************
+create table siminfo.t_ActivityInvestorFund
+(
+	TradingDay   varchar(8) binary  not null COMMENT '交易日'
+	,ActivityID   varchar(8) binary  not null COMMENT '赛事活动代码'
+	,TermNo   INTEGER    default '0' not null COMMENT '赛事活动期号'
+	,BrokerSystemID   varchar(8) binary  not null COMMENT '柜台系统代码'
+	,InvestorID   varchar(10) binary  not null COMMENT '投资者代码'
+	,PreBalance 	   decimal(19,3)   not null COMMENT '上次结算准备金'
+	,CurrMargin 	   decimal(19,3)   not null COMMENT '当前保证金总额'
+	,CloseProfit 	   decimal(19,3)   not null COMMENT '平仓盈亏'
+	,Premium 	   decimal(19,3)   not null COMMENT '期权权利金收支'
+	,Deposit 	   decimal(19,3)   not null COMMENT '入金金额'
+	,Withdraw 	   decimal(19,3)   not null COMMENT '出金金额'
+	,Balance 	   decimal(19,3)   not null COMMENT '期货结算准备金'
+	,Available 	   decimal(19,3)   not null COMMENT '可提资金'
+	,PreMargin 	   decimal(19,3)   not null COMMENT '上次保证金总额'
+	,FuturesMargin 	   decimal(19,3)   not null COMMENT '期货保证金'
+	,OptionsMargin 	   decimal(19,3)   not null COMMENT '期权保证金'
+	,PositionProfit 	   decimal(19,3)   not null COMMENT '持仓盈亏'
+	,Profit 	   decimal(19,3)   not null COMMENT '当日盈亏'
+	,Interest 	   decimal(19,3)   not null COMMENT '利息收入'
+	,Fee 	   decimal(19,3)   not null COMMENT '手续费'
+	,TotalCollateral 	   decimal(19,3)   not null COMMENT '总质押金额'
+	,CollateralForMargin 	   decimal(19,3)   not null COMMENT '用质押抵的保证金金额'
+	,PreAccmulateInterest 	   decimal(19,3)   not null COMMENT '上次资金利息积数'
+	,AccumulateInterest 	   decimal(19,3)   not null COMMENT '资金利息积数'
+	,AccumulateFee 	   decimal(19,3)   not null COMMENT '质押手续费积数'
+	,ForzenDeposit 	   decimal(19,3)   not null COMMENT '冻结资金'
+	,AccountStatus   char(1) binary  not null COMMENT '帐户状态'
+	,InitialAsset 	   decimal(19,3)    default '0' not null COMMENT '初始资产总额'
+	,PreMonthAsset 	   decimal(19,3)    default '0' not null COMMENT '上月资产总额'
+	,PreWeekAsset 	   decimal(19,3)    default '0' not null COMMENT '上周资产总额'
+	,PreAsset 	   decimal(19,3)    default '0' not null COMMENT '昨日资产总额'
+	,CurrentAsset 	   decimal(19,3)    default '0' not null COMMENT '今日资产总额'
+	,PreStockValue 	   decimal(19,3)   not null COMMENT '昨股票市值'
+	,StockValue 	   decimal(19,3)   not null COMMENT '股票市值'
+	  ,PRIMARY KEY (TradingDay,ActivityID,TermNo,BrokerSystemID,InvestorID)
+) COMMENT='投资者比赛资金信息';
 
 
 
@@ -439,6 +569,7 @@ create table siminfo.t_Investor
 	,InvestorName   varchar(20) binary   COMMENT '投资者名称'
 	,OpenID   varchar(20) binary   COMMENT '投资者开户使用的身份认证代码'
 	,Password   varchar(40) binary  not null COMMENT '投资者登录密码'
+	,InvestorAccountType   varchar(4) binary   default '0' not null COMMENT '投资者账户类型'
 	,InvestorStatus   char(1) binary  not null COMMENT '投资者状态'
 	  ,PRIMARY KEY (InvestorID)
 ) COMMENT='投资者信息';
@@ -476,16 +607,21 @@ create  index IDX_InvestorClient_InvestorClientClientIDIndex on siminfo.t_Invest
 create table siminfo.t_ActivityInvestorEvaluation
 (
 	ActivityID   varchar(8) binary  not null COMMENT '赛事活动代码'
+	,TermNo   INTEGER    default '0' not null COMMENT '赛事活动期号'
 	,InvestorID   varchar(10) binary  not null COMMENT '投资者代码'
-	,InitialAsset 	   decimal(19,3)   not null COMMENT '期初资产'
-	,PreAsset 	   decimal(19,3)   not null COMMENT '昨资产'
-	,CurrentAsset 	   decimal(19,3)   not null COMMENT '当前资产'
-	,TotalReturnRate 	   decimal(22,6)   not null COMMENT '总收益率'
-	,ReturnRateOf1Day 	   decimal(22,6)   not null COMMENT '日收益率'
+	,InitialAsset 	   decimal(19,3)    default '0' not null COMMENT '期初资产'
+	,PreMonthAsset 	   decimal(19,3)    default '0' not null COMMENT '上月资产'
+	,PreWeekAsset 	   decimal(19,3)    default '0' not null COMMENT '上周资产'
+	,PreAsset 	   decimal(19,3)    default '0' not null COMMENT '昨资产'
+	,CurrentAsset 	   decimal(19,3)    default '0' not null COMMENT '当前资产'
+	,TotalReturnRate 	   decimal(22,6)    default '0' not null COMMENT '总收益率'
+	,ReturnRateOfMonth 	   decimal(22,6)    default '0' not null COMMENT '月收益率'
+	,ReturnRateOfWeek 	   decimal(22,6)    default '0' not null COMMENT '周收益率'
+	,ReturnRateOf1Day 	   decimal(22,6)    default '0' not null COMMENT '日收益率'
 	,RankingStatus   char(1) binary   default '0' not null COMMENT '是否参与排名'
 	,PreRanking    bigInt(10)     default '0' not null COMMENT '总收益率昨排名'
 	,Ranking    bigInt(10)     default '0' not null COMMENT '总收益率排名'
-	  ,PRIMARY KEY (ActivityID,InvestorID)
+	  ,PRIMARY KEY (ActivityID,TermNo,InvestorID)
 ) COMMENT='投资者赛事评估信息';
 
 
@@ -615,6 +751,7 @@ create table siminfo.t_Instrument
 	,UnderlyingInstrID   varchar(30) binary   COMMENT '基础商品代码'
 	,ProductClass   char(1) binary  not null COMMENT '产品类型'
 	,PositionType   char(1) binary  not null COMMENT '持仓类型'
+	,PositionDateType   char(1) binary   default '1' not null COMMENT '持仓日期类型'
 	,UnderlyingType   char(1) binary   COMMENT '标的类型'
 	,StrikeType   char(1) binary   COMMENT '行权类型'
 	,StrikePrice 	   decimal(16,6)    COMMENT '执行价'
@@ -1058,6 +1195,11 @@ create table siminfo.t_InvestorFund
 	,AccumulateFee 	   decimal(19,3)   not null COMMENT '质押手续费积数'
 	,ForzenDeposit 	   decimal(19,3)   not null COMMENT '冻结资金'
 	,AccountStatus   char(1) binary  not null COMMENT '帐户状态'
+	,InitialAsset 	   decimal(19,3)    default '0' not null COMMENT '初始资产总额'
+	,PreMonthAsset 	   decimal(19,3)    default '0' not null COMMENT '上月资产总额'
+	,PreWeekAsset 	   decimal(19,3)    default '0' not null COMMENT '上周资产总额'
+	,PreAsset 	   decimal(19,3)    default '0' not null COMMENT '昨日资产总额'
+	,CurrentAsset 	   decimal(19,3)    default '0' not null COMMENT '今日资产总额'
 	,PreStockValue 	   decimal(19,3)   not null COMMENT '昨股票市值'
 	,StockValue 	   decimal(19,3)   not null COMMENT '股票市值'
 	  ,PRIMARY KEY (BrokerSystemID,InvestorID)
@@ -1212,6 +1354,248 @@ create table siminfo.t_FuturePositionDtl
 
 
 
+-- ******************************
+-- 创建基准行情表
+-- ******************************
+create table siminfo.t_BenchmarkMarket
+(
+	TradingDay   varchar(8) binary  not null COMMENT '交易日'
+	,StockID   varchar(10) binary  not null COMMENT '证券代码'
+	,LastClosingPrice 	   decimal(16,6)   not null COMMENT '昨收盘价'
+	,OpeningPrice 	   decimal(16,6)   not null COMMENT '开盘价'
+	,ClosingPrice 	   decimal(16,6)   not null COMMENT '收盘价'
+	,TopPrice 	   decimal(16,6)   not null COMMENT '最高价'
+	,FloorPrice 	   decimal(16,6)   not null COMMENT '最低价'
+	,TradingVolume    bigInt(15)    not null COMMENT '成交量'
+	  ,PRIMARY KEY (TradingDay,StockID)
+) COMMENT='基准行情';
+
+
+
+-- ******************************
+-- 创建仿真大赛每日平均收益数据表
+-- ******************************
+create table siminfo.t_TradeMatchDailyAvgReturnData
+(
+	TradingDay   varchar(8) binary  not null COMMENT '交易日'
+	,StatisticRankNo   varchar(10) binary  not null COMMENT '统计样本排名'
+	,ActivityID   varchar(8) binary  not null COMMENT '赛事活动代码'
+	,TermNo   INTEGER    default '0' not null COMMENT '赛事活动期号'
+	,MatchTotalProfit 	   decimal(22,6)   not null COMMENT '大赛累计平均收益率'
+	,BenchmarkTotalProfit 	   decimal(22,6)   not null COMMENT '基准累计收益率'
+	  ,PRIMARY KEY (TradingDay,StatisticRankNo,ActivityID,TermNo)
+) COMMENT='仿真大赛每日平均收益数据';
+
+
+
+-- ******************************
+-- 创建未知探索活动表
+-- ******************************
+create table siminfo.t_DiscoveryActivity
+(
+	ActivityID   varchar(8) binary  not null COMMENT '活动代码'
+	,TermNo   INTEGER    default '0' not null COMMENT '活动期号'
+	,ActivityName   varchar(20) binary  not null COMMENT '活动名称'
+	,ActivityType   varchar(4) binary  not null COMMENT '活动类型'
+	,ActivityStatus   char(1) binary  not null COMMENT '活动状态'
+	,InitialBalance 	   decimal(19,3)    default '100000' not null COMMENT '初始资金'
+	,JoinMode   char(1) binary   default '0' not null COMMENT '参与方式'
+	,RankingRule   varchar(2) binary   default '00' not null COMMENT '排名规则'
+	,CircleFreq   char(1) binary   default '0' not null COMMENT '循环频率'
+	,Duration   INTEGER    default '0' not null COMMENT '持续时间'
+	,JoinCount   INTEGER    default '0' not null COMMENT '参加人数'
+	,CreateDate   varchar(8) binary  not null COMMENT '创建日期'
+	,CreateTime   varchar(8) binary  not null COMMENT '创建时间'
+	,BeginDate   varchar(8) binary   COMMENT '开始日期'
+	,EndDate   varchar(8) binary   COMMENT '结束日期'
+	,UpdateDate   varchar(8) binary  not null COMMENT '最后修改日期'
+	,UpdateTime   varchar(8) binary  not null COMMENT '最后修改时间'
+	  ,PRIMARY KEY (ActivityID,TermNo)
+) COMMENT='未知探索活动';
+
+
+
+-- ******************************
+-- 创建未知探索活动结算组关系表
+-- ******************************
+create table siminfo.t_DiscoveryActSettleGroup
+(
+	ActivityID   varchar(8) binary  not null COMMENT '活动代码'
+	,SettlementGroupID   varchar(8) binary  not null COMMENT '结算组代码'
+	  ,PRIMARY KEY (ActivityID,SettlementGroupID)
+) COMMENT='未知探索活动结算组关系';
+
+
+
+-- ******************************
+-- 创建未知探索活动投资者关系表
+-- ******************************
+create table siminfo.t_DiscoveryActivityInvestor
+(
+	ID    bigInt(10)  auto_increment    not null COMMENT '自增ID'
+	,ActivityID   varchar(8) binary  not null COMMENT '未知探索活动代码'
+	,TermNo   INTEGER    default '0' not null COMMENT '未知探索活动期号'
+	,InvestorID   varchar(10) binary  not null COMMENT '投资者代码'
+	,JoinDate   varchar(8) binary   COMMENT '参与日期'
+	,JoinStatus   char(1) binary   default '0'  COMMENT '参与状态'
+	,Rankable   INTEGER    default '1'  COMMENT '是否参与排名'
+	  ,PRIMARY KEY (ID,ActivityID,InvestorID)
+) COMMENT='未知探索活动投资者关系';
+
+
+
+-- ******************************
+-- 创建投资者未知探索评估信息表
+-- ******************************
+create table siminfo.t_DiscoveryActInvestorEval
+(
+	ActivityID   varchar(8) binary  not null COMMENT '未知探索活动代码'
+	,TermNo   INTEGER    default '0' not null COMMENT '未知探索活动期号'
+	,InvestorID   varchar(10) binary  not null COMMENT '投资者代码'
+	,InitialAsset 	   decimal(19,3)    default '0' not null COMMENT '期初资产'
+	,PreMonthAsset 	   decimal(19,3)    default '0' not null COMMENT '上月资产'
+	,PreWeekAsset 	   decimal(19,3)    default '0' not null COMMENT '上周资产'
+	,PreAsset 	   decimal(19,3)    default '0' not null COMMENT '昨资产'
+	,CurrentAsset 	   decimal(19,3)    default '0' not null COMMENT '当前资产'
+	,TotalReturnRate 	   decimal(22,6)    default '0' not null COMMENT '总收益率'
+	,ReturnRateOfMonth 	   decimal(22,6)    default '0' not null COMMENT '月收益率'
+	,ReturnRateOfWeek 	   decimal(22,6)    default '0' not null COMMENT '周收益率'
+	,ReturnRateOf1Day 	   decimal(22,6)    default '0' not null COMMENT '日收益率'
+	,RankingStatus   char(1) binary   default '0' not null COMMENT '是否参与排名'
+	,PreRanking    bigInt(10)     default '0' not null COMMENT '总收益率昨排名'
+	,Ranking    bigInt(10)     default '0' not null COMMENT '总收益率排名'
+	,IntegratedScores 	   decimal(10,3)   not null COMMENT '综合积分'
+	  ,PRIMARY KEY (ActivityID,TermNo,InvestorID)
+) COMMENT='投资者未知探索评估信息';
+
+
+
+-- ******************************
+-- 创建未知探索活动可排名投资者表
+-- ******************************
+create table siminfo.t_DiscoveryActRankableInvestor
+(
+	ActivityID   varchar(8) binary  not null COMMENT '未知探索活动代码'
+	,InvestorID   varchar(10) binary   default '0' not null COMMENT '投资者代码'
+	,OpenID   varchar(20) binary   COMMENT '投资者开户使用的身份认证代码'
+	  ,PRIMARY KEY (ActivityID,InvestorID,OpenID)
+) COMMENT='未知探索活动可排名投资者';
+
+
+
+-- ******************************
+-- 创建投资者未知探索活动资金表
+-- ******************************
+create table siminfo.t_DiscoveryActInvestorFund
+(
+	ActivityID   varchar(8) binary  not null COMMENT '未知探索活动代码'
+	,TermNo   INTEGER    default '0' not null COMMENT '未知探索活动期号'
+	,BrokerSystemID   varchar(8) binary  not null COMMENT '柜台系统代码'
+	,InvestorID   varchar(10) binary  not null COMMENT '投资者代码'
+	,PreBalance 	   decimal(19,3)   not null COMMENT '上次结算准备金'
+	,CurrMargin 	   decimal(19,3)   not null COMMENT '当前保证金总额'
+	,CloseProfit 	   decimal(19,3)   not null COMMENT '平仓盈亏'
+	,Premium 	   decimal(19,3)   not null COMMENT '期权权利金收支'
+	,Deposit 	   decimal(19,3)   not null COMMENT '入金金额'
+	,Withdraw 	   decimal(19,3)   not null COMMENT '出金金额'
+	,Balance 	   decimal(19,3)   not null COMMENT '期货结算准备金'
+	,Available 	   decimal(19,3)   not null COMMENT '可提资金'
+	,PreMargin 	   decimal(19,3)   not null COMMENT '上次保证金总额'
+	,FuturesMargin 	   decimal(19,3)   not null COMMENT '期货保证金'
+	,OptionsMargin 	   decimal(19,3)   not null COMMENT '期权保证金'
+	,PositionProfit 	   decimal(19,3)   not null COMMENT '持仓盈亏'
+	,Profit 	   decimal(19,3)   not null COMMENT '当日盈亏'
+	,Interest 	   decimal(19,3)   not null COMMENT '利息收入'
+	,Fee 	   decimal(19,3)   not null COMMENT '手续费'
+	,TotalCollateral 	   decimal(19,3)   not null COMMENT '总质押金额'
+	,CollateralForMargin 	   decimal(19,3)   not null COMMENT '用质押抵的保证金金额'
+	,PreAccmulateInterest 	   decimal(19,3)   not null COMMENT '上次资金利息积数'
+	,AccumulateInterest 	   decimal(19,3)   not null COMMENT '资金利息积数'
+	,AccumulateFee 	   decimal(19,3)   not null COMMENT '质押手续费积数'
+	,ForzenDeposit 	   decimal(19,3)   not null COMMENT '冻结资金'
+	,AccountStatus   char(1) binary  not null COMMENT '帐户状态'
+	,InitialAsset 	   decimal(19,3)    default '0' not null COMMENT '初始资产总额'
+	,PreMonthAsset 	   decimal(19,3)    default '0' not null COMMENT '上月资产总额'
+	,PreWeekAsset 	   decimal(19,3)    default '0' not null COMMENT '上周资产总额'
+	,PreAsset 	   decimal(19,3)    default '0' not null COMMENT '昨日资产总额'
+	,CurrentAsset 	   decimal(19,3)    default '0' not null COMMENT '今日资产总额'
+	,PreStockValue 	   decimal(19,3)   not null COMMENT '昨股票市值'
+	,StockValue 	   decimal(19,3)   not null COMMENT '股票市值'
+	  ,PRIMARY KEY (ActivityID,TermNo,BrokerSystemID,InvestorID)
+) COMMENT='投资者未知探索活动资金';
+
+
+
+-- ******************************
+-- 创建投资者未知探索活动合约持仓表
+-- ******************************
+create table siminfo.t_DiscoveryActInvestorPosition
+(
+	TradingDay   varchar(8) binary  not null COMMENT '交易日'
+	,SettlementGroupID   varchar(8) binary  not null COMMENT '结算组代码'
+	,SettlementID   INTEGER   not null COMMENT '结算编号'
+	,HedgeFlag   char(1) binary  not null COMMENT '投机套保标志'
+	,PosiDirection   char(1) binary  not null COMMENT '持仓多空方向'
+	,YdPosition    bigInt(10)    not null COMMENT '上日持仓'
+	,Position    bigInt(10)    not null COMMENT '今日持仓'
+	,LongFrozen    bigInt(10)    not null COMMENT '多头冻结'
+	,ShortFrozen    bigInt(10)    not null COMMENT '空头冻结'
+	,YdLongFrozen    bigInt(10)    not null COMMENT '昨日多头冻结'
+	,YdShortFrozen    bigInt(10)    not null COMMENT '昨日空头冻结'
+	,BuyTradeVolume    bigInt(10)    not null COMMENT '当日买成交量'
+	,SellTradeVolume    bigInt(10)    not null COMMENT '当日卖成交量'
+	,PositionCost 	   decimal(19,3)   not null COMMENT '持仓成本'
+	,YdPositionCost 	   decimal(19,3)   not null COMMENT '昨日持仓成本'
+	,UseMargin 	   decimal(19,3)   not null COMMENT '占用的保证金'
+	,FrozenMargin 	   decimal(19,3)   not null COMMENT '冻结的保证金'
+	,LongFrozenMargin 	   decimal(19,3)   not null COMMENT '多头冻结的保证金'
+	,ShortFrozenMargin 	   decimal(19,3)   not null COMMENT '空头冻结的保证金'
+	,FrozenPremium 	   decimal(19,3)   not null COMMENT '冻结的权利金'
+	,InstrumentID   varchar(30) binary  not null COMMENT '合约代码'
+	,ParticipantID   varchar(10) binary  not null COMMENT '会员代码'
+	,ClientID   varchar(10) binary  not null COMMENT '客户代码'
+	,InvestorID   varchar(10) binary   default '0' not null COMMENT '投资者代码'
+	,ActivityID   varchar(8) binary  not null COMMENT '未知探索活动代码'
+	,TermNo   INTEGER    default '0' not null COMMENT '未知探索活动期号'
+	  ,PRIMARY KEY (TradingDay,SettlementGroupID,SettlementID,HedgeFlag,PosiDirection,InstrumentID,ParticipantID,ClientID,InvestorID,ActivityID,TermNo)
+) COMMENT='投资者未知探索活动合约持仓';
+
+
+
+-- ******************************
+-- 创建预设基准行情表
+-- ******************************
+create table siminfo.t_PresettingBenchmarkMarket
+(
+	TradingDay   varchar(8) binary  not null COMMENT '交易日'
+	,StockID   varchar(10) binary  not null COMMENT '证券代码'
+	,LastClosingPrice 	   decimal(16,6)   not null COMMENT '昨收盘价'
+	,OpeningPrice 	   decimal(16,6)   not null COMMENT '开盘价'
+	,ClosingPrice 	   decimal(16,6)   not null COMMENT '收盘价'
+	,TopPrice 	   decimal(16,6)   not null COMMENT '最高价'
+	,FloorPrice 	   decimal(16,6)   not null COMMENT '最低价'
+	,TradingVolume    bigInt(15)    not null COMMENT '成交量'
+	  ,PRIMARY KEY (TradingDay,StockID)
+) COMMENT='预设基准行情';
+
+
+
+-- ******************************
+-- 创建未知探索活动每日平均收益数据表
+-- ******************************
+create table siminfo.t_DiscoveryActDayAvgRetData
+(
+	TradingDay   varchar(8) binary  not null COMMENT '交易日'
+	,StatisticRankNo   varchar(10) binary  not null COMMENT '统计样本排名'
+	,ActivityID   varchar(8) binary  not null COMMENT '未知探索活动代码'
+	,TermNo   INTEGER    default '0' not null COMMENT '未知探索活动期号'
+	,MatchTotalProfit 	   decimal(22,6)   not null COMMENT '未知探索活动累计平均收益率'
+	,BenchmarkTotalProfit 	   decimal(22,6)   not null COMMENT '基准累计收益率'
+	  ,PRIMARY KEY (TradingDay,StatisticRankNo,ActivityID,TermNo)
+) COMMENT='未知探索活动每日平均收益数据';
+
+
+
 ----\siminfo_SimInfo_clear.sql
 -- 清空交易系统表
 truncate table siminfo.t_TradeSystem;
@@ -1245,6 +1629,12 @@ truncate table siminfo.t_ActivitySettlementGroup;
 
 -- 清空赛事活动投资者关系表
 truncate table siminfo.t_ActivityInvestor;
+
+-- 清空投资者比赛持仓信息表
+truncate table siminfo.t_ActivityInvestorPosition;
+
+-- 清空投资者比赛资金信息表
+truncate table siminfo.t_ActivityInvestorFund;
 
 -- 清空赛事活动可排名投资者表
 truncate table siminfo.t_ActivityRankableInvestor;
@@ -1387,6 +1777,39 @@ truncate table siminfo.t_PartPosition;
 -- 清空期货合约持仓明细表
 truncate table siminfo.t_FuturePositionDtl;
 
+-- 清空基准行情表
+truncate table siminfo.t_BenchmarkMarket;
+
+-- 清空仿真大赛每日平均收益数据表
+truncate table siminfo.t_TradeMatchDailyAvgReturnData;
+
+-- 清空未知探索活动表
+truncate table siminfo.t_DiscoveryActivity;
+
+-- 清空未知探索活动结算组关系表
+truncate table siminfo.t_DiscoveryActSettleGroup;
+
+-- 清空未知探索活动投资者关系表
+truncate table siminfo.t_DiscoveryActivityInvestor;
+
+-- 清空投资者未知探索评估信息表
+truncate table siminfo.t_DiscoveryActInvestorEval;
+
+-- 清空未知探索活动可排名投资者表
+truncate table siminfo.t_DiscoveryActRankableInvestor;
+
+-- 清空投资者未知探索活动资金表
+truncate table siminfo.t_DiscoveryActInvestorFund;
+
+-- 清空投资者未知探索活动合约持仓表
+truncate table siminfo.t_DiscoveryActInvestorPosition;
+
+-- 清空预设基准行情表
+truncate table siminfo.t_PresettingBenchmarkMarket;
+
+-- 清空未知探索活动每日平均收益数据表
+truncate table siminfo.t_DiscoveryActDayAvgRetData;
+
 ----\dbclear_DBClear_drop.sql
 -- 删除结算会话表
 drop table IF EXISTS dbclear.t_Settlement;
@@ -1402,6 +1825,9 @@ drop table IF EXISTS dbclear.t_ClientPositionForSecurityProfit;
 
 -- 删除市场行情表
 drop table IF EXISTS dbclear.t_MarketData;
+
+-- 删除深度行情表
+drop table IF EXISTS dbclear.t_DepthMarketData;
 
 -- 删除成交表
 drop table IF EXISTS dbclear.t_Trade;
@@ -1426,6 +1852,9 @@ drop table IF EXISTS dbclear.t_ClientTradeProfit;
 
 -- 删除客户合约持仓盈亏表
 drop table IF EXISTS dbclear.t_ClientPositionProfit;
+
+-- 删除客户合约交割/行权盈亏表
+drop table IF EXISTS dbclear.t_ClientDelivProfit;
 
 -- 删除客户合约交易手续费率表
 drop table IF EXISTS dbclear.t_ClientTransFeeRatio;
@@ -1577,6 +2006,62 @@ create table dbclear.t_MarketData
 	,InstrumentID   varchar(30) binary  not null COMMENT '合约代码'
 	  ,PRIMARY KEY (TradingDay,SettlementGroupID,SettlementID,InstrumentID)
 ) COMMENT='市场行情';
+
+
+
+-- ******************************
+-- 创建深度行情表
+-- ******************************
+create table dbclear.t_DepthMarketData
+(
+	TradingDay   varchar(8) binary  not null COMMENT '交易日'
+	,SettlementGroupID   varchar(8) binary  not null COMMENT '结算组代码'
+	,SettlementID   INTEGER   not null COMMENT '结算编号'
+	,LastPrice 	   decimal(16,6)    COMMENT '最新价'
+	,PreSettlementPrice 	   decimal(16,6)    COMMENT '昨结算'
+	,PreClosePrice 	   decimal(16,6)    COMMENT '昨收盘'
+	,UnderlyingClosePx 	   decimal(16,6)    COMMENT '标的昨收盘'
+	,PreOpenInterest 	   decimal(19,3)   not null COMMENT '昨持仓量'
+	,OpenPrice 	   decimal(16,6)    COMMENT '今开盘'
+	,HighestPrice 	   decimal(16,6)    COMMENT '最高价'
+	,LowestPrice 	   decimal(16,6)    COMMENT '最低价'
+	,Volume    bigInt(10)     COMMENT '数量'
+	,Turnover 	   decimal(19,3)    COMMENT '成交金额'
+	,OpenInterest 	   decimal(19,3)    COMMENT '持仓量'
+	,ClosePrice 	   decimal(16,6)    COMMENT '今收盘'
+	,SettlementPrice 	   decimal(16,6)    COMMENT '今结算'
+	,UpperLimitPrice 	   decimal(16,6)    COMMENT '涨停板价'
+	,LowerLimitPrice 	   decimal(16,6)    COMMENT '跌停板价'
+	,PreDelta 	   decimal(22,6)    COMMENT '昨虚实度'
+	,CurrDelta 	   decimal(22,6)    COMMENT '今虚实度'
+	,UpdateTime   varchar(8) binary   COMMENT '最后修改时间'
+	,UpdateMillisec   INTEGER    COMMENT '最后修改毫秒'
+	,InstrumentID   varchar(30) binary  not null COMMENT '合约代码'
+	,BidPrice1 	   decimal(16,6)    COMMENT '买一价'
+	,BidVolume1    bigInt(10)     COMMENT '买一量'
+	,AskPrice1 	   decimal(16,6)    COMMENT '卖一价'
+	,AskVolume1    bigInt(10)     COMMENT '卖一量'
+	,BidPrice2 	   decimal(16,6)    COMMENT '买二价'
+	,BidVolume2    bigInt(10)     COMMENT '买二量'
+	,AskPrice2 	   decimal(16,6)    COMMENT '卖二价'
+	,AskVolume2    bigInt(10)     COMMENT '卖二量'
+	,BidPrice3 	   decimal(16,6)    COMMENT '买三价'
+	,BidVolume3    bigInt(10)     COMMENT '买三量'
+	,AskPrice3 	   decimal(16,6)    COMMENT '卖三价'
+	,AskVolume3    bigInt(10)     COMMENT '卖三量'
+	,BidPrice4 	   decimal(16,6)    COMMENT '买四价'
+	,BidVolume4    bigInt(10)     COMMENT '买四量'
+	,AskPrice4 	   decimal(16,6)    COMMENT '卖四价'
+	,AskVolume4    bigInt(10)     COMMENT '卖四量'
+	,BidPrice5 	   decimal(16,6)    COMMENT '买五价'
+	,BidVolume5    bigInt(10)     COMMENT '买五量'
+	,AskPrice5 	   decimal(16,6)    COMMENT '卖五价'
+	,AskVolume5    bigInt(10)     COMMENT '卖五量'
+	,BandingUpperPrice 	   decimal(16,6)    COMMENT '上限价格'
+	,BandingLowerPrice 	   decimal(16,6)    COMMENT '下限价格'
+	,ReferencePrice 	   decimal(16,6)    COMMENT '参考价格'
+	  ,PRIMARY KEY (TradingDay,SettlementGroupID,SettlementID,InstrumentID)
+) COMMENT='深度行情';
 
 
 
@@ -1809,6 +2294,32 @@ create table dbclear.t_ClientPositionProfit
 
 
 -- ******************************
+-- 创建客户合约交割/行权盈亏表
+-- ******************************
+create table dbclear.t_ClientDelivProfit
+(
+	TradingDay   varchar(8) binary  not null COMMENT '交易日'
+	,SettlementGroupID   varchar(8) binary  not null COMMENT '结算组代码'
+	,SettlementID   INTEGER   not null COMMENT '结算编号'
+	,InstrumentID   varchar(30) binary  not null COMMENT '合约代码'
+	,ParticipantID   varchar(10) binary  not null COMMENT '会员代码'
+	,ClientID   varchar(10) binary  not null COMMENT '客户代码'
+	,AccountID   varchar(12) binary  not null COMMENT '资金帐号'
+	,HedgeFlag   char(1) binary  not null COMMENT '投机套保标志'
+	,PosiDirection   char(1) binary  not null COMMENT '持仓多空方向'
+	,Position    bigInt(10)    not null COMMENT '交割持仓量'
+	,OptionsType   char(1) binary   COMMENT '期权类型'
+	,VolumeMultiple   INTEGER   not null COMMENT '合约数量乘数'
+	,UnderlyingMultiple 	   decimal(9,3)   not null COMMENT '合约基础商品乘数'
+	,StrikePrice 	   decimal(16,6)    COMMENT '执行价'
+	,SettlementPrice 	   decimal(16,6)    COMMENT '结算价'
+	,Profit 	   decimal(19,3)   not null COMMENT '交割/行权盈亏'
+	  ,PRIMARY KEY (TradingDay,SettlementGroupID,SettlementID,InstrumentID,ParticipantID,ClientID,AccountID,HedgeFlag,PosiDirection)
+) COMMENT='客户合约交割/行权盈亏';
+
+
+
+-- ******************************
 -- 创建客户合约交易手续费率表
 -- ******************************
 create table dbclear.t_ClientTransFeeRatio
@@ -1963,6 +2474,9 @@ truncate table dbclear.t_ClientPositionForSecurityProfit;
 -- 清空市场行情表
 truncate table dbclear.t_MarketData;
 
+-- 清空深度行情表
+truncate table dbclear.t_DepthMarketData;
+
 -- 清空成交表
 truncate table dbclear.t_Trade;
 
@@ -1986,6 +2500,9 @@ truncate table dbclear.t_ClientTradeProfit;
 
 -- 清空客户合约持仓盈亏表
 truncate table dbclear.t_ClientPositionProfit;
+
+-- 清空客户合约交割/行权盈亏表
+truncate table dbclear.t_ClientDelivProfit;
 
 -- 清空客户合约交易手续费率表
 truncate table dbclear.t_ClientTransFeeRatio;
@@ -2474,6 +2991,7 @@ create table sync.t_Instrument
 	,UnderlyingInstrID   varchar(30) binary   COMMENT '基础商品代码'
 	,ProductClass   char(1) binary  not null COMMENT '产品类型'
 	,PositionType   char(1) binary  not null COMMENT '持仓类型'
+	,PositionDateType   char(1) binary   default '1' not null COMMENT '持仓日期类型'
 	,UnderlyingType   char(1) binary   COMMENT '标的类型'
 	,StrikeType   char(1) binary   COMMENT '行权类型'
 	,StrikePrice 	   decimal(16,6)    COMMENT '执行价'
@@ -3045,6 +3563,18 @@ drop table IF EXISTS snap.t_S_PartFund;
 -- 删除期货合约持仓明细表
 drop table IF EXISTS snap.t_S_FuturePositionDtl;
 
+-- 删除未知探索活动表
+drop table IF EXISTS snap.t_S_DiscoveryActivity;
+
+-- 删除未知探索活动结算组关系表
+drop table IF EXISTS snap.t_S_DiscoveryActSettleGroup;
+
+-- 删除未知探索活动投资者关系表
+drop table IF EXISTS snap.t_S_DiscoveryActivityInvestor;
+
+-- 删除投资者未知探索评估信息表
+drop table IF EXISTS snap.t_S_DiscoveryActInvestorEval;
+
 ----\snap_Snap_create.sql
 -- ******************************
 -- 创建交易系统表
@@ -3067,6 +3597,8 @@ create table snap.t_S_BrokerSystem
 	TradingDay   varchar(8) binary  not null COMMENT '交易日'
 	,BrokerSystemID   varchar(8) binary  not null COMMENT '柜台系统代码'
 	,BrokerSystemName   varchar(20) binary  not null COMMENT '柜台系统名称'
+	,BrokerSystemType   char(1) binary  not null COMMENT '柜台系统类型'
+	,TradingAddress   varchar(40) binary  not null COMMENT '柜台系统交易地址'
 	  ,PRIMARY KEY (TradingDay,BrokerSystemID)
 ) COMMENT='柜台系统';
 
@@ -3147,17 +3679,23 @@ create table snap.t_S_Activity
 (
 	TradingDay   varchar(8) binary  not null COMMENT '交易日'
 	,ActivityID   varchar(8) binary  not null COMMENT '赛事活动代码'
+	,TermNo   INTEGER    default '0' not null COMMENT '赛事活动期号'
 	,ActivityName   varchar(20) binary  not null COMMENT '赛事活动名称'
 	,ActivityType   varchar(4) binary  not null COMMENT '赛事活动类型'
 	,ActivityStatus   char(1) binary  not null COMMENT '赛事活动状态'
 	,InitialBalance 	   decimal(19,3)    default '100000' not null COMMENT '初始资金'
+	,JoinMode   char(1) binary   default '0' not null COMMENT '参与方式'
+	,RankingRule   varchar(2) binary   default '00' not null COMMENT '排名规则'
+	,CircleFreq   char(1) binary   default '0' not null COMMENT '循环频率'
+	,Duration   INTEGER    default '0' not null COMMENT '持续时间'
+	,JoinCount   INTEGER    default '0' not null COMMENT '参赛人数'
 	,CreateDate   varchar(8) binary  not null COMMENT '创建日期'
 	,CreateTime   varchar(8) binary  not null COMMENT '创建时间'
 	,BeginDate   varchar(8) binary   COMMENT '开始日期'
 	,EndDate   varchar(8) binary   COMMENT '结束日期'
 	,UpdateDate   varchar(8) binary  not null COMMENT '最后修改日期'
 	,UpdateTime   varchar(8) binary  not null COMMENT '最后修改时间'
-	  ,PRIMARY KEY (TradingDay,ActivityID)
+	  ,PRIMARY KEY (TradingDay,ActivityID,TermNo)
 ) COMMENT='赛事活动';
 
 
@@ -3182,9 +3720,11 @@ create table snap.t_S_ActivityInvestor
 (
 	ID    bigInt(10)  auto_increment    not null COMMENT '自增ID'
 	,ActivityID   varchar(8) binary  not null COMMENT '赛事活动代码'
+	,TermNo   INTEGER    default '0' not null COMMENT '赛事活动期号'
 	,InvestorID   varchar(10) binary  not null COMMENT '投资者代码'
 	,JoinDate   varchar(8) binary   COMMENT '参与日期'
 	,JoinStatus   char(1) binary   default '0'  COMMENT '参与状态'
+	,Rankable   INTEGER    default '1'  COMMENT '是否参与排名'
 	,TradingDay   varchar(8) binary  not null COMMENT '交易日'
 	  ,PRIMARY KEY (ID,ActivityID,InvestorID,TradingDay)
 ) COMMENT='赛事活动投资者关系';
@@ -3308,6 +3848,7 @@ create table snap.t_S_Investor
 	,InvestorName   varchar(20) binary   COMMENT '投资者名称'
 	,OpenID   varchar(20) binary   COMMENT '投资者开户使用的身份认证代码'
 	,Password   varchar(40) binary  not null COMMENT '投资者登录密码'
+	,InvestorAccountType   varchar(4) binary   default '0' not null COMMENT '投资者账户类型'
 	,InvestorStatus   char(1) binary  not null COMMENT '投资者状态'
 	  ,PRIMARY KEY (TradingDay,InvestorID)
 ) COMMENT='投资者信息';
@@ -3335,16 +3876,21 @@ create table snap.t_S_ActivityInvestorEvaluation
 (
 	TradingDay   varchar(8) binary  not null COMMENT '交易日'
 	,ActivityID   varchar(8) binary  not null COMMENT '赛事活动代码'
+	,TermNo   INTEGER    default '0' not null COMMENT '赛事活动期号'
 	,InvestorID   varchar(10) binary  not null COMMENT '投资者代码'
-	,InitialAsset 	   decimal(19,3)   not null COMMENT '期初资产'
-	,PreAsset 	   decimal(19,3)   not null COMMENT '昨资产'
-	,CurrentAsset 	   decimal(19,3)   not null COMMENT '当前资产'
-	,TotalReturnRate 	   decimal(22,6)   not null COMMENT '总收益率'
-	,ReturnRateOf1Day 	   decimal(22,6)   not null COMMENT '日收益率'
+	,InitialAsset 	   decimal(19,3)    default '0' not null COMMENT '期初资产'
+	,PreMonthAsset 	   decimal(19,3)    default '0' not null COMMENT '上月资产'
+	,PreWeekAsset 	   decimal(19,3)    default '0' not null COMMENT '上周资产'
+	,PreAsset 	   decimal(19,3)    default '0' not null COMMENT '昨资产'
+	,CurrentAsset 	   decimal(19,3)    default '0' not null COMMENT '当前资产'
+	,TotalReturnRate 	   decimal(22,6)    default '0' not null COMMENT '总收益率'
+	,ReturnRateOfMonth 	   decimal(22,6)    default '0' not null COMMENT '月收益率'
+	,ReturnRateOfWeek 	   decimal(22,6)    default '0' not null COMMENT '周收益率'
+	,ReturnRateOf1Day 	   decimal(22,6)    default '0' not null COMMENT '日收益率'
 	,RankingStatus   char(1) binary   default '0' not null COMMENT '是否参与排名'
 	,PreRanking    bigInt(10)     default '0' not null COMMENT '总收益率昨排名'
 	,Ranking    bigInt(10)     default '0' not null COMMENT '总收益率排名'
-	  ,PRIMARY KEY (TradingDay,ActivityID,InvestorID)
+	  ,PRIMARY KEY (TradingDay,ActivityID,TermNo,InvestorID)
 ) COMMENT='投资者赛事评估信息';
 
 
@@ -3483,6 +4029,7 @@ create table snap.t_S_Instrument
 	,UnderlyingInstrID   varchar(30) binary   COMMENT '基础商品代码'
 	,ProductClass   char(1) binary  not null COMMENT '产品类型'
 	,PositionType   char(1) binary  not null COMMENT '持仓类型'
+	,PositionDateType   char(1) binary   default '1' not null COMMENT '持仓日期类型'
 	,UnderlyingType   char(1) binary   COMMENT '标的类型'
 	,StrikeType   char(1) binary   COMMENT '行权类型'
 	,StrikePrice 	   decimal(16,6)    COMMENT '执行价'
@@ -4013,6 +4560,11 @@ create table snap.t_S_InvestorFund
 	,AccumulateFee 	   decimal(19,3)   not null COMMENT '质押手续费积数'
 	,ForzenDeposit 	   decimal(19,3)   not null COMMENT '冻结资金'
 	,AccountStatus   char(1) binary  not null COMMENT '帐户状态'
+	,InitialAsset 	   decimal(19,3)    default '0' not null COMMENT '初始资产总额'
+	,PreMonthAsset 	   decimal(19,3)    default '0' not null COMMENT '上月资产总额'
+	,PreWeekAsset 	   decimal(19,3)    default '0' not null COMMENT '上周资产总额'
+	,PreAsset 	   decimal(19,3)    default '0' not null COMMENT '昨日资产总额'
+	,CurrentAsset 	   decimal(19,3)    default '0' not null COMMENT '今日资产总额'
 	,PreStockValue 	   decimal(19,3)   not null COMMENT '昨股票市值'
 	,StockValue 	   decimal(19,3)   not null COMMENT '股票市值'
 	  ,PRIMARY KEY (TradingDay,BrokerSystemID,InvestorID)
@@ -4075,6 +4627,92 @@ create table snap.t_S_FuturePositionDtl
 	,CloseAmount 	   decimal(19,3)    COMMENT '平仓金额'
 	  ,PRIMARY KEY (TradingDay,SettlementGroupID,SettlementID,InstrumentID,ParticipantID,ClientID,HedgeFlag,Direction,OpenDate,TradeID,TradeType)
 ) COMMENT='期货合约持仓明细';
+
+
+
+-- ******************************
+-- 创建未知探索活动表
+-- ******************************
+create table snap.t_S_DiscoveryActivity
+(
+	TradingDay   varchar(8) binary  not null COMMENT '交易日'
+	,ActivityID   varchar(8) binary  not null COMMENT '活动代码'
+	,TermNo   INTEGER    default '0' not null COMMENT '活动期号'
+	,ActivityName   varchar(20) binary  not null COMMENT '活动名称'
+	,ActivityType   varchar(4) binary  not null COMMENT '活动类型'
+	,ActivityStatus   char(1) binary  not null COMMENT '活动状态'
+	,InitialBalance 	   decimal(19,3)    default '100000' not null COMMENT '初始资金'
+	,JoinMode   char(1) binary   default '0' not null COMMENT '参与方式'
+	,RankingRule   varchar(2) binary   default '00' not null COMMENT '排名规则'
+	,CircleFreq   char(1) binary   default '0' not null COMMENT '循环频率'
+	,Duration   INTEGER    default '0' not null COMMENT '持续时间'
+	,JoinCount   INTEGER    default '0' not null COMMENT '参加人数'
+	,CreateDate   varchar(8) binary  not null COMMENT '创建日期'
+	,CreateTime   varchar(8) binary  not null COMMENT '创建时间'
+	,BeginDate   varchar(8) binary   COMMENT '开始日期'
+	,EndDate   varchar(8) binary   COMMENT '结束日期'
+	,UpdateDate   varchar(8) binary  not null COMMENT '最后修改日期'
+	,UpdateTime   varchar(8) binary  not null COMMENT '最后修改时间'
+	  ,PRIMARY KEY (TradingDay,ActivityID,TermNo)
+) COMMENT='未知探索活动';
+
+
+
+-- ******************************
+-- 创建未知探索活动结算组关系表
+-- ******************************
+create table snap.t_S_DiscoveryActSettleGroup
+(
+	TradingDay   varchar(8) binary  not null COMMENT '交易日'
+	,ActivityID   varchar(8) binary  not null COMMENT '活动代码'
+	,SettlementGroupID   varchar(8) binary  not null COMMENT '结算组代码'
+	  ,PRIMARY KEY (TradingDay,ActivityID,SettlementGroupID)
+) COMMENT='未知探索活动结算组关系';
+
+
+
+-- ******************************
+-- 创建未知探索活动投资者关系表
+-- ******************************
+create table snap.t_S_DiscoveryActivityInvestor
+(
+	TradingDay   varchar(8) binary  not null COMMENT '交易日'
+	,ID    bigInt(10)  auto_increment    not null COMMENT '自增ID'
+	,ActivityID   varchar(8) binary  not null COMMENT '未知探索活动代码'
+	,TermNo   INTEGER    default '0' not null COMMENT '未知探索活动期号'
+	,InvestorID   varchar(10) binary  not null COMMENT '投资者代码'
+	,JoinDate   varchar(8) binary   COMMENT '参与日期'
+	,JoinStatus   char(1) binary   default '0'  COMMENT '参与状态'
+	,Rankable   INTEGER    default '1'  COMMENT '是否参与排名'
+	  ,PRIMARY KEY (TradingDay,ID,ActivityID,InvestorID)
+) COMMENT='未知探索活动投资者关系';
+
+
+
+-- ******************************
+-- 创建投资者未知探索评估信息表
+-- ******************************
+create table snap.t_S_DiscoveryActInvestorEval
+(
+	TradingDay   varchar(8) binary  not null COMMENT '交易日'
+	,ActivityID   varchar(8) binary  not null COMMENT '未知探索活动代码'
+	,TermNo   INTEGER    default '0' not null COMMENT '未知探索活动期号'
+	,InvestorID   varchar(10) binary  not null COMMENT '投资者代码'
+	,InitialAsset 	   decimal(19,3)    default '0' not null COMMENT '期初资产'
+	,PreMonthAsset 	   decimal(19,3)    default '0' not null COMMENT '上月资产'
+	,PreWeekAsset 	   decimal(19,3)    default '0' not null COMMENT '上周资产'
+	,PreAsset 	   decimal(19,3)    default '0' not null COMMENT '昨资产'
+	,CurrentAsset 	   decimal(19,3)    default '0' not null COMMENT '当前资产'
+	,TotalReturnRate 	   decimal(22,6)    default '0' not null COMMENT '总收益率'
+	,ReturnRateOfMonth 	   decimal(22,6)    default '0' not null COMMENT '月收益率'
+	,ReturnRateOfWeek 	   decimal(22,6)    default '0' not null COMMENT '周收益率'
+	,ReturnRateOf1Day 	   decimal(22,6)    default '0' not null COMMENT '日收益率'
+	,RankingStatus   char(1) binary   default '0' not null COMMENT '是否参与排名'
+	,PreRanking    bigInt(10)     default '0' not null COMMENT '总收益率昨排名'
+	,Ranking    bigInt(10)     default '0' not null COMMENT '总收益率排名'
+	,IntegratedScores 	   decimal(10,3)   not null COMMENT '综合积分'
+	  ,PRIMARY KEY (TradingDay,ActivityID,TermNo,InvestorID)
+) COMMENT='投资者未知探索评估信息';
 
 
 
@@ -4240,4 +4878,16 @@ truncate table snap.t_S_PartFund;
 
 -- 清空期货合约持仓明细表
 truncate table snap.t_S_FuturePositionDtl;
+
+-- 清空未知探索活动表
+truncate table snap.t_S_DiscoveryActivity;
+
+-- 清空未知探索活动结算组关系表
+truncate table snap.t_S_DiscoveryActSettleGroup;
+
+-- 清空未知探索活动投资者关系表
+truncate table snap.t_S_DiscoveryActivityInvestor;
+
+-- 清空投资者未知探索评估信息表
+truncate table snap.t_S_DiscoveryActInvestorEval;
 

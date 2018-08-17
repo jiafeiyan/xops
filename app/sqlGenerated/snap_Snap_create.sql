@@ -19,6 +19,8 @@ create table snap.t_S_BrokerSystem
 	TradingDay   varchar(8) binary  not null COMMENT '交易日'
 	,BrokerSystemID   varchar(8) binary  not null COMMENT '柜台系统代码'
 	,BrokerSystemName   varchar(20) binary  not null COMMENT '柜台系统名称'
+	,BrokerSystemType   char(1) binary  not null COMMENT '柜台系统类型'
+	,TradingAddress   varchar(40) binary  not null COMMENT '柜台系统交易地址'
 	  ,PRIMARY KEY (TradingDay,BrokerSystemID)
 ) COMMENT='柜台系统';
 
@@ -99,17 +101,23 @@ create table snap.t_S_Activity
 (
 	TradingDay   varchar(8) binary  not null COMMENT '交易日'
 	,ActivityID   varchar(8) binary  not null COMMENT '赛事活动代码'
+	,TermNo   INTEGER    default '0' not null COMMENT '赛事活动期号'
 	,ActivityName   varchar(20) binary  not null COMMENT '赛事活动名称'
 	,ActivityType   varchar(4) binary  not null COMMENT '赛事活动类型'
 	,ActivityStatus   char(1) binary  not null COMMENT '赛事活动状态'
 	,InitialBalance 	   decimal(19,3)    default '100000' not null COMMENT '初始资金'
+	,JoinMode   char(1) binary   default '0' not null COMMENT '参与方式'
+	,RankingRule   varchar(2) binary   default '00' not null COMMENT '排名规则'
+	,CircleFreq   char(1) binary   default '0' not null COMMENT '循环频率'
+	,Duration   INTEGER    default '0' not null COMMENT '持续时间'
+	,JoinCount   INTEGER    default '0' not null COMMENT '参赛人数'
 	,CreateDate   varchar(8) binary  not null COMMENT '创建日期'
 	,CreateTime   varchar(8) binary  not null COMMENT '创建时间'
 	,BeginDate   varchar(8) binary   COMMENT '开始日期'
 	,EndDate   varchar(8) binary   COMMENT '结束日期'
 	,UpdateDate   varchar(8) binary  not null COMMENT '最后修改日期'
 	,UpdateTime   varchar(8) binary  not null COMMENT '最后修改时间'
-	  ,PRIMARY KEY (TradingDay,ActivityID)
+	  ,PRIMARY KEY (TradingDay,ActivityID,TermNo)
 ) COMMENT='赛事活动';
 
 
@@ -134,9 +142,11 @@ create table snap.t_S_ActivityInvestor
 (
 	ID    bigInt(10)  auto_increment    not null COMMENT '自增ID'
 	,ActivityID   varchar(8) binary  not null COMMENT '赛事活动代码'
+	,TermNo   INTEGER    default '0' not null COMMENT '赛事活动期号'
 	,InvestorID   varchar(10) binary  not null COMMENT '投资者代码'
 	,JoinDate   varchar(8) binary   COMMENT '参与日期'
 	,JoinStatus   char(1) binary   default '0'  COMMENT '参与状态'
+	,Rankable   INTEGER    default '1'  COMMENT '是否参与排名'
 	,TradingDay   varchar(8) binary  not null COMMENT '交易日'
 	  ,PRIMARY KEY (ID,ActivityID,InvestorID,TradingDay)
 ) COMMENT='赛事活动投资者关系';
@@ -260,6 +270,7 @@ create table snap.t_S_Investor
 	,InvestorName   varchar(20) binary   COMMENT '投资者名称'
 	,OpenID   varchar(20) binary   COMMENT '投资者开户使用的身份认证代码'
 	,Password   varchar(40) binary  not null COMMENT '投资者登录密码'
+	,InvestorAccountType   varchar(4) binary   default '0' not null COMMENT '投资者账户类型'
 	,InvestorStatus   char(1) binary  not null COMMENT '投资者状态'
 	  ,PRIMARY KEY (TradingDay,InvestorID)
 ) COMMENT='投资者信息';
@@ -287,16 +298,21 @@ create table snap.t_S_ActivityInvestorEvaluation
 (
 	TradingDay   varchar(8) binary  not null COMMENT '交易日'
 	,ActivityID   varchar(8) binary  not null COMMENT '赛事活动代码'
+	,TermNo   INTEGER    default '0' not null COMMENT '赛事活动期号'
 	,InvestorID   varchar(10) binary  not null COMMENT '投资者代码'
-	,InitialAsset 	   decimal(19,3)   not null COMMENT '期初资产'
-	,PreAsset 	   decimal(19,3)   not null COMMENT '昨资产'
-	,CurrentAsset 	   decimal(19,3)   not null COMMENT '当前资产'
-	,TotalReturnRate 	   decimal(22,6)   not null COMMENT '总收益率'
-	,ReturnRateOf1Day 	   decimal(22,6)   not null COMMENT '日收益率'
+	,InitialAsset 	   decimal(19,3)    default '0' not null COMMENT '期初资产'
+	,PreMonthAsset 	   decimal(19,3)    default '0' not null COMMENT '上月资产'
+	,PreWeekAsset 	   decimal(19,3)    default '0' not null COMMENT '上周资产'
+	,PreAsset 	   decimal(19,3)    default '0' not null COMMENT '昨资产'
+	,CurrentAsset 	   decimal(19,3)    default '0' not null COMMENT '当前资产'
+	,TotalReturnRate 	   decimal(22,6)    default '0' not null COMMENT '总收益率'
+	,ReturnRateOfMonth 	   decimal(22,6)    default '0' not null COMMENT '月收益率'
+	,ReturnRateOfWeek 	   decimal(22,6)    default '0' not null COMMENT '周收益率'
+	,ReturnRateOf1Day 	   decimal(22,6)    default '0' not null COMMENT '日收益率'
 	,RankingStatus   char(1) binary   default '0' not null COMMENT '是否参与排名'
 	,PreRanking    bigInt(10)     default '0' not null COMMENT '总收益率昨排名'
 	,Ranking    bigInt(10)     default '0' not null COMMENT '总收益率排名'
-	  ,PRIMARY KEY (TradingDay,ActivityID,InvestorID)
+	  ,PRIMARY KEY (TradingDay,ActivityID,TermNo,InvestorID)
 ) COMMENT='投资者赛事评估信息';
 
 
@@ -435,6 +451,7 @@ create table snap.t_S_Instrument
 	,UnderlyingInstrID   varchar(30) binary   COMMENT '基础商品代码'
 	,ProductClass   char(1) binary  not null COMMENT '产品类型'
 	,PositionType   char(1) binary  not null COMMENT '持仓类型'
+	,PositionDateType   char(1) binary   default '1' not null COMMENT '持仓日期类型'
 	,UnderlyingType   char(1) binary   COMMENT '标的类型'
 	,StrikeType   char(1) binary   COMMENT '行权类型'
 	,StrikePrice 	   decimal(16,6)    COMMENT '执行价'
@@ -965,6 +982,11 @@ create table snap.t_S_InvestorFund
 	,AccumulateFee 	   decimal(19,3)   not null COMMENT '质押手续费积数'
 	,ForzenDeposit 	   decimal(19,3)   not null COMMENT '冻结资金'
 	,AccountStatus   char(1) binary  not null COMMENT '帐户状态'
+	,InitialAsset 	   decimal(19,3)    default '0' not null COMMENT '初始资产总额'
+	,PreMonthAsset 	   decimal(19,3)    default '0' not null COMMENT '上月资产总额'
+	,PreWeekAsset 	   decimal(19,3)    default '0' not null COMMENT '上周资产总额'
+	,PreAsset 	   decimal(19,3)    default '0' not null COMMENT '昨日资产总额'
+	,CurrentAsset 	   decimal(19,3)    default '0' not null COMMENT '今日资产总额'
 	,PreStockValue 	   decimal(19,3)   not null COMMENT '昨股票市值'
 	,StockValue 	   decimal(19,3)   not null COMMENT '股票市值'
 	  ,PRIMARY KEY (TradingDay,BrokerSystemID,InvestorID)
@@ -1027,6 +1049,92 @@ create table snap.t_S_FuturePositionDtl
 	,CloseAmount 	   decimal(19,3)    COMMENT '平仓金额'
 	  ,PRIMARY KEY (TradingDay,SettlementGroupID,SettlementID,InstrumentID,ParticipantID,ClientID,HedgeFlag,Direction,OpenDate,TradeID,TradeType)
 ) COMMENT='期货合约持仓明细';
+
+
+
+-- ******************************
+-- 创建未知探索活动表
+-- ******************************
+create table snap.t_S_DiscoveryActivity
+(
+	TradingDay   varchar(8) binary  not null COMMENT '交易日'
+	,ActivityID   varchar(8) binary  not null COMMENT '活动代码'
+	,TermNo   INTEGER    default '0' not null COMMENT '活动期号'
+	,ActivityName   varchar(20) binary  not null COMMENT '活动名称'
+	,ActivityType   varchar(4) binary  not null COMMENT '活动类型'
+	,ActivityStatus   char(1) binary  not null COMMENT '活动状态'
+	,InitialBalance 	   decimal(19,3)    default '100000' not null COMMENT '初始资金'
+	,JoinMode   char(1) binary   default '0' not null COMMENT '参与方式'
+	,RankingRule   varchar(2) binary   default '00' not null COMMENT '排名规则'
+	,CircleFreq   char(1) binary   default '0' not null COMMENT '循环频率'
+	,Duration   INTEGER    default '0' not null COMMENT '持续时间'
+	,JoinCount   INTEGER    default '0' not null COMMENT '参加人数'
+	,CreateDate   varchar(8) binary  not null COMMENT '创建日期'
+	,CreateTime   varchar(8) binary  not null COMMENT '创建时间'
+	,BeginDate   varchar(8) binary   COMMENT '开始日期'
+	,EndDate   varchar(8) binary   COMMENT '结束日期'
+	,UpdateDate   varchar(8) binary  not null COMMENT '最后修改日期'
+	,UpdateTime   varchar(8) binary  not null COMMENT '最后修改时间'
+	  ,PRIMARY KEY (TradingDay,ActivityID,TermNo)
+) COMMENT='未知探索活动';
+
+
+
+-- ******************************
+-- 创建未知探索活动结算组关系表
+-- ******************************
+create table snap.t_S_DiscoveryActSettleGroup
+(
+	TradingDay   varchar(8) binary  not null COMMENT '交易日'
+	,ActivityID   varchar(8) binary  not null COMMENT '活动代码'
+	,SettlementGroupID   varchar(8) binary  not null COMMENT '结算组代码'
+	  ,PRIMARY KEY (TradingDay,ActivityID,SettlementGroupID)
+) COMMENT='未知探索活动结算组关系';
+
+
+
+-- ******************************
+-- 创建未知探索活动投资者关系表
+-- ******************************
+create table snap.t_S_DiscoveryActivityInvestor
+(
+	TradingDay   varchar(8) binary  not null COMMENT '交易日'
+	,ID    bigInt(10)  auto_increment    not null COMMENT '自增ID'
+	,ActivityID   varchar(8) binary  not null COMMENT '未知探索活动代码'
+	,TermNo   INTEGER    default '0' not null COMMENT '未知探索活动期号'
+	,InvestorID   varchar(10) binary  not null COMMENT '投资者代码'
+	,JoinDate   varchar(8) binary   COMMENT '参与日期'
+	,JoinStatus   char(1) binary   default '0'  COMMENT '参与状态'
+	,Rankable   INTEGER    default '1'  COMMENT '是否参与排名'
+	  ,PRIMARY KEY (TradingDay,ID,ActivityID,InvestorID)
+) COMMENT='未知探索活动投资者关系';
+
+
+
+-- ******************************
+-- 创建投资者未知探索评估信息表
+-- ******************************
+create table snap.t_S_DiscoveryActInvestorEval
+(
+	TradingDay   varchar(8) binary  not null COMMENT '交易日'
+	,ActivityID   varchar(8) binary  not null COMMENT '未知探索活动代码'
+	,TermNo   INTEGER    default '0' not null COMMENT '未知探索活动期号'
+	,InvestorID   varchar(10) binary  not null COMMENT '投资者代码'
+	,InitialAsset 	   decimal(19,3)    default '0' not null COMMENT '期初资产'
+	,PreMonthAsset 	   decimal(19,3)    default '0' not null COMMENT '上月资产'
+	,PreWeekAsset 	   decimal(19,3)    default '0' not null COMMENT '上周资产'
+	,PreAsset 	   decimal(19,3)    default '0' not null COMMENT '昨资产'
+	,CurrentAsset 	   decimal(19,3)    default '0' not null COMMENT '当前资产'
+	,TotalReturnRate 	   decimal(22,6)    default '0' not null COMMENT '总收益率'
+	,ReturnRateOfMonth 	   decimal(22,6)    default '0' not null COMMENT '月收益率'
+	,ReturnRateOfWeek 	   decimal(22,6)    default '0' not null COMMENT '周收益率'
+	,ReturnRateOf1Day 	   decimal(22,6)    default '0' not null COMMENT '日收益率'
+	,RankingStatus   char(1) binary   default '0' not null COMMENT '是否参与排名'
+	,PreRanking    bigInt(10)     default '0' not null COMMENT '总收益率昨排名'
+	,Ranking    bigInt(10)     default '0' not null COMMENT '总收益率排名'
+	,IntegratedScores 	   decimal(10,3)   not null COMMENT '综合积分'
+	  ,PRIMARY KEY (TradingDay,ActivityID,TermNo,InvestorID)
+) COMMENT='投资者未知探索评估信息';
 
 
 
